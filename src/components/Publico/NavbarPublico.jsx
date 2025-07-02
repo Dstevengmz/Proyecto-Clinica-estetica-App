@@ -42,6 +42,11 @@ const NavbarPublico = () => {
                 Servicios
               </CNavLink>
             </CNavItem>
+             <CNavItem>
+              <CNavLink as={Link} to="/carrito">
+                Carrito
+              </CNavLink>
+            </CNavItem>
           </CNavbarNav>
           <CNavbarNav className="ms-auto">
             {!isAuthenticated  ? (

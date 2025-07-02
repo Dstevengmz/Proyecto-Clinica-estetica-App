@@ -1,13 +1,15 @@
-import { useParams } from "react-router-dom";
+import { useParams,useNavigate  } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
-
+import { useCarrito } from "../../../contexts/CarritoContext";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function VistaServicios() {
   const { id } = useParams();
   const [procedimiento, setProcedimiento] = useState(null);
   const [imagenActiva, setImagenActiva] = useState("");
+  const { agregarAlCarrito } = useCarrito();
+    const navigate = useNavigate();
 
   useEffect(() => {
     axios
@@ -18,7 +20,18 @@ function VistaServicios() {
       })
       .catch((err) => console.error("Error al obtener el procedimiento:", err));
   }, [id]);
-
+  
+   const manejoReserva = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      localStorage.setItem("pendienteAgregar", id);
+      navigate("/iniciarsesion");
+    } else {
+      agregarAlCarrito(procedimiento.id);
+      alert("Agregado al carrito ✅");
+      navigate("/servicios");
+    }
+  };
   if (!procedimiento) {
     return <p className="text-center mt-5">Cargando procedimiento...</p>;
   }
@@ -75,9 +88,8 @@ function VistaServicios() {
                   Duración: {procedimiento.duracion} minutos
                 </small>
               </div>
-
               <div className="mt-4">
-                <button className="btn btn-primary btn-lg w-100">
+                <button className="btn btn-primary btn-lg w-100" onClick={manejoReserva}>
                   <i className="fas fa-cart-plus me-2" />
                   Reservar Cita
                 </button>

@@ -7,6 +7,8 @@ export const CitasContext = createContext();
 import { cibCassandra, cilPenAlt, cilXCircle } from "@coreui/icons";
 import CIcon from "@coreui/icons-react";
 const useCitasContext = () => useContext(CitasContext);
+const API_URL = import.meta.env.VITE_API_URL;
+
 import {
   CTable,
   CTableHead,
@@ -40,7 +42,7 @@ function Consultarcitas() {
       return;
     }
     axios
-      .get("http://localhost:2100/apicitas/listarcitas", {
+      .get(`${API_URL}/apicitas/listarcitas`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

@@ -16,7 +16,7 @@ import {
 import CIcon from "@coreui/icons-react";
 import Swal from "sweetalert2";
 import axios from "axios";
-import { useNavigate  } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { cilLockLocked, cilUser } from "@coreui/icons";
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -52,7 +52,13 @@ const Login = () => {
           timer: 1500,
         });
         setTimeout(() => {
-          navigate("/dashboard");
+          const pendiente = localStorage.getItem("pendienteAgregar");
+          if (pendiente) {
+            localStorage.removeItem("pendienteAgregar");
+            navigate(`/reservar/${pendiente}`);
+          } else {
+            navigate("/dashboard");
+          }
         }, 1600);
       } else {
         Swal.fire({
@@ -119,9 +125,9 @@ const Login = () => {
                       </CCol>
                       <CCol xs={6} className="text-right">
                         <Link to="/registrar">
-                        <CButton color="link" className="px-0">
-                          ¿Crear una cuenta?
-                        </CButton>
+                          <CButton color="link" className="px-0">
+                            ¿Crear una cuenta?
+                          </CButton>
                         </Link>
                       </CCol>
                     </CRow>

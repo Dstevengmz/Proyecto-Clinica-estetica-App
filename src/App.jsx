@@ -60,6 +60,8 @@ import { ProcedimientoContext } from "./views/pages/procedimientos/ConsultarProc
 const EditarProcedimiento = React.lazy(() =>
   import("./views/pages/procedimientos/EditarProcedimiento")
 );
+//Carrito
+const Carrito = React.lazy(() => import("./views/pages/carrito/carrito"));
 
 import CerrarSesion from "./views/pages/logout/CerrarSesion";
 import Control from "./components/control/control";
@@ -113,6 +115,14 @@ const App = () => {
                   <Route path="/iniciarsesion" element={<Login />} />
                   <Route path="/inicio" element={<Inicio />} />
                   <Route path="/servicios" element={<Servicios />} />
+                  <Route
+                    path="/carrito"
+                    element={
+                      <RutaProtegida>
+                        <Carrito />
+                      </RutaProtegida>
+                    }
+                  />
                   <Route path="/reservar/:id" element={<VistaServicios />} />
                 </Route>
 
