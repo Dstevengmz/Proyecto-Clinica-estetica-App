@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Form, Button, Container, Row, Col, Card } from "react-bootstrap";
 import axios from "axios";
-import { usePerfilUsuario } from "../../../hooks/UsePerfilUsuario";
+import { usePerfilUsuario } from "../../../hooks/usePerfilUsuario";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
