@@ -1,7 +1,12 @@
 import { useCarrito } from "../../../contexts/CarritoContext";
+import { useNavigate } from "react-router-dom";
 
 function Carrito() {
   const { carrito, eliminarDelCarrito, limpiarCarrito } = useCarrito();
+  const navigate = useNavigate();
+  const irACita = () => {
+    navigate("/crearhistorialclinico");
+  };
 
   return (
     <div className="container mt-5">
@@ -12,13 +17,18 @@ function Carrito() {
         <>
           <ul className="list-group mb-3">
             {carrito.map((item) => (
-              <li key={item.id} className="list-group-item d-flex justify-content-between align-items-center">
+              <li
+                key={item.id}
+                className="list-group-item d-flex justify-content-between align-items-center"
+              >
                 <div>
                   <strong>Nombre: {item.procedimiento?.nombre}</strong>
                   <br />
                   <strong>Precio: {item.procedimiento?.precio}</strong>
                   <br />
-                  <span className="text-muted">Descripcion : {item.procedimiento?.descripcion}</span>
+                  <span className="text-muted">
+                    Descripcion : {item.procedimiento?.descripcion}
+                  </span>
                 </div>
                 <button
                   onClick={() => eliminarDelCarrito(item.id)}
@@ -31,6 +41,9 @@ function Carrito() {
           </ul>
           <button onClick={limpiarCarrito} className="btn btn-warning">
             Limpiar carrito
+          </button>
+          <button className="btn btn-primary ms-4" onClick={irACita}>
+            Realizar Cita
           </button>
         </>
       )}

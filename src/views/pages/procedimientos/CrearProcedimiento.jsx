@@ -102,10 +102,14 @@ const manejarEnvio = async (e) => {
           <Form.Label>Duración (minutos)</Form.Label>
           <Form.Control type="number" name="duracion" value={formData.duracion} onChange={manejarCambio} required />
         </Form.Group>
-
         <Form.Group>
-          <Form.Label>Exámenes Requeridos</Form.Label>
-          <Form.Control name="examenes_requeridos" value={formData.examenes_requeridos} onChange={manejarCambio} />
+          <Form.Check
+            type="checkbox"
+            label="¿Exámenes Requeridos?"
+            name="examenes_requeridos"
+            checked={formData.examenes_requeridos}
+            onChange={manejarCambio}
+          />
         </Form.Group>
 
         <Form.Group>

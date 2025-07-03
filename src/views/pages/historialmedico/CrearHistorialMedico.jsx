@@ -2,10 +2,13 @@ import { useState } from "react";
 import { Form, Button, Container, Row, Col, Card } from "react-bootstrap";
 import axios from "axios";
 import { usePerfilUsuario } from "../../../hooks/usePerfilUsuario";
+import { useNavigate } from "react-router-dom";
+
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function HistorialMedico() {
+  const navigate = useNavigate();
   const { usuario } = usePerfilUsuario();
   const [formulario, setFormulario] = useState({
     enfermedades: "",
@@ -66,7 +69,7 @@ function HistorialMedico() {
           );
 
           alert("Historial médico guardado correctamente");
-
+          navigate("/crearcita");
           setFormulario({
             enfermedades: "",
             alergias: "",
