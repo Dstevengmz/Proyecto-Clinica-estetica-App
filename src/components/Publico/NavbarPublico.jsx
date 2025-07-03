@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate,useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import manejarCerrarSesion from "../../assets/js/AlertaCerrarSesion";
 import { useAuth } from "../../contexts/AuthenticaContext";
 import {
@@ -18,9 +18,9 @@ import {
   CNavLink,
 } from "@coreui/react";
 const NavbarPublico = () => {
-  const { logout ,isAuthenticated} = useAuth();
+  const { logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation()
+  const location = useLocation();
   const [visible, setVisible] = useState(false);
 
   return (
@@ -42,14 +42,14 @@ const NavbarPublico = () => {
                 Servicios
               </CNavLink>
             </CNavItem>
-             <CNavItem>
+            <CNavItem>
               <CNavLink as={Link} to="/carrito">
                 Carrito
               </CNavLink>
             </CNavItem>
           </CNavbarNav>
           <CNavbarNav className="ms-auto">
-            {!isAuthenticated  ? (
+            {!isAuthenticated ? (
               <CNavItem>
                 <CNavLink as={Link} to="/iniciarsesion">
                   Iniciar Sesión
@@ -64,8 +64,15 @@ const NavbarPublico = () => {
                   <CDropdownItem as={Link} to="/perfil">
                     Perfil
                   </CDropdownItem>
+                  <CDropdownItem as={Link} to="/dashboard">
+                    Dashboard
+                  </CDropdownItem>
                   <CDropdownDivider />
-                  <CDropdownItem onClick={() => manejarCerrarSesion(navigate,logout,location)}>
+                  <CDropdownItem
+                    onClick={() =>
+                      manejarCerrarSesion(navigate, logout, location)
+                    }
+                  >
                     Cerrar Sesión
                   </CDropdownItem>
                 </CDropdownMenu>
