@@ -52,13 +52,7 @@ const Login = () => {
           timer: 1500,
         });
         setTimeout(() => {
-          const pendiente = localStorage.getItem("pendienteAgregar");
-          if (pendiente) {
-            localStorage.removeItem("pendienteAgregar");
-            navigate(`/reservar/${pendiente}`);
-          } else {
             navigate("/dashboard");
-          }
         }, 1600);
       } else {
         Swal.fire({

@@ -24,7 +24,6 @@ function VistaServicios() {
    const manejoReserva = () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      localStorage.setItem("pendienteAgregar", id);
       navigate("/iniciarsesion");
     } else {
       agregarAlCarrito(procedimiento.id);

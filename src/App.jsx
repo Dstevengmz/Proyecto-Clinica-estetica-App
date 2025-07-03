@@ -18,7 +18,8 @@ const Page404 = React.lazy(() => import("./views/pages/page404/Page404"));
 const Page500 = React.lazy(() => import("./views/pages/page500/Page500"));
 const Inicio = React.lazy(() => import("./views/pages/inicio/Inicio"));
 const Servicios = React.lazy(() => import("./views/pages/servicios/Servicios"));
-const VistaServicios = React.lazy(() => import("./views/pages/servicios/VistaServicios")
+const VistaServicios = React.lazy(() =>
+  import("./views/pages/servicios/VistaServicios")
 );
 
 //historialClinico
