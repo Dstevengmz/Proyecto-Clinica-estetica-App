@@ -29,17 +29,22 @@ function ConsultarProcedimientos() {
     axios
       .get(`${API_URL}/apiprocedimientos/listarprocedimiento`, {
         headers: {
-           Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           // "Content-Type": "application/json",
         },
       })
       .then((response) => {
-        console.log("Respuesta del backend:", response.data);
         setProcedimientos(response.data);
+        console.log("Respuesta del backend:", response.data);
       })
       .catch((error) => {
         console.error("Error al cargar procedimientos:", error);
-        alert("Error", "No se pudieron cargar los procedimientos", "error");
+        alert(
+          "Error",
+          "No se pudieron cargar los procedimientos",
+          "error",
+          error
+        );
       });
   }, []);
 
