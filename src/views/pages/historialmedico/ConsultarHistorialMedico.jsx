@@ -46,7 +46,7 @@ function ConsultaHistorialMedico() {
         console.log("Respuesta del backend:", response.data);
       })
       .catch((error) => {
-        console.error("❌ Error al cargar historialmedico:", error);
+        console.error(" Error al cargar historialmedico:", error);
         alert("Error", "No se pudieron cargar los historialmedico", "error",error);
       });
   }, []);

@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {  createContext, useContext } from "react";
+import { createContext, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 import {
   CTable,
   CTableHead,
   CTableHeaderCell,
   CTableRow,
   CTableBody,
-  CTableDataCell
-} from '@coreui/react'
+  CTableDataCell,
+} from "@coreui/react";
 export const ProcedimientoContext = createContext();
 const useProcedimientoContext = () => useContext(ProcedimientoContext);
 
 function ConsultarProcedimientos() {
-  
   const [procedimientos, setProcedimientos] = useState([]);
-  const {selectedProcedimiento, setSelectedProcedimiento}  = useProcedimientoContext();
+  const { selectedProcedimiento, setSelectedProcedimiento } =
+    useProcedimientoContext();
   const navigate = useNavigate();
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -26,14 +27,14 @@ function ConsultarProcedimientos() {
       return;
     }
     axios
-      .get("http://localhost:2100/apiprocedimientos/listarprocedimiento", {
+      .get(`${API_URL}/apiprocedimientos/listarprocedimiento`, {
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+           Authorization: `Bearer ${token}`,
+          // "Content-Type": "application/json",
         },
       })
       .then((response) => {
-        console.log("Respuesta del backend:", response.data); 
+        console.log("Respuesta del backend:", response.data);
         setProcedimientos(response.data);
       })
       .catch((error) => {
@@ -48,8 +49,10 @@ function ConsultarProcedimientos() {
   };
 
   return (
-    <ProcedimientoContext.Provider value={{ selectedProcedimiento, setSelectedProcedimiento }}>
-    <div className="card-body">
+    <ProcedimientoContext.Provider
+      value={{ selectedProcedimiento, setSelectedProcedimiento }}
+    >
+      <div className="card-body">
         <CTable striped bordered hover responsive>
           <CTableHead color="dark">
             <CTableRow>
@@ -83,16 +86,15 @@ function ConsultarProcedimientos() {
                       <i className="bi bi-eye-fill"></i>
                     </a>
                     <a
-                      onClick={() => navigate(`/editarprocedimientos/${procedimiento.id}`)}
+                      onClick={() =>
+                        navigate(`/editarprocedimientos/${procedimiento.id}`)
+                      }
                       className="btn btn-sm btn-primary"
                       title="Editar"
                     >
                       <i className="bi bi-pencil-square"></i>
                     </a>
-                    <a
-                      className="btn btn-sm btn-danger"
-                      title="Eliminar"
-                    >
+                    <a className="btn btn-sm btn-danger" title="Eliminar">
                       <i className="bi bi-trash"></i>
                     </a>
                   </div>
@@ -101,9 +103,7 @@ function ConsultarProcedimientos() {
             ))}
           </CTableBody>
         </CTable>
-
-
-    </div>
+      </div>
     </ProcedimientoContext.Provider>
   );
 }
