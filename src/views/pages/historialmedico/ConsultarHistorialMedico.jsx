@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { createContext, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 import {
   CButton,
   CContainer,
@@ -35,20 +36,18 @@ function ConsultaHistorialMedico() {
       return;
     }
     axios
-      .get("http://localhost:2100/apihistorialmedico/listarhistorialclinico", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      .get(`${API_URL}/apihistorialmedico/listarhistorialclinico`,{
+        headers: { Authorization: `Bearer ${token}`,
+          // "Content-Type": "application/json",
         },
       })
       .then((response) => {
-        console.log("Respuesta del backend:", response.data);
-
         setHistorialmedico(response.data);
+        console.log("Respuesta del backend:", response.data);
       })
       .catch((error) => {
-        console.error("Error al cargar historialmedico:", error);
-        alert("Error", "No se pudieron cargar los historialmedico", "error");
+        console.error("❌ Error al cargar historialmedico:", error);
+        alert("Error", "No se pudieron cargar los historialmedico", "error",error);
       });
   }, []);
 
