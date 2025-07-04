@@ -109,7 +109,6 @@ const App = () => {
             >
               <Routes>
                 {/* Rutas públicas */}
-
                 <Route path="/registrar" element={<Register />} />
                 <Route element={<PublicLayout />}>
                   <Route path="/iniciarsesion" element={<Login />} />
@@ -125,21 +124,20 @@ const App = () => {
                   />
                   <Route path="/reservar/:id" element={<VistaServicios />} />
                 </Route>
-
                 {/* Rutas con layout */}
                 <Route path="/cerrarsesion" element={<CerrarSesion />} />
-                <Route path="/" element={<DefaultLayout />}>
+                <Route index element={<Navigate to="/inicio" replace />} /> 
+                <Route path="/dashboard" element={<DefaultLayout />}>
                   <Route path="/404" element={<Page404 />} />
                   <Route path="/500" element={<Page500 />} />
-                  <Route path="/" element={<Navigate to="/inicio" replace />} />
-                  <Route
+                  {/* <Route
                     path="/dashboard"
                     element={
                       <RutaProtegida>
                         <Dashboard />
                       </RutaProtegida>
                     }
-                  />
+                  /> */}
                   <Route
                     path="/crearhistorialclinico"
                     element={
@@ -240,7 +238,6 @@ const App = () => {
                     }
                   />
                 </Route>
-
                 {/* Fallback */}
                 <Route path="*" element={<Navigate to="/404" />} />
               </Routes>
