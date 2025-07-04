@@ -128,7 +128,13 @@ const App = () => {
                 </Route>
 
                 {/* Rutas protegidas con layout */}
-                <Route element={<DefaultLayout />}>
+                <Route
+                  element={
+                    <RutaProtegida>
+                      <DefaultLayout />
+                    </RutaProtegida>
+                  }
+                >
                   <Route
                     path="/dashboard"
                     element={
@@ -174,7 +180,7 @@ const App = () => {
                   />
 
                   <Route
-                    path="/crearcita"
+                    path="/c"
                     element={
                       <RutaProtegida>
                         <CrearCita />
