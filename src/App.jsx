@@ -127,17 +127,17 @@ const App = () => {
                 {/* Rutas con layout */}
                 <Route path="/cerrarsesion" element={<CerrarSesion />} />
                 <Route index element={<Navigate to="/inicio" replace />} /> 
-                <Route path="/" element={<DefaultLayout />}>
+                <Route path="/dashboard" element={<DefaultLayout />}>
                   <Route path="/404" element={<Page404 />} />
                   <Route path="/500" element={<Page500 />} />
-                  <Route
+                  {/* <Route
                     path="/dashboard"
                     element={
                       <RutaProtegida>
                         <Dashboard />
                       </RutaProtegida>
                     }
-                  />
+                  /> */}
                   <Route
                     path="/crearhistorialclinico"
                     element={
