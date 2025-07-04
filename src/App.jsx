@@ -108,11 +108,13 @@ const App = () => {
               }
             >
               <Routes>
+                {/* Redirección principal */}
+                <Route path="/" element={<Navigate to="/inicio" replace />} />
+
                 {/* Rutas públicas */}
-                <Route path="/registrar" element={<Register />} />
                 <Route element={<PublicLayout />}>
                   <Route path="/iniciarsesion" element={<Login />} />
-                  <Route path="/" element={<Inicio />} />
+                  <Route path="/inicio" element={<Inicio />} />
                   <Route path="/servicios" element={<Servicios />} />
                   <Route
                     path="/carrito"
@@ -124,20 +126,20 @@ const App = () => {
                   />
                   <Route path="/reservar/:id" element={<VistaServicios />} />
                 </Route>
-                {/* Rutas con layout */}
-                <Route path="/cerrarsesion" element={<CerrarSesion />} />
-                <Route index element={<Navigate to="/inicio" replace />} /> 
-                <Route path="/dashboard" element={<DefaultLayout />}>
-                  <Route path="/404" element={<Page404 />} />
-                  <Route path="/500" element={<Page500 />} />
-                  {/* <Route
+
+                {/* Rutas protegidas con layout */}
+                <Route element={<DefaultLayout />}>
+                  <Route
                     path="/dashboard"
                     element={
                       <RutaProtegida>
                         <Dashboard />
                       </RutaProtegida>
                     }
-                  /> */}
+                  />
+                  <Route path="/404" element={<Page404 />} />
+                  <Route path="/500" element={<Page500 />} />
+
                   <Route
                     path="/crearhistorialclinico"
                     element={
@@ -170,7 +172,7 @@ const App = () => {
                       </RutaProtegida>
                     }
                   />
-                  {/* citas */}
+
                   <Route
                     path="/crearcita"
                     element={
@@ -203,7 +205,6 @@ const App = () => {
                       </RutaProtegida>
                     }
                   />
-                  {/* procedimientos */}
 
                   <Route
                     path="/crearprocedimiento"
@@ -238,7 +239,11 @@ const App = () => {
                     }
                   />
                 </Route>
-                {/* Fallback */}
+
+                {/* Cierre de sesión */}
+                <Route path="/cerrarsesion" element={<CerrarSesion />} />
+
+                {/* Ruta no encontrada */}
                 <Route path="*" element={<Navigate to="/404" />} />
               </Routes>
             </Suspense>
