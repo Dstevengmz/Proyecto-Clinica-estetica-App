@@ -1,11 +1,15 @@
 import React, { Suspense, useEffect } from "react";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 import { CSpinner, useColorModes } from "@coreui/react";
 import "./scss/style.scss";
 import "./scss/examples.scss";
+
+//Verificar Token
+import VerificarTokenExpirado from "./assets/js/ValidarTokenExpirado";
+import TokenExpiradoAlerta from "./assets/js/MensajeTokenEXpirado";
 
 // Layout
 const DefaultLayout = React.lazy(() => import("./layout/DefaultLayout"));
@@ -82,6 +86,7 @@ const App = () => {
     "coreui-free-react-admin-template-theme"
   );
   const storedTheme = useSelector((state) => state.theme);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.href.split("?")[1]);
@@ -89,6 +94,14 @@ const App = () => {
     if (theme) setColorMode(theme);
     if (!isColorModeSet()) setColorMode(storedTheme);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const token = VerificarTokenExpirado.obtenerToken();
+    if (token && !VerificarTokenExpirado.tokenEsValido(token)) {
+      localStorage.removeItem("token");
+      TokenExpiradoAlerta(navigate);
+    }
+  }, [navigate]);
 
   return (
     <HistorialClinicoContext.Provider
@@ -98,162 +111,92 @@ const App = () => {
         <ProcedimientoContext.Provider
           value={{ selectedProcedimiento, setSelectedProcedimiento }}
         >
-          <BrowserRouter>
-            <Control />
-            <Suspense
-              fallback={
-                <div className="pt-3 text-center">
-                  <CSpinner color="primary" variant="grow" />
-                </div>
-              }
-            >
-              <Routes>
-                {/* Redirección principal */}
-                <Route path="/" element={<Navigate to="/inicio" replace />} />
-
-                {/* Rutas públicas */}
-                <Route element={<PublicLayout />}>
-                  <Route path="/iniciarsesion" element={<Login />} />
-                  <Route path="/inicio" element={<Inicio />} />
-                  <Route path="/servicios" element={<Servicios />} />
-                  <Route
-                    path="/carrito"
-                    element={
-                      <RutaProtegida>
-                        <Carrito />
-                      </RutaProtegida>
-                    }
-                  />
-                  <Route path="/reservar/:id" element={<VistaServicios />} />
-                </Route>
-
-                {/* Rutas protegidas con layout */}
+          <Control />
+          <Suspense
+            fallback={
+              <div className="pt-3 text-center">
+                <CSpinner color="primary" variant="grow" />
+              </div>
+            }
+          >
+            <Routes>
+              <Route path="/" element={<Navigate to="/inicio" replace />} />
+              {/* Rutas públicas */}
+              <Route element={<PublicLayout />}>
+                <Route path="/iniciarsesion" element={<Login />} />
+                <Route path="/inicio" element={<Inicio />} />
+                <Route path="/servicios" element={<Servicios />} />
+                <Route path="/registrar" element={<Register />} />
                 <Route
+                  path="/carrito"
                   element={
                     <RutaProtegida>
-                      <DefaultLayout />
+                      <Carrito />
                     </RutaProtegida>
                   }
-                >
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <RutaProtegida>
-                        <Dashboard />
-                      </RutaProtegida>
-                    }
-                  />
-                  <Route path="/404" element={<Page404 />} />
-                  <Route path="/500" element={<Page500 />} />
+                />
+                <Route path="/reservar/:id" element={<VistaServicios />} />
+              </Route>
 
-                  <Route
-                    path="/crearhistorialclinico"
-                    element={
-                      <RutaProtegida>
-                        <CrearHistorialClinico />
-                      </RutaProtegida>
-                    }
-                  />
-                  <Route
-                    path="/consultarhistorialmedico"
-                    element={
-                      <RutaProtegida>
-                        <ConsultarHistorialMedico />
-                      </RutaProtegida>
-                    }
-                  />
-                  <Route
-                    path="/detalleshistorialmedico"
-                    element={
-                      <RutaProtegida>
-                        <DetallesHistorialMedico />
-                      </RutaProtegida>
-                    }
-                  />
-                  <Route
-                    path="/editarhistorialmedico/:id"
-                    element={
-                      <RutaProtegida>
-                        <EditarHistorialMedico />
-                      </RutaProtegida>
-                    }
-                  />
+              {/* Rutas protegidas con layout */}
+              <Route
+                element={
+                  <RutaProtegida>
+                    <DefaultLayout />
+                  </RutaProtegida>
+                }
+              >
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/404" element={<Page404 />} />
+                <Route path="/500" element={<Page500 />} />
 
-                  <Route
-                    path="/c"
-                    element={
-                      <RutaProtegida>
-                        <CrearCita />
-                      </RutaProtegida>
-                    }
-                  />
-                  <Route
-                    path="/consultarcitas"
-                    element={
-                      <RutaProtegida>
-                        <ConsultarCitas />
-                      </RutaProtegida>
-                    }
-                  />
-                  <Route
-                    path="/detallescitas"
-                    element={
-                      <RutaProtegida>
-                        <DetallesCitas />
-                      </RutaProtegida>
-                    }
-                  />
-                  <Route
-                    path="/editarcita/:id"
-                    element={
-                      <RutaProtegida>
-                        <Editarcita />
-                      </RutaProtegida>
-                    }
-                  />
+                <Route
+                  path="/crearhistorialclinico"
+                  element={<CrearHistorialClinico />}
+                />
+                <Route
+                  path="/consultarhistorialmedico"
+                  element={<ConsultarHistorialMedico />}
+                />
+                <Route
+                  path="/detalleshistorialmedico"
+                  element={<DetallesHistorialMedico />}
+                />
+                <Route
+                  path="/editarhistorialmedico/:id"
+                  element={<EditarHistorialMedico />}
+                />
 
-                  <Route
-                    path="/crearprocedimiento"
-                    element={
-                      <RutaProtegida>
-                        <CrearProcedimiento />
-                      </RutaProtegida>
-                    }
-                  />
-                  <Route
-                    path="/consultarprocedimientos"
-                    element={
-                      <RutaProtegida>
-                        <ConsultarProcedimientos />
-                      </RutaProtegida>
-                    }
-                  />
-                  <Route
-                    path="/detallesprocedimientos"
-                    element={
-                      <RutaProtegida>
-                        <DetallesProcedimientos />
-                      </RutaProtegida>
-                    }
-                  />
-                  <Route
-                    path="/editarprocedimientos/:id"
-                    element={
-                      <RutaProtegida>
-                        <EditarProcedimiento />
-                      </RutaProtegida>
-                    }
-                  />
-                </Route>
+                <Route path="/crearcita" element={<CrearCita />} />
+                <Route path="/consultarcitas" element={<ConsultarCitas />} />
+                <Route path="/detallescitas" element={<DetallesCitas />} />
+                <Route path="/editarcita/:id" element={<Editarcita />} />
 
-                {/* Cierre de sesión */}
-                <Route path="/cerrarsesion" element={<CerrarSesion />} />
+                <Route
+                  path="/crearprocedimiento"
+                  element={<CrearProcedimiento />}
+                />
+                <Route
+                  path="/consultarprocedimientos"
+                  element={<ConsultarProcedimientos />}
+                />
+                <Route
+                  path="/detallesprocedimientos"
+                  element={<DetallesProcedimientos />}
+                />
+                <Route
+                  path="/editarprocedimientos/:id"
+                  element={<EditarProcedimiento />}
+                />
+              </Route>
 
-                {/* Ruta no encontrada */}
-                <Route path="*" element={<Navigate to="/404" />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
+              {/* Cierre de sesión */}
+              <Route path="/cerrarsesion" element={<CerrarSesion />} />
+
+              {/* Ruta no encontrada */}
+              <Route path="*" element={<Navigate to="/404" />} />
+            </Routes>
+          </Suspense>
         </ProcedimientoContext.Provider>
       </CitasContext.Provider>
     </HistorialClinicoContext.Provider>

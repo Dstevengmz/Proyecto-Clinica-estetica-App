@@ -11,6 +11,7 @@
 
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
+import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthenticaContext";
 import "core-js";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -23,7 +24,9 @@ createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <AuthProvider>
       <CarritoProvider>
-        <App />
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
       </CarritoProvider>
     </AuthProvider>
   </Provider>
