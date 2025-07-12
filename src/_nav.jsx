@@ -5,20 +5,43 @@ import {
   cilNotes,
   cilMedicalCross,
   cilSpeedometer,
+  // cilUser,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
-const _nav = [
+// Navegación para usuarios normales
+const getUserNavigation = () => [
   {
     component: CNavItem,
     name: 'Panel de control',
     to: '/dashboard',
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
   },
-  
   {
     component: CNavGroup,
-    name: 'Historial Medico',
+    name: 'Mis Citas',
+    icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: 'Agendar Cita',
+        to: '/crearcita',
+      },
+    ],
+  },
+]
+
+// Navegación para doctores
+const getDoctorNavigation = () => [
+  {
+    component: CNavItem,
+    name: 'Panel de control',
+    to: '/dashboard',
+    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavGroup,
+    name: 'Historial Médico',
     icon: <CIcon icon={cilMedicalCross} customClassName="nav-icon" />,
     items: [
       {
@@ -26,7 +49,6 @@ const _nav = [
         name: 'Crear',
         to: '/crearhistorialclinico',
       },
-
       {
         component: CNavItem,
         name: 'Consultar',
@@ -61,7 +83,6 @@ const _nav = [
         name: 'Crear Procedimiento',
         to: '/crearprocedimiento',
       },
-
       {
         component: CNavItem,
         name: 'Consultar Procedimientos',
@@ -69,11 +90,26 @@ const _nav = [
       },
     ],
   },
-  // {
-  //   component: CNavTitle,
-  //   name: 'Mas',
-  // },
-
 ]
 
-export default _nav
+// Función principal que retorna la navegación según el rol
+const getNavigationByRole = (userRole) => {
+  switch (userRole) {
+    case 'doctor':
+    case 'Doctor':
+    case 'DOCTOR':
+      return getDoctorNavigation()
+    case 'usuario':
+    case 'Usuario':
+    case 'USUARIO':
+    case 'user':
+    case 'User':
+    case 'USER':
+      return getUserNavigation()
+    default:
+      // Si no hay rol o es desconocido, mostrar navegación básica
+      return getUserNavigation()
+  }
+}
+
+export default getNavigationByRole

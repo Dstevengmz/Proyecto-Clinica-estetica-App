@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
 import React, { useState, useEffect } from "react";
 import { createContext, useContext } from "react";
 export const CitasContext = createContext();
@@ -8,7 +7,7 @@ import { cibCassandra, cilPenAlt, cilXCircle } from "@coreui/icons";
 import CIcon from "@coreui/icons-react";
 const useCitasContext = () => useContext(CitasContext);
 const API_URL = import.meta.env.VITE_API_URL;
-
+// import  obtenerRolDesdeToken  from "../../../assets/js/VerificacionRol";
 import {
   CTable,
   CTableHead,
@@ -22,18 +21,7 @@ function Consultarcitas() {
   const [citas, setCitas] = useState([]);
   const { selectedCitas, setSelectedCitas } = useCitasContext();
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-  let rol = null;
-  if (token) {
-    try {
-      const usuario = jwtDecode(token);
-      rol = usuario.rol;
-    } catch (error) {
-      console.error("Error al decodificar el token:", error);
-      rol = null;
-    }
-  }
-
+  // const rol = obtenerRolDesdeToken();
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -70,33 +58,38 @@ function Consultarcitas() {
   return (
     <CitasContext.Provider value={{ selectedCitas, setSelectedCitas }}>
       <div className="card-body">
-        <CTable striped hover responsive>
-          <CTableHead>
-            <CTableRow>
-              <CTableHeaderCell>ID</CTableHeaderCell>
-              <CTableHeaderCell>Usuario</CTableHeaderCell>
-              <CTableHeaderCell>Doctor</CTableHeaderCell>
-              <CTableHeaderCell>Fecha</CTableHeaderCell>
-              <CTableHeaderCell>Opciones</CTableHeaderCell>
-            </CTableRow>
-          </CTableHead>
-          <CTableBody>
-            {citas.map((cita) => (
-              <CTableRow key={cita.id}>
-                <CTableDataCell>{cita.id}</CTableDataCell>
-                <CTableDataCell>{cita.usuario?.nombre || "N/A"}</CTableDataCell>
-                <CTableDataCell>{cita.doctor?.nombre || "N/A"}</CTableDataCell>
-                <CTableDataCell>{cita.fecha}</CTableDataCell>
-                <CTableDataCell>
-                  <div className="d-flex gap-2 justify-content-center">
-                    <button
-                      className="btn btn-sm btn-info"
-                      title="Ver detalles"
-                      onClick={() => selectCitas(cita)}
-                    >
-                      <CIcon icon={cibCassandra} size="sm" />
-                    </button>
-                    {(rol === "doctor" || rol === "asistente") && (
+       
+          <CTable striped hover responsive>
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell>ID</CTableHeaderCell>
+                <CTableHeaderCell>Usuario</CTableHeaderCell>
+                <CTableHeaderCell>Doctor</CTableHeaderCell>
+                <CTableHeaderCell>Fecha</CTableHeaderCell>
+                <CTableHeaderCell>Opciones</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {citas.map((cita) => (
+                <CTableRow key={cita.id}>
+                  <CTableDataCell>{cita.id}</CTableDataCell>
+                  <CTableDataCell>
+                    {cita.usuario?.nombre || "N/A"}
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    {cita.doctor?.nombre || "N/A"}
+                  </CTableDataCell>
+                  <CTableDataCell>{cita.fecha}</CTableDataCell>
+                  <CTableDataCell>
+                    <div className="d-flex gap-2 justify-content-center">
+                      <button
+                        className="btn btn-sm btn-info"
+                        title="Ver detalles"
+                        onClick={() => selectCitas(cita)}
+                      >
+                        <CIcon icon={cibCassandra} size="sm" />
+                      </button>
+
                       <button
                         className="btn btn-sm btn-primary"
                         title="Editar"
@@ -104,21 +97,21 @@ function Consultarcitas() {
                       >
                         <CIcon icon={cilPenAlt} size="sm" />
                       </button>
-                    )}
-                    {rol === "doctor" && (
+                       {/* {rol === "usuario" && ( */}
                       <button
                         className="btn btn-sm btn-danger"
                         title="Eliminar"
                       >
                         <CIcon icon={cilXCircle} size="sm" />
                       </button>
-                    )}
-                  </div>
-                </CTableDataCell>
-              </CTableRow>
-            ))}
-          </CTableBody>
-        </CTable>
+                        {/* )} */}
+                    </div>
+                  </CTableDataCell>
+                </CTableRow>
+              ))}
+            </CTableBody>
+          </CTable>
+      
       </div>
     </CitasContext.Provider>
   );

@@ -1,13 +1,36 @@
 import { useCarrito } from "../../../contexts/CarritoContext";
 import { useNavigate } from "react-router-dom";
-
+import { usePerfilUsuario } from "../../../hooks/usePerfilUsuario";
+const API_URL = import.meta.env.VITE_API_URL;
+import axios from "axios";
 function Carrito() {
+  const { usuario } = usePerfilUsuario();
   const { carrito, eliminarDelCarrito, limpiarCarrito } = useCarrito();
   const navigate = useNavigate();
-  const irACita = () => {
-    navigate("/crearhistorialclinico");
-  };
+  const token = localStorage.getItem("token");
 
+  const verificarHistorialMedico = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/apihistorialmedico/buscarhistorialclinicoporusuario/${usuario.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data ? true : false;
+    } catch (error) {
+      console.log("Error al verificar el historial médico:", error);
+      return false;
+    }
+  };
+  const irACita = async () => {
+    const tieneHistorial = await verificarHistorialMedico();
+    if (tieneHistorial) {
+      navigate("/crearcita");
+    } else {
+      navigate("/crearhistorialclinico");
+    }
+  };
   return (
     <div className="container mt-5">
       <h2 className="mb-4">🛒 Mi Carrito</h2>

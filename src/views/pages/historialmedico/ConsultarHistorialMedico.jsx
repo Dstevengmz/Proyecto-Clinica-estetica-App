@@ -38,7 +38,6 @@ function ConsultaHistorialMedico() {
     axios
       .get(`${API_URL}/apihistorialmedico/listarhistorialclinico`,{
         headers: { Authorization: `Bearer ${token}`,
-          // "Content-Type": "application/json",
         },
       })
       .then((response) => {

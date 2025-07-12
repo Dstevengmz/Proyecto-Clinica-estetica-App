@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Form, Button, Container, Row, Col, Card } from "react-bootstrap";
+import { Form, Container, Row, Col, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-
+import Swal from "sweetalert2";
+import { useCarrito } from "../../../contexts/CarritoContext";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function RegistrarCitas() {
+  const { limpiarCarrito } = useCarrito();
   const [usuario, setUsuario] = useState({});
   const horariosDisponibles = [
     "08:00",
@@ -32,12 +34,11 @@ function RegistrarCitas() {
 
   const duraciones = {
     evaluacion: 30,
-    procedimiento: 150,
+    procedimiento: 60,
   };
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-
   const [usuarios, setUsuarios] = useState([]);
   const [horariosOcupados, setHorariosOcupados] = useState([]);
   const [horaSeleccionada, setHoraSeleccionada] = useState("");
@@ -143,6 +144,15 @@ function RegistrarCitas() {
     const fechaFormateada = `${formData.fecha} ${horaSeleccionada}:00`;
 
     try {
+      const orden = await axios.post(
+        `${API_URL}/apicitas/crearordendesdecita`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Orden creada:", orden.data);
+
       await axios.post(
         `${API_URL}/apicitas/crearcitas`,
         { ...formData, fecha: fechaFormateada },
@@ -153,12 +163,17 @@ function RegistrarCitas() {
           },
         }
       );
-      console.log("formData.fecha:", formData.fecha);
-      alert("Registro exitoso");
+
+      Swal.fire("Éxito", "Tu orden y cita han sido registradas Correctamente", "success");
+      limpiarCarrito();
       navigate("/dashboard");
     } catch (error) {
-      console.error("Error al registrar:", error);
-      alert("Hubo un error al registrar");
+      console.error("Error al registrar cita/orden:", error);
+      Swal.fire(
+        "Error",
+        "Hubo un error al registrar la orden o la cita",
+        "error"
+      );
     }
   };
 

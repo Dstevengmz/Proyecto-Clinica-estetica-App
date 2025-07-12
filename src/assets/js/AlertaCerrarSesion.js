@@ -1,5 +1,5 @@
 import Swal from "sweetalert2";
-import CerrarSesion from "../../views/pages/logout/CerrarSesion";
+
 const manejarCerrarSesion = (navigate, logout, location) => {
   Swal.fire({
     title: "¿Estás seguro de cerrar sesión?",
@@ -18,7 +18,12 @@ const manejarCerrarSesion = (navigate, logout, location) => {
         showConfirmButton: false,
         timer: 1500,
       }).then(() => {
-        CerrarSesion(navigate, logout, location);
+        // Llamar al logout del contexto
+        logout();
+        // Determinar destino
+        const x = location.pathname;
+        const destino = x.includes('/dashboard') ? '/iniciarsesion' : '/inicio'
+        navigate(destino);
       });
     }
   });

@@ -18,10 +18,12 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { cilLockLocked, cilUser } from "@coreui/icons";
+import { useAuth } from "../../../contexts/AuthenticaContext";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formulario, setFormulario] = useState({
     correo: "",
     contrasena: "",
@@ -43,7 +45,8 @@ const Login = () => {
       console.log("Respuesta del servidor:", respuesta.data);
       const { token } = respuesta.data;
       if (token) {
-        localStorage.setItem("token", token);
+        // Usar el contexto para hacer login
+        login(token);
         Swal.fire({
           position: "top-end",
           icon: "success",
