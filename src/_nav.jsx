@@ -8,9 +8,12 @@ import {
   // cilUser,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
+import ObtenerUserIdFromToken from './assets/js/ObtenerTokenDelUsuario'
 
-// Navegación para usuarios normales
-const getUserNavigation = () => [
+const getUserNavigation = () => {
+  const userId= ObtenerUserIdFromToken();
+  
+  return [
   {
     component: CNavItem,
     name: 'Panel de control',
@@ -29,7 +32,25 @@ const getUserNavigation = () => [
       },
     ],
   },
+    {
+    component: CNavGroup,
+    name: 'Historial Médico',
+    icon: <CIcon icon={cilMedicalCross} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: 'Crear',
+        to: '/crearhistorialclinico',
+      },
+      {
+        component: CNavItem,
+        name: 'Mi Historial Medico',
+        to:`/mihistorialclinico/${userId}`,
+      },
+    ],
+  },
 ]
+}
 
 // Navegación para doctores
 const getDoctorNavigation = () => [

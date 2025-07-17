@@ -31,6 +31,9 @@ import { HistorialClinicoContext } from "./views/pages/historialmedico/Consultar
 const CrearHistorialClinico = React.lazy(() =>
   import("./views/pages/historialmedico/CrearHistorialMedico")
 );
+const MiHistorialMedico = React.lazy(() =>
+  import("./views/pages/historialmedico/MiHistorialMedico")
+);
 const ConsultarHistorialMedico = React.lazy(() =>
   import("./views/pages/historialmedico/ConsultarHistorialMedico")
 );
@@ -165,6 +168,10 @@ const App = () => {
                 <Route
                   path="/editarhistorialmedico/:id"
                   element={<EditarHistorialMedico />}
+                />
+                <Route
+                  path="/mihistorialclinico/:id"
+                  element={<MiHistorialMedico />}
                 />
 
                 <Route path="/crearcita" element={<CrearCita />} />
