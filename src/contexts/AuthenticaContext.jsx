@@ -1,25 +1,20 @@
 import { createContext, useState, useEffect, useContext } from "react"
 
 const AuthContext = createContext()
-
 // Función para decodificar el token JWT y extraer el rol
 const getUserRoleFromToken = (token) => {
   try {
     if (!token) return null
-    
     // Verificar que el token tenga el formato correcto (3 partes separadas por puntos)
     const tokenParts = token.split('.')
     if (tokenParts.length !== 3) {
       console.error('Token JWT inválido: formato incorrecto')
       return null
     }
-    
     // Decodificar el payload del JWT (parte del medio)
     const payload = JSON.parse(atob(tokenParts[1]))
-    
     // Buscar el rol en diferentes posibles campos
     const role = payload.rol || payload.role || payload.tipoUsuario || payload.tipo_usuario || payload.userRole || null
-    
     console.log('Rol extraído del token:', role)
     return role
   } catch (error) {
@@ -31,7 +26,6 @@ const getUserRoleFromToken = (token) => {
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userRole, setUserRole] = useState(null)
-
   useEffect(() => {
     const token = localStorage.getItem("token")
     if (token) {
