@@ -25,6 +25,12 @@ const Servicios = React.lazy(() => import("./views/pages/servicios/Servicios"));
 const VistaServicios = React.lazy(() =>
   import("./views/pages/servicios/VistaServicios")
 );
+//Rutas de usuarios
+const ConsultarListausuarios = React.lazy(() =>
+  import("./views/pages/usuarios/ListaUsuarios")
+);
+import DetallesListarUsuarios from "./views/pages/usuarios/DetallesListaUsuarios";
+import { ListarUsuariosContext } from "./views/pages/usuarios/ListaUsuarios";
 
 //historialClinico
 import { HistorialClinicoContext } from "./views/pages/historialmedico/ConsultarHistorialMedico";
@@ -85,6 +91,7 @@ const App = () => {
     useState(null);
   const [selectedCitas, setSelectedCitas] = useState(null);
   const [selectedProcedimiento, setSelectedProcedimiento] = useState(null);
+  const [selectedListarusuarios, setSelectedListarusuarios] = useState(null);
   const { isColorModeSet, setColorMode } = useColorModes(
     "coreui-free-react-admin-template-theme"
   );
@@ -114,96 +121,110 @@ const App = () => {
         <ProcedimientoContext.Provider
           value={{ selectedProcedimiento, setSelectedProcedimiento }}
         >
-          <Control />
-          <Suspense
-            fallback={
-              <div className="pt-3 text-center">
-                <CSpinner color="primary" variant="grow" />
-              </div>
-            }
+          <ListarUsuariosContext.Provider
+            value={{ selectedListarusuarios, setSelectedListarusuarios }}
           >
-            <Routes>
-              <Route path="/" element={<Navigate to="/inicio" replace />} />
-              {/* Rutas públicas */}
-              <Route element={<PublicLayout />}>
-                <Route path="/iniciarsesion" element={<Login />} />
-                <Route path="/inicio" element={<Inicio />} />
-                <Route path="/servicios" element={<Servicios />} />
-                <Route path="/registrar" element={<Register />} />
+            <Control />
+            <Suspense
+              fallback={
+                <div className="pt-3 text-center">
+                  <CSpinner color="primary" variant="grow" />
+                </div>
+              }
+            >
+              <Routes>
+                <Route path="/" element={<Navigate to="/inicio" replace />} />
+                {/* Rutas públicas */}
+                <Route element={<PublicLayout />}>
+                  <Route path="/iniciarsesion" element={<Login />} />
+                  <Route path="/inicio" element={<Inicio />} />
+                  <Route path="/servicios" element={<Servicios />} />
+                  <Route path="/registrar" element={<Register />} />
+                  <Route
+                    path="/carrito"
+                    element={
+                      <RutaProtegida>
+                        <Carrito />
+                      </RutaProtegida>
+                    }
+                  />
+                  <Route path="/reservar/:id" element={<VistaServicios />} />
+                </Route>
+
+                {/* Rutas protegidas con layout */}
                 <Route
-                  path="/carrito"
                   element={
                     <RutaProtegida>
-                      <Carrito />
+                      <DefaultLayout />
                     </RutaProtegida>
                   }
-                />
-                <Route path="/reservar/:id" element={<VistaServicios />} />
-              </Route>
+                >
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/404" element={<Page404 />} />
+                  <Route path="/500" element={<Page500 />} />
 
-              {/* Rutas protegidas con layout */}
-              <Route
-                element={
-                  <RutaProtegida>
-                    <DefaultLayout />
-                  </RutaProtegida>
-                }
-              >
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/404" element={<Page404 />} />
-                <Route path="/500" element={<Page500 />} />
+                  <Route
+                    path="/crearhistorialclinico"
+                    element={<CrearHistorialClinico />}
+                  />
+                  {/* USUARIOS */}
+                  <Route
+                    path="/listarusuarios"
+                    element={<ConsultarListausuarios />}
+                  />
+                  <Route
+                    path="/DetallesListarUsuarios"
+                    element={<DetallesListarUsuarios />}
+                  />
 
-                <Route
-                  path="/crearhistorialclinico"
-                  element={<CrearHistorialClinico />}
-                />
-                <Route
-                  path="/consultarhistorialmedico"
-                  element={<ConsultarHistorialMedico />}
-                />
-                <Route
-                  path="/detalleshistorialmedico"
-                  element={<DetallesHistorialMedico />}
-                />
-                <Route
-                  path="/editarhistorialmedico/:id"
-                  element={<EditarHistorialMedico />}
-                />
-                <Route
-                  path="/mihistorialclinico/:id"
-                  element={<MiHistorialMedico />}
-                />
+                  <Route
+                    path="/consultarhistorialmedico"
+                    element={<ConsultarHistorialMedico />}
+                  />
+                  <Route
+                    path="/detalleshistorialmedico"
+                    element={<DetallesHistorialMedico />}
+                  />
+                  <Route
+                    path="/editarhistorialmedico/:id"
+                    element={<EditarHistorialMedico />}
+                  />
+                  <Route
+                    path="/mihistorialclinico/:id"
+                    element={<MiHistorialMedico />}
+                  />
 
-                <Route path="/crearcita" element={<CrearCita />} />
-                <Route path="/consultarcitas" element={<ConsultarCitas />} />
-                <Route path="/detallescitas" element={<DetallesCitas />} />
-                <Route path="/editarcita/:id" element={<Editarcita />} />
+                  <Route path="/crearcita" element={<CrearCita />} />
+                  <Route path="/consultarcitas" element={<ConsultarCitas />} />
+                  <Route path="/detallescitas" element={<DetallesCitas />} />
+                  <Route path="/editarcita/:id" element={<Editarcita />} />
 
-                <Route
-                  path="/crearprocedimiento"
-                  element={<CrearProcedimiento />}
-                />
-                <Route
-                  path="/consultarprocedimientos"
-                  element={<ConsultarProcedimientos />}
-                />
-                <Route
-                  path="/detallesprocedimientos"
-                  element={<DetallesProcedimientos />}
-                />
-                <Route
-                  path="/editarprocedimientos/:id"
-                  element={<EditarProcedimiento />}
-                />
-              </Route>
+                  <Route
+                    path="/crearprocedimiento"
+                    element={<CrearProcedimiento />}
+                  />
+                  <Route
+                    path="/consultarprocedimientos"
+                    element={<ConsultarProcedimientos />}
+                  />
+                  <Route
+                    path="/detallesprocedimientos"
+                    element={<DetallesProcedimientos />}
+                  />
+                  <Route
+                    path="/editarprocedimientos/:id"
+                    element={<EditarProcedimiento />}
+                  />
+                </Route>
 
-              {/* Cierre de sesión */}
-              <Route path="/cerrarsesion" element={<CerrarSesion />} />
+                {/* Cierre de sesión */}
+                <Route path="/cerrarsesion" element={<CerrarSesion />} />
 
-              {/* Ruta no encontrada */}
-              <Route path="*" element={<Navigate to="/404" />} />
-            </Routes>
-          </Suspense>
+                {/* Ruta no encontrada */}
+                <Route path="*" element={<Navigate to="/404" />} />
+              </Routes>
+            </Suspense>
+          </ListarUsuariosContext.Provider>
         </ProcedimientoContext.Provider>
       </CitasContext.Provider>
     </HistorialClinicoContext.Provider>

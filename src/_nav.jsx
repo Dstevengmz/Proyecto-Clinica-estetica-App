@@ -111,6 +111,18 @@ const getDoctorNavigation = () => [
       },
     ],
   },
+    {
+    component: CNavGroup,
+    name: 'Usuarios',
+    icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: 'lista de Usuarios',
+        to: '/listarusuarios',
+      },
+    ],
+  },
 ]
 
 // Función principal que retorna la navegación según el rol

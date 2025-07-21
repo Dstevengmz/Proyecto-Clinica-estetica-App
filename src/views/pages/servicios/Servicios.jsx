@@ -6,7 +6,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 function Servicios() {
   const [procedimientos, setProcedimientos] = useState([]);
-
   useEffect(() => {
     axios
       .get(`${API_URL}/apiprocedimientos/listarprocedimiento`)
