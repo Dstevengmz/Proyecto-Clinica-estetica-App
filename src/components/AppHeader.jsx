@@ -16,7 +16,6 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
-  cilBell,
   cilContrast,
   cilEnvelopeOpen,
   cilList,
@@ -28,6 +27,7 @@ import {
 import { AppBreadcrumb } from './index'
 import { AppHeaderDropdown } from './header/index'
 import UserInfo from './UserInfo'
+import NotificationBell from './NotificationBell'
 
 const AppHeader = () => {
   const headerRef = useRef()
@@ -66,11 +66,7 @@ const AppHeader = () => {
           </CNavItem>
         </CHeaderNav>
         <CHeaderNav className="ms-auto">
-          <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilBell} size="lg" />
-            </CNavLink>
-          </CNavItem>
+          <NotificationBell />
           <CNavItem>
             <CNavLink href="#">
               <CIcon icon={cilList} size="lg" />

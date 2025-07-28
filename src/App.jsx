@@ -49,6 +49,7 @@ const DetallesHistorialMedico = React.lazy(() =>
 const EditarHistorialMedico = React.lazy(() =>
   import("./views/pages/historialmedico/EditarHistorialMedico")
 );
+const HistorialNotificaciones = React.lazy(() => import('./views/pages/notificaciones/HistorialNotificaciones'))
 //citas
 import { CitasContext } from "./views/pages/citas/ConsultarCitas";
 const CrearCita = React.lazy(() => import("./views/pages/citas/RegistrarCita"));
@@ -198,6 +199,7 @@ const App = () => {
                   <Route path="/consultarcitas" element={<ConsultarCitas />} />
                   <Route path="/detallescitas" element={<DetallesCitas />} />
                   <Route path="/editarcita/:id" element={<Editarcita />} />
+                  
 
                   <Route
                     path="/crearprocedimiento"
@@ -215,6 +217,15 @@ const App = () => {
                     path="/editarprocedimientos/:id"
                     element={<EditarProcedimiento />}
                   />
+                  <Route
+                    path="/historial-notificaciones"
+                    element={
+                      <RutaProtegida>
+                        <HistorialNotificaciones />
+                      </RutaProtegida>
+                    }
+                  />
+
                 </Route>
 
                 {/* Cierre de sesión */}

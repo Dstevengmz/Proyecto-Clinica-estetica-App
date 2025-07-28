@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import useListarUsuario from "../../../hooks/useListaDeUsuarios";
 import useCambiarEstado from "../../../hooks/useCambiarEstadoUsuario";
@@ -24,6 +24,39 @@ function ConsultarListaUsuarios() {
   const { selectedListarusuarios, setSelectedListarusuarios } = useListarUsuariosContext();
   const { cambiarEstado, cargando, error } = useCambiarEstado();
   const navigate = useNavigate();
+  
+  // Estado para el buscador
+  const [terminoBusqueda, setTerminoBusqueda] = useState("");
+
+  // Filtrar usuarios basado en el término de búsqueda
+  const usuariosFiltrados = useMemo(() => {
+    if (!terminoBusqueda.trim()) {
+      return usuario;
+    }
+    
+    const termino = terminoBusqueda.toLowerCase().trim();
+    return usuario.filter((user) => {
+      return (
+        (user.nombre && user.nombre.toLowerCase().includes(termino)) ||
+        (user.numerodocumento && user.numerodocumento.toString().includes(termino)) ||
+        (user.correo && user.correo.toLowerCase().includes(termino)) ||
+        (user.rol && user.rol.toLowerCase().includes(termino)) ||
+        (user.tipodocumento && user.tipodocumento.toLowerCase().includes(termino)) ||
+        (user.genero && user.genero.toLowerCase().includes(termino)) ||
+        (user.id && user.id.toString().includes(termino))
+      );
+    });
+  }, [usuario, terminoBusqueda]);
+
+  // Manejar el cambio en el input de búsqueda
+  const handleBusquedaChange = (e) => {
+    setTerminoBusqueda(e.target.value);
+  };
+
+  // Limpiar búsqueda
+  const limpiarBusqueda = () => {
+    setTerminoBusqueda("");
+  };
 
   const selectUser = (listausuarios) => {
     setSelectedListarusuarios(listausuarios);
@@ -49,17 +82,52 @@ function ConsultarListaUsuarios() {
       <div className="card-body">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h1 className="mb-0">Lista De usuarios</h1>
-          <CForm className="d-flex" role="search">
+          <CForm className="d-flex" role="search" onSubmit={(e) => e.preventDefault()}>
             <CFormInput
               type="search"
               className="me-2"
-              placeholder="Buscar..."
+              placeholder="Buscar por nombre, documento, correo, rol..."
+              value={terminoBusqueda}
+              onChange={handleBusquedaChange}
+              style={{ minWidth: "300px" }}
             />
-            <CButton type="submit" color="success" variant="outline">
-              Buscar
+            {terminoBusqueda && (
+              <CButton 
+                type="button" 
+                color="secondary" 
+                variant="outline" 
+                className="me-2"
+                onClick={limpiarBusqueda}
+                title="Limpiar búsqueda"
+              >
+                <i className="bi bi-x-lg"></i>
+              </CButton>
+            )}
+            <CButton type="button" color="success" variant="outline">
+              <i className="bi bi-search"></i>
             </CButton>
           </CForm>
         </div>
+        
+        {/* Mostrar información de resultados de búsqueda */}
+        {terminoBusqueda && (
+          <div className="mb-3">
+            <div className="alert alert-info d-flex justify-content-between align-items-center">
+              <span>
+                <i className="bi bi-info-circle me-2"></i>
+                Mostrando {usuariosFiltrados.length} de {usuario.length} usuarios
+                {terminoBusqueda && ` para "${terminoBusqueda}"`}
+              </span>
+              {usuariosFiltrados.length === 0 && (
+                <span className="text-muted">
+                  <i className="bi bi-search me-1"></i>
+                  No se encontraron resultados
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+        
         <CTable striped hover responsive>
           <CTableHead>
             <CTableRow>
@@ -75,7 +143,24 @@ function ConsultarListaUsuarios() {
             </CTableRow>
           </CTableHead>
           <CTableBody>
-            {usuario.map((usuario) => (
+            {usuariosFiltrados.length === 0 ? (
+              <CTableRow>
+                <CTableDataCell colSpan="9" className="text-center text-muted py-4">
+                  {terminoBusqueda ? (
+                    <>
+                      <i className="bi bi-search me-2"></i>
+                      No se encontraron usuarios que coincidan con "{terminoBusqueda}"
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-person-x me-2"></i>
+                      No hay usuarios registrados
+                    </>
+                  )}
+                </CTableDataCell>
+              </CTableRow>
+            ) : (
+              usuariosFiltrados.map((usuario) => (
               <CTableRow key={usuario.id}>
                 <CTableDataCell>{usuario.id}</CTableDataCell>
                 <CTableDataCell>
@@ -137,7 +222,8 @@ function ConsultarListaUsuarios() {
                   </div>
                 </CTableDataCell>
               </CTableRow>
-            ))}
+              ))
+            )}
           </CTableBody>
         </CTable>
       </div>

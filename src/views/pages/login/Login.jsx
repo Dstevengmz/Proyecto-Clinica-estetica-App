@@ -45,7 +45,6 @@ const Login = () => {
       console.log("Respuesta del servidor:", respuesta.data);
       const { token } = respuesta.data;
       if (token) {
-        // Usar el contexto para hacer login
         login(token);
         Swal.fire({
           position: "top-end",
@@ -67,12 +66,20 @@ const Login = () => {
       }
     } catch (error) {
       console.log("Error con las credenciales", error);
+       if (error.response && error.response.status === 429) {
+    Swal.fire({
+      icon: "warning",
+      title: "Demasiados intentos",
+      text: error.response.data.mensaje || "Intenta más tarde",
+    });
+  }else{
       Swal.fire({
         icon: "error",
         title: "Error al iniciar sesión",
         text: "Correo o contraseña incorrectos",
       });
     }
+  }
   };
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
