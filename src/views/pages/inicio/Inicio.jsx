@@ -61,7 +61,7 @@ const Inicio = () => {
         </p>
       </div>
       {/* NUESTRO EQUIPO MÉDICO */}
-      
+
 <div className="row text-center">
   <div className="col-md-4 mb-4">
     <div className="card h-100 card-profile-small">
@@ -144,86 +144,89 @@ const Inicio = () => {
       
 
       {/* SERVICIOS */}
-      <div className="container-fluid px-5 my-5">
-        <h2 className="text-center mb-4">Nuestros Servicios</h2>
-        <div className="row">
-          <div className="col-md-4 mb-3">
-            <div className="card h-100">
-              <img
-                src="https://renewsteticspa.com/wp-content/uploads/2022/01/foto-limpieza-facial-pagina-1024x682.png"
-                className="card-img-top"
-                alt="servicio1"
-              />
-              <div className="card-body">
-                <h5 className="card-title">Limpieza Facial</h5>
-                <p className="card-text">
-                  Tratamientos para revitalizar tu piel y dejarla luminosa.
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4 mb-3">
-            <div className="card h-100">
-              <img
-                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNas_ErSqfomrqsZ0CihUNm9GF77MBlwTTcQ&s"
-                className="card-img-top"
-                alt="servicio2"
-              />
-              <div className="card-body">
-                <h5 className="card-title">Depilación Láser</h5>
-                <p className="card-text">
-                  Eliminación del vello de forma segura y efectiva.
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4 mb-3">
-            <div className="card h-100">
-              <img
-                src="data:image/jpeg;base64,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"
-                className="card-img-top"
-                alt="servicio3"
-              />
-              <div className="card-body">
-                <h5 className="card-title">Masajes Relajantes</h5>
-                <p className="card-text">
-                  Libérate del estrés con nuestras terapias personalizadas.
-                </p>
-              </div>
-            </div>
-          </div>
+      
+<div className="container-fluid px-5 my-5">
+  <h2 className="text-center mb-4">Nuestros Servicios</h2>
+  <div className="overflow-auto" style={{ whiteSpace: "nowrap" }}>
+    <div className="d-inline-flex" style={{ gap: "1rem" }}>
+      {/* Servicio 1 */}
+      <div className="card h-100" style={{ width: "250px", display: "inline-block" }}>
+        <img
+          src="https://renewsteticspa.com/wp-content/uploads/2022/01/foto-limpieza-facial-pagina-1024x682.png"
+          className="card-img-top"
+          alt="servicio1"
+          style={{ height: "150px", objectFit: "cover" }}
+        />
+        <div className="card-body">
+          <h5 className="card-title">Limpieza Facial</h5>
+          <p className="card-text">
+            Tratamientos para revitalizar <br/>rtu piel y dejarla luminosa.
+          </p>
         </div>
       </div>
-
-      <div className="container-fluid bg-dark px-5 py-5">
-        <h2 className="text-center mb-4">Contáctanos</h2>
-        <form>
-          <div className="row mb-3">
-            <div className="col-md-6">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Nombre completo"
-              />
-            </div>
-            <div className="col-md-6">
-              <input
-                type="email"
-                className="form-control"
-                placeholder="Correo electrónico"
-              />
-            </div>
-          </div>
-          <div className="mb-3">
-            <textarea className="form-control" rows="4" placeholder="Mensaje" />
-          </div>
-          <div className="text-center">
-            <button type="submit" className="btn btn-primary">
-              Enviar mensaje
-            </button>
-          </div>
-        </form>
+      {/* Servicio 2 */}
+      <div className="card h-100" style={{ width: "250px", display: "inline-block" }}>
+        <img
+          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNas_ErSqfomrqsZ0CihUNm9GF77MBlwTTcQ&s"
+          className="card-img-top"
+          alt="servicio2"
+          style={{ height: "150px", objectFit: "cover" }}
+        />
+        <div className="card-body">
+          <h5 className="card-title">Depilación Láser</h5>
+          <p className="card-text">
+            Eliminación del vello <br/> de forma segura y efectiva.
+          </p>
+        </div>
       </div>
+      {/* Servicio 3 */}
+      <div className="card h-100" style={{ width: "250px", display: "inline-block" }}>
+        <img
+          src="data:image/jpeg;base64,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"
+          className="card-img-top"
+          alt="servicio3"
+          style={{ height: "150px", objectFit: "cover" }}
+        />
+        <div className="card-body">
+          <h5 className="card-title">Masajes Relajantes</h5>
+          <p className="card-text">
+            Libérate del estrés con nuestras <br/> terapias personalizadas.
+          </p>
+        </div>
+      </div>
+      {/* Puedes agregar más servicios aquí, repitiendo el bloque de card */}
+      <div className="card h-100" style={{ width: "250px", display: "inline-block" }}>
+        <img
+          src="https://images.pexels.com/photos/3757942/pexels-photo-3757942.jpeg"
+          className="card-img-top"
+          alt="servicio4"
+          style={{ height: "150px", objectFit: "cover" }}
+        />
+        <div className="card-body">
+          <h5 className="card-title">Radiofrecuencia Facial</h5>
+          <p className="card-text">
+            Mejora la firmeza y elasticidad <br/> de tu piel con tecnología <br/> avanzada.
+          </p>
+        </div>
+      </div>
+      <div className="card h-100" style={{ width: "250px", display: "inline-block" }}>
+        <img
+          src="https://images.pexels.com/photos/3997987/pexels-photo-3997987.jpeg"
+          className="card-img-top"
+          alt="servicio5"
+          style={{ height: "150px", objectFit: "cover" }}
+        />
+        <div className="card-body">
+          <h5 className="card-title">Tratamientos Corporales</h5>
+          <p className="card-text">
+            Moldea tu figura y mejora <br/> tu bienestar integral.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
       {/* FOOTER */}
       <footer className="bg-dark text-white text-center py-4 w-100">
