@@ -152,7 +152,7 @@ const Inicio = () => {
       {/* Servicio 1 */}
       <div className="card h-100" style={{ width: "250px", display: "inline-block" }}>
         <img
-          src="https://renewsteticspa.com/wp-content/uploads/2022/01/foto-limpieza-facial-pagina-1024x682.png"
+          src="https://tse3.explicit.bing.net/th/id/OIP.JwmG9VvsJfBIUsm7Xk-pigHaHa?pid=Api&P=0&h=180"
           className="card-img-top"
           alt="servicio1"
           style={{ height: "150px", objectFit: "cover" }}

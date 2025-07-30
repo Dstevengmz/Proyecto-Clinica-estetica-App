@@ -149,7 +149,7 @@ const App = () => {
                       </RutaProtegida>
                     }
                   />
-                  <Route path="/reservar/:id" element={<VistaServicios />} />
+                  <Route path="/servicios/:id" element={<VistaServicios />} />
                 </Route>
 
                 {/* Rutas protegidas con layout */}

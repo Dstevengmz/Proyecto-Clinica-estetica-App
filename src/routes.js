@@ -1,10 +1,15 @@
-import React from 'react'
+import React from 'react';
+const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'));
 
-const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
-//HistorialClinico
+// Importa tus componentes de servicios
+import ListaServicios from './views/pages/servicios/ListaServicios';
+import VistaServicios from './views/pages/servicios/VistaServicios';
+
 const routes = [
   { path: '/', exact: true, name: 'Home' },
-  { path: '/dashboard', name: 'Dashboard', element: Dashboard },
-]
+  { path: '/dashboard', name: 'Dashboard', element: <Dashboard /> },
+  { path: '/servicios', name: 'Servicios', element: <ListaServicios /> },
+  { path: '/servicios/:id', name: 'VistaServicio', element: <VistaServicios /> }
+];
 
-export default routes
+export default routes;
