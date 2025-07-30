@@ -34,6 +34,7 @@ const Register = () => {
   const [confirmar, setConfirmar] = useState("");
   const [rol, setRol] = useState("");
   const [genero, setGenero] = useState("");
+  const [terminos,setTerminos] = useState(false);
 
   const mostrarErrores = (errores) => {
     const lista = errores.map((e) => `<li>${e}</li>`).join("");
@@ -57,8 +58,10 @@ const Register = () => {
     if (!tipodocumento) errores.push("Debe seleccionar un tipo de documento");
     if (!numerodocumento.trim())
       errores.push("El número de documento es obligatorio");
-    else if (numerodocumento.trim().length < 5)
-      errores.push("El número de documento debe tener al menos 5 caracteres");
+    else if (numerodocumento.trim().length < 7)
+      errores.push("El número de documento debe tener al menos 7 caracteres");
+    else if (numerodocumento.trim().length > 10)
+      errores.push("El número de documento no puede tener más de 10 caracteres");
 
     if (!correo.trim()) errores.push("El correo electrónico es obligatorio");
     else if (!/\S+@\S+\.\S+/.test(correo))
@@ -76,6 +79,7 @@ const Register = () => {
       errores.push("El número de teléfono no es válido");
 
     if (!genero) errores.push("Debe seleccionar un género");
+    if (!terminos) errores.push("Debe aceptar los términos y condiciones");
 
     return errores;
   };
@@ -96,6 +100,7 @@ const Register = () => {
         rol,
         telefono: phone,
         genero,
+        terminos_condiciones: terminos,
       });
 
       Swal.fire({
@@ -176,10 +181,18 @@ const Register = () => {
                     <CFormInput
                       placeholder="Numero de documento"
                       autoComplete="Numero de documento"
+                      maxlength="10"
+                      pattern="[0-9]*"
                       required
                       value={numerodocumento}
-                      onChange={(e) => setNumerodocumento(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '');
+                        if (value.length <= 10) {
+                          setNumerodocumento(value);
+                        }
+                      }}
                     />
+                    
                   </CInputGroup>
 
                   <CInputGroup className="mb-3">
@@ -289,15 +302,28 @@ const Register = () => {
                       ]}
                     />
                   </CInputGroup>
+                  <div className="form-check mb-3">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="terminos"
+                      checked={terminos}
+                      onChange={(e) => setTerminos(e.target.checked)}
+                    />
+                    <label className="form-check-label" htmlFor="terminos">
+                      Acepto los{" "}
+                      <Link to="/terminoscondiciones">términos y condiciones</Link>
+                    </label>
+                  </div>
                   <div className="d-grid">
                     <CButton type="submit" color="success">
                       Crear cuenta
                     </CButton>
                     <CCol xs={8} className="text-right">
                       <Link to="/iniciarsesion">
-                      <CButton color="link" className="px-0">
-                        ¿Ya tengo una cuenta?
-                      </CButton>
+                        <CButton color="link" className="px-0">
+                          ¿Ya tengo una cuenta?
+                        </CButton>
                       </Link>
                     </CCol>
                   </div>
