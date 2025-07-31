@@ -15,6 +15,11 @@ import TokenExpiradoAlerta from "./assets/js/MensajeTokenEXpirado";
 const DefaultLayout = React.lazy(() => import("./layout/DefaultLayout"));
 const PublicLayout = React.lazy(() => import("./layout/PublicLayout"));
 
+//Terminos y condiciones ruta
+const TerminosyCondiciones = React.lazy(() =>
+  import("./views/pages/politicas/terminosycondiciones")
+);
+
 // Pages
 const Login = React.lazy(() => import("./views/pages/login/Login"));
 const Register = React.lazy(() => import("./views/pages/register/Register"));
@@ -49,7 +54,9 @@ const DetallesHistorialMedico = React.lazy(() =>
 const EditarHistorialMedico = React.lazy(() =>
   import("./views/pages/historialmedico/EditarHistorialMedico")
 );
-const HistorialNotificaciones = React.lazy(() => import('./views/pages/notificaciones/HistorialNotificaciones'))
+const HistorialNotificaciones = React.lazy(() =>
+  import("./views/pages/notificaciones/HistorialNotificaciones")
+);
 //citas
 import { CitasContext } from "./views/pages/citas/ConsultarCitas";
 const CrearCita = React.lazy(() => import("./views/pages/citas/RegistrarCita"));
@@ -141,6 +148,11 @@ const App = () => {
                   <Route path="/inicio" element={<Inicio />} />
                   <Route path="/servicios" element={<Servicios />} />
                   <Route path="/registrar" element={<Register />} />
+                  {/* terminos y condiciones */}
+                  <Route
+                    path="/terminoscondiciones"
+                    element={<TerminosyCondiciones />}
+                  />
                   <Route
                     path="/carrito"
                     element={
@@ -168,6 +180,7 @@ const App = () => {
                     path="/crearhistorialclinico"
                     element={<CrearHistorialClinico />}
                   />
+
                   {/* USUARIOS */}
                   <Route
                     path="/listarusuarios"
@@ -199,7 +212,6 @@ const App = () => {
                   <Route path="/consultarcitas" element={<ConsultarCitas />} />
                   <Route path="/detallescitas" element={<DetallesCitas />} />
                   <Route path="/editarcita/:id" element={<Editarcita />} />
-                  
 
                   <Route
                     path="/crearprocedimiento"
@@ -225,7 +237,6 @@ const App = () => {
                       </RutaProtegida>
                     }
                   />
-
                 </Route>
 
                 {/* Cierre de sesión */}

@@ -35,6 +35,10 @@ export default defineConfig({
    server: {
     host: '0.0.0.0', 
     port: 5173,       
-    open: true,      
+    open: true,
+    // Esto permitirá acceder tanto desde localhost como desde la IP
+    hmr: {
+      host: 'localhost'
+    }
   }
 })
