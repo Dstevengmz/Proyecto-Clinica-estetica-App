@@ -194,13 +194,6 @@ const Inicio = () => {
           </div>
         </form>
       </div>
-
-      {/* FOOTER */}
-      <footer className="bg-dark text-white text-center py-4 w-100">
-        <p className="mb-0">
-          © 2025 Clínica Estética. Todos los derechos reservados.
-        </p>
-      </footer>
     </div>
   );
 };

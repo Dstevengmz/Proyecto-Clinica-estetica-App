@@ -12,7 +12,6 @@ const FooterPublico = () => {
               Comprometidos con tu bienestar y belleza. Agenda tu cita con nosotros hoy mismo.
             </p>
           </div>
-
           <div className="col-lg-6 text-lg-end text-center">
             <p className="mb-1">
               <a href="/terminos" className="text-decoration-none text-muted me-3">Términos</a>

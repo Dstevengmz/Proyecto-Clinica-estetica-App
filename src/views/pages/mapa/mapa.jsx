@@ -31,7 +31,7 @@ function MapaConRuta() {
   const solicitarUbicacion = () => {
     setSolicitandoUbicacion(true);
     setError(null);
-    
+
     if (!navigator.geolocation) {
       setError("La geolocalización no está disponible en este navegador");
       setSolicitandoUbicacion(false);
@@ -70,12 +70,17 @@ function MapaConRuta() {
       (error) => {
         setSolicitandoUbicacion(false);
         let errorMessage = "No se pudo obtener tu ubicación. ";
-        switch(error.code) {
+        switch (error.code) {
           case error.PERMISSION_DENIED:
-            if (window.location.protocol === 'http:' && !window.location.hostname.includes('localhost')) {
-              errorMessage += "Los navegadores requieren HTTPS para geolocalización. Prueba accediendo desde localhost o configura HTTPS.";
+            if (
+              window.location.protocol === "http:" &&
+              !window.location.hostname.includes("localhost")
+            ) {
+              errorMessage +=
+                "Los navegadores requieren HTTPS para geolocalización. Prueba accediendo desde localhost o configura HTTPS.";
             } else {
-              errorMessage += "Permiso denegado. Por favor, permite el acceso a la ubicación en tu navegador.";
+              errorMessage +=
+                "Permiso denegado. Por favor, permite el acceso a la ubicación en tu navegador.";
             }
             break;
           case error.POSITION_UNAVAILABLE:
@@ -93,7 +98,7 @@ function MapaConRuta() {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 60000
+        maximumAge: 60000,
       }
     );
   };
@@ -121,12 +126,19 @@ function MapaConRuta() {
       <div className="text-center my-5">
         <div className="alert alert-danger">
           <h5>Error cargando Google Maps</h5>
-          <p><strong>Error:</strong> {loadError.message}</p>
+          <p>
+            <strong>Error:</strong> {loadError.message}
+          </p>
           <hr />
           <h6>Posibles soluciones:</h6>
           <ul className="text-start">
-            <li>Verifica la configuración de tu API key en Google Cloud Console</li>
-            <li>Asegúrate de que las APIs estén habilitadas (Maps JavaScript API, Directions API)</li>
+            <li>
+              Verifica la configuración de tu API key en Google Cloud Console
+            </li>
+            <li>
+              Asegúrate de que las APIs estén habilitadas (Maps JavaScript API,
+              Directions API)
+            </li>
             <li>Revisa las restricciones de dominio de la API key</li>
           </ul>
         </div>
@@ -134,7 +146,8 @@ function MapaConRuta() {
     );
   }
 
-  if (!isLoaded || loading) return <p className="text-center my-5">Cargando mapa...</p>;
+  if (!isLoaded || loading)
+    return <p className="text-center my-5">Cargando mapa...</p>;
 
   if (error) {
     return (
@@ -150,7 +163,9 @@ function MapaConRuta() {
         >
           <Marker position={clinicaUbicacion} label="Clínica" />
         </GoogleMap>
-        <p className="text-muted mt-2">Mapa básico mostrando solo la ubicación de la clínica</p>
+        <p className="text-muted mt-2">
+          Mapa básico mostrando solo la ubicación de la clínica
+        </p>
       </div>
     );
   }
@@ -166,18 +181,22 @@ function MapaConRuta() {
         {posCliente && <Marker position={posCliente} label="Tú" />}
         {direccion && <DirectionsRenderer directions={direccion} />}
       </GoogleMap>
-      
+
       <div className="text-center mt-3">
         {!posCliente && !error && (
           <div>
-            <button 
-              className="btn btn-primary" 
+            <button
+              className="btn btn-primary"
               onClick={solicitarUbicacion}
               disabled={solicitandoUbicacion}
             >
               {solicitandoUbicacion ? (
                 <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
                   Obteniendo ubicación...
                 </>
               ) : (
@@ -185,15 +204,10 @@ function MapaConRuta() {
               )}
             </button>
             <p className="text-muted mt-2 small">
-              Haz clic para permitir el acceso a tu ubicación y ver la ruta a la clínica
+              Haz clic para permitir el acceso a tu ubicación y ver la ruta a la
+              clínica
             </p>
           </div>
-        )}
-        
-        {posCliente && !error && (
-          <p className="text-success">
-            ✅ Ruta calculada desde tu ubicación hasta la clínica
-          </p>
         )}
       </div>
     </div>
