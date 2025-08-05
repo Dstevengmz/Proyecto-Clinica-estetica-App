@@ -9,6 +9,9 @@ import useListarUsuario from "../../../hooks/useListaDeUsuarios";
 import useHorariosDisponible from "../../../hooks/useHorariosDisponible";
 import horariosDisponibles from "../../../assets/js/HorariosDisponibles";
 import estaOcupado from "../../../assets/js/HorarioEstaOcupado";
+import Cargando from "../../../components/Cargando";
+import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 function RegistrarCitas() {
@@ -19,37 +22,14 @@ function RegistrarCitas() {
   const token = localStorage.getItem("token");
 
   const [horaSeleccionada, setHoraSeleccionada] = useState("");
-  const [formData, setFormData] = useState({
-    id_usuario: "",
-    id_doctor: "",
-    fecha: "",
-    estado: "pendiente",
-    tipo: "",
-    observaciones: "",
+  const [formData, setFormData] = useState({ id_usuario: "", id_doctor: "", fecha: "", estado: "pendiente", tipo: "", observaciones: "",
   });
 
-  const {
-    horariosOcupados,
-    cargando: cargandoHorarios,
-    error,
+  const { horariosOcupados, cargando: cargandoHorarios, error,
   } = useHorariosDisponible(formData.fecha, formData.tipo, token);
 
   useEffect(() => {
-    console.log("Estado del hook:", {
-      fecha: formData.fecha,
-      tipo: formData.tipo,
-      horariosOcupados,
-      cargandoHorarios,
-      error,
-      token: token ? "Presente" : " No presente",
-    });
-  }, [
-    formData.fecha,
-    formData.tipo,
-    horariosOcupados,
-    cargandoHorarios,
-    error,
-    token,
+  }, [ formData.fecha, formData.tipo, horariosOcupados, cargandoHorarios, error, token,
   ]);
 
   useEffect(() => {
@@ -119,81 +99,23 @@ function RegistrarCitas() {
   };
 
   if (cargando || cargandoUsuarios || cargandoHorarios) {
-    return (
-      <Container>
-        <div
-          className="d-flex justify-content-center align-items-center"
-          style={{ minHeight: "200px" }}
-        >
-          <div>Cargando información...</div>
-        </div>
-      </Container>
-    );
+ return <Cargando texto="Cargando Informacion" />;
   }
 
   if (!usuario || !usuario.id) {
-    return (
-      <Container>
-        <div className="alert alert-warning">
-          No se pudo cargar la información del usuario. Por favor, inicie sesión
-          nuevamente.
-        </div>
-      </Container>
-    );
+    return <Cargando texto=" No se pudo cargar la información del usuario. Por favor, inicie sesión nuevamente." />;
   }
 
   return (
     <Container>
       <h1 className="mt-4">Registrar Cita</h1>
       {error && <div className="alert alert-danger">{error}</div>}
-      <Card className="mb-4">
-        <Card.Body>
-          <h4>Detalles del Usuario</h4>
-          <Row>
-            <Col md={6}>
-              <p>
-                <strong>Nombre:</strong> {usuario?.nombre || "No disponible"}
-              </p>
-            </Col>
-            <Col md={6}>
-              <p>
-                <strong>Correo:</strong> {usuario?.correo || "No disponible"}
-              </p>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={6}>
-              <p>
-                <strong>Teléfono:</strong>{" "}
-                {usuario?.telefono || "No disponible"}
-              </p>
-            </Col>
-            <Col md={6}>
-              <p>
-                <strong>Dirección:</strong>{" "}
-                {usuario?.direccion || "No disponible"}
-              </p>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={6}>
-              <p>
-                <strong>Rol:</strong> {usuario?.rol || "No disponible"}
-              </p>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
+      <InformacionUsuario usuario={usuario} />
       <Form onSubmit={ManejarEnvio}>
         <input type="hidden" name="id_usuario" value={formData.id_usuario} />
         <div className="mb-3">
           <label className="form-label">Doctor:</label>
-          <select
-            name="id_doctor"
-            className="form-select"
-            value={formData.id_doctor}
-            onChange={manejarCambio}
-            required
+          <select name="id_doctor" className="form-select" value={formData.id_doctor} onChange={manejarCambio} required
           >
             <option value="">Seleccione un Doctor</option>
             {usuarios && usuarios.length > 0 ? (
@@ -212,12 +134,7 @@ function RegistrarCitas() {
 
         <div className="mb-3">
           <label className="form-label">Tipo:</label>
-          <select
-            className="form-select"
-            name="tipo"
-            value={formData.tipo}
-            onChange={manejarCambio}
-            required
+          <select className="form-select" name="tipo" value={formData.tipo} onChange={manejarCambio} required
           >
             <option value="">Seleccione tipo</option>
             <option value="evaluacion">Evaluación</option>
@@ -227,25 +144,13 @@ function RegistrarCitas() {
 
         <div className="mb-3">
           <label className="form-label">Fecha:</label>
-          <input
-            type="date"
-            name="fecha"
-            className="form-control"
-            value={formData.fecha}
-            onChange={manejarCambio}
-            min={new Date().toISOString().split("T")[0]}
-            required
+          <input type="date" name="fecha" className="form-control" value={formData.fecha} onChange={manejarCambio} min={new Date().toISOString().split("T")[0]} required
           />
         </div>
 
         <div className="mb-3">
           <label className="form-label">Hora:</label>
-          <select
-            className="form-select"
-            value={horaSeleccionada}
-            onChange={(e) => setHoraSeleccionada(e.target.value)}
-            required
-            disabled={!formData.fecha || !formData.tipo || cargandoHorarios}
+          <select className="form-select" value={horaSeleccionada} onChange={(e) => setHoraSeleccionada(e.target.value)} required disabled={!formData.fecha || !formData.tipo || cargandoHorarios}
           >
             <option value="">
               {!formData.fecha || !formData.tipo
@@ -258,14 +163,7 @@ function RegistrarCitas() {
               formData.tipo &&
               !cargandoHorarios &&
               horariosDisponibles.map((hora) => (
-                <option
-                  key={hora}
-                  value={hora}
-                  disabled={estaOcupado(
-                    hora,
-                    horariosOcupados,
-                    cargandoHorarios,
-                    formData
+                <option key={hora} value={hora} disabled={estaOcupado( hora, horariosOcupados, cargandoHorarios, formData
                   )}
                 >
                   {hora}{" "}
@@ -285,13 +183,7 @@ function RegistrarCitas() {
 
         <div className="mb-3">
           <label className="form-label">Observaciones:</label>
-          <textarea
-            name="observaciones"
-            className="form-control"
-            value={formData.observaciones}
-            onChange={manejarCambio}
-            rows={3}
-            placeholder="Ingrese observaciones adicionales (opcional)"
+          <textarea name="observaciones" className="form-control" value={formData.observaciones} onChange={manejarCambio} rows={3} placeholder="Ingrese observaciones adicionales (opcional)"
           />
         </div>
 
@@ -309,10 +201,7 @@ function RegistrarCitas() {
           >
             {cargandoHorarios ? "Verificando horarios..." : "Registrar Cita"}
           </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => navigate("/dashboard")}
+          <button type="button" className="btn btn-secondary" onClick={() => navigate("/dashboard")}
           >
             Cancelar
           </button>

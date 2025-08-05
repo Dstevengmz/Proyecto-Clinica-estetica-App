@@ -1,41 +1,60 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
-function useCitaPorId(id, token) {
-  const [cita, setCita] = useState(null);
-  const [hora, setHora] = useState("");
-  const [cargando, setCargando] = useState(true);
+const useActualizarCita = (id, formulario, hora, token) => {
+  const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!id || !token) return;
+  const actualizarCita = async (e) => {
+    e.preventDefault();
 
-    const fetchCita = async () => {
-      setCargando(true);
-      setError(null);
+    if (!formulario.id_doctor) {
+      alert("Por favor seleccione un doctor");
+      return;
+    }
+    if (!formulario.tipo) {
+      alert("Por favor seleccione el tipo de cita");
+      return;
+    }
+    if (!formulario.fecha) {
+      alert("Por favor seleccione una fecha");
+      return;
+    }
+    if (!hora) {
+      alert("Por favor seleccione una hora");
+      return;
+    }
 
-      try {
-        const response = await axios.get(`${API_URL}/apicitas/buscarcitas/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        const citaData = response.data;
-        const [fecha, horaStr] = citaData.fecha.split(" ");
-        setCita({ ...citaData, fecha });
-        setHora(horaStr.slice(0, 5));
-      } catch (err) {
-        console.error("Error al cargar cita:", err);
-        setError("No se pudo cargar la cita.");
-      } finally {
-        setCargando(false);
-      }
-    };
+    setCargando(true);
+    const fechaCompleta = `${formulario.fecha} ${hora}:00`;
 
-    fetchCita();
-  }, [id, token]);
+    try {
+      await axios.patch(
+        `${API_URL}/apicitas/editarcitas/${id}`,
+        { ...formulario, fecha: fechaCompleta },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("Cita actualizada correctamente");
+      navigate("/consultarcitas");
+    } catch (err) {
+      console.error("Error al actualizar cita:", err);
+      const errorMessage = err.response?.data?.message || "No se pudo actualizar la cita";
+      setError(errorMessage);
+      alert(errorMessage);
+    } finally {
+      setCargando(false);
+    }
+  };
 
-  return { cita, hora, cargando, error };
-}
+  return {
+    actualizarCita,
+    cargando,
+    error,
+  };
+};
 
-export default useCitaPorId;
+export default useActualizarCita;

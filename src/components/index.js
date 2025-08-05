@@ -8,6 +8,7 @@ import DocsComponents from './DocsComponents'
 import DocsIcons from './DocsIcons'
 import DocsLink from './DocsLink'
 import DocsExample from './DocsExample'
+import Cargando from './Cargando'
 
 export {
   AppBreadcrumb,
@@ -20,4 +21,5 @@ export {
   DocsIcons,
   DocsLink,
   DocsExample,
+  Cargando,
 }

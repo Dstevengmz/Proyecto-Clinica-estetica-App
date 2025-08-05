@@ -187,7 +187,6 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
-  // Solicitar permisos de notificación al cargar
   useEffect(() => {
     if (isAuthenticated && Notification.permission === 'default') {
       Notification.requestPermission();
