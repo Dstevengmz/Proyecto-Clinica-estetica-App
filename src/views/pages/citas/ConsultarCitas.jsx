@@ -50,7 +50,6 @@ function Consultarcitas() {
   return (
     <CitasContext.Provider value={{ selectedCitas, setSelectedCitas }}>
       <div className="card-body">
-       
           <CTable striped hover responsive>
             <CTableHead>
               <CTableRow>

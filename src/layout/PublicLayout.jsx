@@ -10,7 +10,7 @@ function PublicLayout() {
       <main >
         <Outlet />
       </main>
-       <FooterPublico />
+      <FooterPublico />
     </>
   );
 }

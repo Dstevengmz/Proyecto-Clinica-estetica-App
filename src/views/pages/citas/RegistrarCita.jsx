@@ -167,12 +167,7 @@ function RegistrarCitas() {
                   )}
                 >
                   {hora}{" "}
-                  {estaOcupado(
-                    hora,
-                    horariosOcupados,
-                    cargandoHorarios,
-                    formData
-                  )
+                  {estaOcupado(hora,horariosOcupados,cargandoHorarios,formData)
                     ? "🟥 Ocupado"
                     : "🟩 Disponible"}
                 </option>
