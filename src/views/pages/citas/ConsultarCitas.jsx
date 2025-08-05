@@ -1,13 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import React, { useState, useEffect } from "react";
 import { createContext, useContext } from "react";
+import {Container} from "react-bootstrap";
 export const CitasContext = createContext();
 import { cibCassandra, cilPenAlt, cilXCircle } from "@coreui/icons";
 import CIcon from "@coreui/icons-react";
+import useListarCitas from "../../../hooks/useListarCitas";
 const useCitasContext = () => useContext(CitasContext);
-const API_URL = import.meta.env.VITE_API_URL;
-// import  obtenerRolDesdeToken  from "../../../assets/js/VerificacionRol";
 import {
   CTable,
   CTableHead,
@@ -18,43 +16,37 @@ import {
 } from "@coreui/react";
 
 function Consultarcitas() {
-  const [citas, setCitas] = useState([]);
+  const { citas, cargando: cargandoCitas } = useListarCitas();
   const { selectedCitas, setSelectedCitas } = useCitasContext();
   const navigate = useNavigate();
-  // const rol = obtenerRolDesdeToken();
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      alert("Error", "No estás autenticado", "error");
-      return;
-    }
-    axios
-      .get(`${API_URL}/apicitas/listarcitas`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        console.log("Respuesta del backend:", response.data);
-        setCitas(response.data);
-      })
-      .catch((error) => {
-        console.error("Error al cargar las citas:", error);
-        alert(
-          "Error No hay permisos ",
-          "No se pudieron cargar las citas",
-          "error"
-        );
-      });
-  }, []);
-
   const selectCitas = (citas) => {
     setSelectedCitas(citas);
     navigate("/detallesCitas");
   };
-
+    if ( cargandoCitas ) {
+      return (
+        <Container>
+          <div
+            className="d-flex justify-content-center align-items-center"
+            style={{ minHeight: "200px" }}
+          >
+            <div>Cargando información...</div>
+          </div>
+        </Container>
+      );
+    }
+    if (!cargandoCitas && citas.length === 0) {
+    return (
+      <Container>
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ minHeight: "200px" }}
+        >
+          <div>No hay citas disponibles.</div>
+        </div>
+      </Container>
+    );
+  }
   return (
     <CitasContext.Provider value={{ selectedCitas, setSelectedCitas }}>
       <div className="card-body">
@@ -111,7 +103,6 @@ function Consultarcitas() {
               ))}
             </CTableBody>
           </CTable>
-      
       </div>
     </CitasContext.Provider>
   );

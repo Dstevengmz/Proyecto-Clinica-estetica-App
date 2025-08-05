@@ -4,43 +4,20 @@ import { Form, Container, Row, Col, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useCarrito } from "../../../contexts/CarritoContext";
+import { usePerfilUsuario } from "../../../hooks/usePerfilUsuario";
+import useListarUsuario from "../../../hooks/useListaDeUsuarios";
+import useHorariosDisponible from "../../../hooks/useHorariosDisponible";
+import horariosDisponibles from "../../../assets/js/HorariosDisponibles";
+import estaOcupado from "../../../assets/js/HorarioEstaOcupado";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function RegistrarCitas() {
   const { limpiarCarrito } = useCarrito();
-  const [usuario, setUsuario] = useState({});
-  const horariosDisponibles = [
-    "08:00",
-    "08:30",
-    "09:00",
-    "09:30",
-    "10:00",
-    "10:30",
-    "11:00",
-    "11:30",
-    "12:00",
-    "12:30",
-    "13:00",
-    "13:30",
-    "14:00",
-    "14:30",
-    "15:00",
-    "15:30",
-    "16:00",
-    "16:30",
-    "17:00",
-    "17:30",
-  ];
-
-  const duraciones = {
-    evaluacion: 30,
-    procedimiento: 60,
-  };
-
   const navigate = useNavigate();
+  const { usuario, cargando } = usePerfilUsuario();
+  const { usuario: usuarios, cargando: cargandoUsuarios } = useListarUsuario();
   const token = localStorage.getItem("token");
-  const [usuarios, setUsuarios] = useState([]);
-  const [horariosOcupados, setHorariosOcupados] = useState([]);
+
   const [horaSeleccionada, setHoraSeleccionada] = useState("");
   const [formData, setFormData] = useState({
     id_usuario: "",
@@ -51,88 +28,48 @@ function RegistrarCitas() {
     observaciones: "",
   });
 
-  useEffect(() => {
-    async function obtenerDatosUsuario() {
-      try {
-        const respuesta = await axios.get(
-          `${API_URL}/apiusuarios/listarusuarios`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setUsuarios(respuesta.data);
-      } catch (error) {
-        console.error("Error al obtener datos del usuario", error);
-        alert("No se pudieron obtener los datos del usuario.");
-      }
-    }
-    obtenerDatosUsuario();
-  }, [token]);
+  const {
+    horariosOcupados,
+    cargando: cargandoHorarios,
+    error,
+  } = useHorariosDisponible(formData.fecha, formData.tipo, token);
 
   useEffect(() => {
-    async function obtenerDatosUsuarios() {
-      try {
-        const response = await axios.get(`${API_URL}/apiusuarios/perfil`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUsuario(response.data.usuario);
-      } catch (error) {
-        console.error("Error al obtener datos del usuario", error);
-      }
-    }
-    obtenerDatosUsuarios();
-  }, [token]);
+    console.log("Estado del hook:", {
+      fecha: formData.fecha,
+      tipo: formData.tipo,
+      horariosOcupados,
+      cargandoHorarios,
+      error,
+      token: token ? "Presente" : " No presente",
+    });
+  }, [
+    formData.fecha,
+    formData.tipo,
+    horariosOcupados,
+    cargandoHorarios,
+    error,
+    token,
+  ]);
 
   useEffect(() => {
-    if (usuario && usuario.id) {
-      setFormData((prev) => ({ ...prev, id_usuario: usuario.id }));
+    if (usuario?.id && !cargando) {
+      setFormData((prev) => ({
+        ...prev,
+        id_usuario: usuario.id,
+      }));
     }
-  }, [usuario]);
-
-  useEffect(() => {
-    async function obtenerHorarios() {
-      if (!formData.fecha || !formData.tipo) return;
-      try {
-        const respuesta = await axios.get(
-          `${API_URL}/apicitas/horarios/${formData.fecha}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setHorariosOcupados(respuesta.data);
-      } catch (error) {
-        console.error("Error al obtener horarios ocupados", error);
-        setHorariosOcupados([]);
-      }
-    }
-    obtenerHorarios();
-  }, [formData.fecha, formData.tipo, token]);
+  }, [usuario?.id, cargando]);
 
   const manejarCambio = (e) => {
     const { name, value } = e.target;
+
+    if (name === "fecha" || name === "tipo") {
+      setHoraSeleccionada("");
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
-    console.log(formData);
   };
-
-  const estaOcupado = (hora) => {
-    const fechaHora = `${formData.fecha}T${hora}:00`;
-    const inicio = new Date(fechaHora);
-    const duracionMin = duraciones[formData.tipo] || 0;
-    const fin = new Date(inicio.getTime() + duracionMin * 60000);
-
-    return horariosOcupados.some((cita) => {
-      const inicioOcupado = new Date(cita.fecha);
-      const finOcupado = new Date(
-        inicioOcupado.getTime() + duraciones[cita.tipo] * 60000
-      );
-      return (
-        (inicio >= inicioOcupado && inicio < finOcupado) ||
-        (fin > inicioOcupado && fin <= finOcupado) ||
-        (inicio <= inicioOcupado && fin >= finOcupado)
-      );
-    });
-  };
-
   const ManejarEnvio = async (e) => {
     e.preventDefault();
 
@@ -164,7 +101,11 @@ function RegistrarCitas() {
         }
       );
 
-      Swal.fire("Éxito", "Tu orden y cita han sido registradas Correctamente", "success");
+      Swal.fire(
+        "Éxito",
+        "Tu orden y cita han sido registradas Correctamente",
+        "success"
+      );
       limpiarCarrito();
       navigate("/dashboard");
     } catch (error) {
@@ -177,40 +118,67 @@ function RegistrarCitas() {
     }
   };
 
+  if (cargando || cargandoUsuarios || cargandoHorarios) {
+    return (
+      <Container>
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ minHeight: "200px" }}
+        >
+          <div>Cargando información...</div>
+        </div>
+      </Container>
+    );
+  }
+
+  if (!usuario || !usuario.id) {
+    return (
+      <Container>
+        <div className="alert alert-warning">
+          No se pudo cargar la información del usuario. Por favor, inicie sesión
+          nuevamente.
+        </div>
+      </Container>
+    );
+  }
+
   return (
     <Container>
       <h1 className="mt-4">Registrar Cita</h1>
+      {error && <div className="alert alert-danger">{error}</div>}
       <Card className="mb-4">
         <Card.Body>
           <h4>Detalles del Usuario</h4>
           <Row>
             <Col md={6}>
               <p>
-                <strong>Nombre:</strong> {usuario.nombre}
+                <strong>Nombre:</strong> {usuario?.nombre || "No disponible"}
               </p>
             </Col>
             <Col md={6}>
               <p>
-                <strong>Correo:</strong> {usuario.correo}
-              </p>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={6}>
-              <p>
-                <strong>Teléfono:</strong> {usuario.telefono}
-              </p>
-            </Col>
-            <Col md={6}>
-              <p>
-                <strong>Dirección:</strong> {usuario.direccion}
+                <strong>Correo:</strong> {usuario?.correo || "No disponible"}
               </p>
             </Col>
           </Row>
           <Row>
             <Col md={6}>
               <p>
-                <strong>Rol:</strong> {usuario.rol}
+                <strong>Teléfono:</strong>{" "}
+                {usuario?.telefono || "No disponible"}
+              </p>
+            </Col>
+            <Col md={6}>
+              <p>
+                <strong>Dirección:</strong>{" "}
+                {usuario?.direccion || "No disponible"}
+              </p>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={6}>
+              <p>
+                <strong>Rol:</strong> {usuario?.rol || "No disponible"}
               </p>
             </Col>
           </Row>
@@ -218,8 +186,8 @@ function RegistrarCitas() {
       </Card>
       <Form onSubmit={ManejarEnvio}>
         <input type="hidden" name="id_usuario" value={formData.id_usuario} />
-        <div>
-          <label>Doctor:</label>
+        <div className="mb-3">
+          <label className="form-label">Doctor:</label>
           <select
             name="id_doctor"
             className="form-select"
@@ -228,18 +196,22 @@ function RegistrarCitas() {
             required
           >
             <option value="">Seleccione un Doctor</option>
-            {usuarios
-              .filter((u) => u.rol === "doctor")
-              .map((doctor) => (
-                <option key={doctor.id} value={doctor.id}>
-                  {doctor.nombre}
-                </option>
-              ))}
+            {usuarios && usuarios.length > 0 ? (
+              usuarios
+                .filter((u) => u.rol === "doctor")
+                .map((doctor) => (
+                  <option key={doctor.id} value={doctor.id}>
+                    {doctor.nombre}
+                  </option>
+                ))
+            ) : (
+              <option disabled>No hay doctores disponibles</option>
+            )}
           </select>
         </div>
 
-        <div>
-          <label>Tipo:</label>
+        <div className="mb-3">
+          <label className="form-label">Tipo:</label>
           <select
             className="form-select"
             name="tipo"
@@ -253,56 +225,98 @@ function RegistrarCitas() {
           </select>
         </div>
 
-        <div>
-          <label>Fecha:</label>
+        <div className="mb-3">
+          <label className="form-label">Fecha:</label>
           <input
             type="date"
             name="fecha"
             className="form-control"
             value={formData.fecha}
             onChange={manejarCambio}
+            min={new Date().toISOString().split("T")[0]}
             required
           />
         </div>
 
-        <div>
-          <label>Hora:</label>
+        <div className="mb-3">
+          <label className="form-label">Hora:</label>
           <select
             className="form-select"
             value={horaSeleccionada}
             onChange={(e) => setHoraSeleccionada(e.target.value)}
             required
+            disabled={!formData.fecha || !formData.tipo || cargandoHorarios}
           >
-            <option value="">Seleccione una hora</option>
-            {horariosDisponibles.map((hora) => (
-              <option key={hora} value={hora} disabled={estaOcupado(hora)}>
-                {hora} {estaOcupado(hora) ? "🟥 Ocupado" : "🟩 Disponible"}
-              </option>
-            ))}
+            <option value="">
+              {!formData.fecha || !formData.tipo
+                ? "Primero seleccione fecha y tipo"
+                : cargandoHorarios
+                ? "Cargando horarios disponibles..."
+                : "Seleccione una hora"}
+            </option>
+            {formData.fecha &&
+              formData.tipo &&
+              !cargandoHorarios &&
+              horariosDisponibles.map((hora) => (
+                <option
+                  key={hora}
+                  value={hora}
+                  disabled={estaOcupado(
+                    hora,
+                    horariosOcupados,
+                    cargandoHorarios,
+                    formData
+                  )}
+                >
+                  {hora}{" "}
+                  {estaOcupado(
+                    hora,
+                    horariosOcupados,
+                    cargandoHorarios,
+                    formData
+                  )
+                    ? "🟥 Ocupado"
+                    : "🟩 Disponible"}
+                </option>
+              ))}
           </select>
+          {error && <div className="text-danger small mt-1">{error}</div>}
         </div>
 
-        <div>
-          <label>Observaciones:</label>
-          <input
-            type="text"
+        <div className="mb-3">
+          <label className="form-label">Observaciones:</label>
+          <textarea
             name="observaciones"
             className="form-control"
             value={formData.observaciones}
             onChange={manejarCambio}
+            rows={3}
+            placeholder="Ingrese observaciones adicionales (opcional)"
           />
         </div>
 
-        <button type="submit" className="btn btn-primary">
-          Registrar
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => navigate("/")}
-        >
-          Cancelar
-        </button>
+        <div className="d-flex gap-2 mt-4">
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={
+              !formData.id_doctor ||
+              !formData.fecha ||
+              !horaSeleccionada ||
+              !formData.tipo ||
+              cargandoHorarios
+            }
+          >
+            {cargandoHorarios ? "Verificando horarios..." : "Registrar Cita"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => navigate("/dashboard")}
+          >
+            Cancelar
+          </button>
+        </div>
       </Form>
     </Container>
   );

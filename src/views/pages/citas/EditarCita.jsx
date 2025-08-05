@@ -2,38 +2,20 @@ import { Form, Row, Col, Card, Container } from "react-bootstrap";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-
+import horariosDisponibles from "../../../assets/js/HorariosDisponibles";
+import estaOcupado from "../../../assets/js/HorarioEstaOcupado";
+import useHorariosDisponible from "../../../hooks/useHorariosDisponible";
 const API_URL = import.meta.env.VITE_API_URL;
-
+import  useListarUsuario from "../../../hooks/useListaDeUsuarios"; 
+import useCitaPorId from "../../../hooks/useEditarCita"; 
 function EditarCitas() {
   const { id } = useParams();
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-
-  const horariosDisponibles = [
-    "08:00",
-    "08:30",
-    "09:00",
-    "09:30",
-    "10:00",
-    "10:30",
-    "11:00",
-    "11:30",
-    "12:00",
-    "12:30",
-    "13:00",
-    "13:30",
-    "14:00",
-    "14:30",
-    "15:00",
-    "15:30",
-    "16:00",
-    "16:30",
-    "17:00",
-    "17:30",
-  ];
-
-  const [usuarios, setUsuarios] = useState([]);
+  const { cita, hora: horaInicial, cargando: citaidcargando, error: erroridcita } = useCitaPorId(id, token);
+  const { usuario, cargando } = useListarUsuario();
+  const [cargandoActualizacion, setCargandoActualizacion] = useState(false);
+  const [hora, setHora] = useState("");
   const [formulario, setFormulario] = useState({
     id_usuario: "",
     id_doctor: "",
@@ -44,48 +26,77 @@ function EditarCitas() {
     usuario: {},
     doctor: {},
   });
-  const [hora, setHora] = useState("");
-
-  // Cargar usuarios (doctores)
+  const {
+    horariosOcupados,
+    cargando: cargandoHorarios,
+    error,
+  } = useHorariosDisponible(formulario.fecha, formulario.tipo, token);
   useEffect(() => {
-    if (!token) return;
-    axios
-      .get(`${API_URL}/apiusuarios/listarusuarios`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setUsuarios(res.data))
-      .catch((err) => console.error("Error al cargar usuarios:", err));
-  }, [token]);
+    console.log("Estado del hook:", {
+      fecha: formulario.fecha,
+      tipo: formulario.tipo,
+      horariosOcupados,
+      cargandoHorarios,
+      error,
+      token: token ? "Hay token" : " No hay token",
+    });
+  }, [
+    formulario.fecha,
+    formulario.tipo,
+    horariosOcupados,
+    cargandoHorarios,
+    error,
+    token,
+  ]);
 
-  // Cargar cita
   useEffect(() => {
-    if (!token) return;
-    axios
-      .get(`${API_URL}/apicitas/buscarcitas/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const cita = res.data;
-        const [fecha, horaStr] = cita.fecha.split(" ");
-        setFormulario({ ...cita, fecha });
-        setHora(horaStr.slice(0, 5));
-      })
-      .catch((err) => {
-        console.error("Error al cargar cita:", err);
-        alert("No se pudo cargar la cita.");
+    if (cita) {
+      setFormulario({
+        id_usuario: cita.id_usuario || "",
+        id_doctor: cita.id_doctor || "",
+        fecha: cita.fecha || "",
+        estado: cita.estado || "",
+        tipo: cita.tipo || "",
+        observaciones: cita.observaciones || "",
+        usuario: cita.usuario || {},
+        doctor: cita.doctor || {},
       });
-  }, [id, token]);
+    }
+    if (horaInicial) {
+      setHora(horaInicial);
+    }
+  }, [cita, horaInicial]);
 
-  // Actualizar cambios del formulario
   const manejarCambio = (e) => {
     const { name, value } = e.target;
     setFormulario((prev) => ({ ...prev, [name]: value }));
+    
+    if (name === "fecha" || name === "tipo") {
+      setHora("");
+    }
   };
 
-  // Enviar cambios
   const actualizarCita = async (e) => {
     e.preventDefault();
 
+    if (!formulario.id_doctor) {
+      alert("Por favor seleccione un doctor");
+      return;
+    }
+    if (!formulario.tipo) {
+      alert("Por favor seleccione el tipo de cita");
+      return;
+    }
+    if (!formulario.fecha) {
+      alert("Por favor seleccione una fecha");
+      return;
+    }
+    if (!hora) {
+      alert("Por favor seleccione una hora");
+      return;
+    }
+
+    setCargandoActualizacion(true);
     const fechaCompleta = `${formulario.fecha} ${hora}:00`;
     try {
       await axios.patch(
@@ -97,25 +108,80 @@ function EditarCitas() {
       navigate("/consultarcitas");
     } catch (err) {
       console.error("Error al actualizar cita:", err);
-      alert("No se pudo actualizar la cita");
+      const errorMessage = err.response?.data?.message || "No se pudo actualizar la cita";
+      alert(errorMessage);
+    } finally {
+      setCargandoActualizacion(false);
     }
   };
 
+  if (cargando || citaidcargando) {
+    return (
+      <Container>
+        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "50vh" }}>
+          <div className="text-center">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Cargando...</span>
+            </div>
+            <p className="mt-2">Cargando datos de la cita...</p>
+          </div>
+        </div>
+      </Container>
+    );
+  }
+
+  if (erroridcita) {
+    return (
+      <Container>
+        <div className="alert alert-danger mt-4" role="alert">
+          <h4 className="alert-heading">Error al cargar la cita</h4>
+          <p>{erroridcita}</p>
+          <hr />
+          <button 
+            className="btn btn-outline-danger" 
+            onClick={() => navigate("/consultarcitas")}
+          >
+            Volver a la lista de citas
+          </button>
+        </div>
+      </Container>
+    );
+  }
+
+  if (!cita) {
+    return (
+      <Container>
+        <div className="alert alert-warning mt-4" role="alert">
+          <h4 className="alert-heading">Cita no encontrada</h4>
+          <p>La cita que intentas editar no existe o no tienes permisos para verla.</p>
+          <hr />
+          <button 
+            className="btn btn-outline-warning" 
+            onClick={() => navigate("/consultarcitas")}
+          >
+            Volver a la lista de citas
+          </button>
+        </div>
+      </Container>
+    );
+  }
   return (
     <Container>
       <h2 className="mt-4">Editar Cita</h2>
+      
+      {/* Información del Usuario */}
       <Card className="mb-4">
         <Card.Body>
           <h5>Información del Usuario</h5>
           <Row>
             <Col md={6}>
               <p>
-                <strong>Nombre:</strong> {formulario.usuario?.nombre}
+                <strong>Nombre:</strong> {formulario.usuario?.nombre || "No disponible"}
               </p>
             </Col>
             <Col md={6}>
               <p>
-                <strong>Teléfono:</strong> {formulario.usuario?.telefono}
+                <strong>Teléfono:</strong> {formulario.usuario?.telefono || "No disponible"}
               </p>
             </Col>
             <Col md={6}>
@@ -126,8 +192,28 @@ function EditarCitas() {
             </Col>
             <Col md={6}>
               <p>
-                <strong>Rol:</strong> {formulario.usuario?.rol}
+                <strong>Rol:</strong> {formulario.usuario?.rol || "No disponible"}
               </p>
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
+
+      <Card className="mb-4">
+        <Card.Body>
+          <h5>Información Actual de la Cita</h5>
+          <Row>
+            <Col md={3}>
+              <p><strong>Estado:</strong> {formulario.estado}</p>
+            </Col>
+            <Col md={3}>
+              <p><strong>Tipo:</strong> {formulario.tipo}</p>
+            </Col>
+            <Col md={3}>
+              <p><strong>Fecha:</strong> {formulario.fecha}</p>
+            </Col>
+            <Col md={3}>
+              <p><strong>Hora:</strong> {hora}</p>
             </Col>
           </Row>
         </Card.Body>
@@ -143,7 +229,7 @@ function EditarCitas() {
             required
           >
             <option value="">Seleccione un doctor</option>
-            {usuarios
+            {usuario
               .filter((u) => u.rol === "doctor")
               .map((doc) => (
                 <option key={doc.id} value={doc.id}>
@@ -176,6 +262,7 @@ function EditarCitas() {
                 name="fecha"
                 value={formulario.fecha}
                 onChange={manejarCambio}
+                min={new Date().toISOString().split('T')[0]} 
                 required
               />
             </Form.Group>
@@ -190,11 +277,24 @@ function EditarCitas() {
                 required
               >
                 <option value="">Seleccione una hora</option>
-                {horariosDisponibles.map((h) => (
-                  <option key={h} value={h}>
-                    {h}
-                  </option>
-                ))}
+                {horariosDisponibles.map((h) => {
+                  const horariosOcupadosFiltrados = horariosOcupados.filter(
+                    (cita) => cita.id !== parseInt(id)
+                  );
+                  
+                  const ocupado = estaOcupado(
+                    h,
+                    horariosOcupadosFiltrados,
+                    cargandoHorarios,
+                    formulario
+                  );
+
+                  return (
+                    <option key={h} value={h} disabled={ocupado}>
+                      {h} {ocupado ? "🟥 Ocupado" : "🟩 Disponible"}
+                    </option>
+                  );
+                })}
               </Form.Select>
             </Form.Group>
           </Col>
@@ -210,13 +310,18 @@ function EditarCitas() {
           />
         </Form.Group>
 
-        <button type="submit" className="btn btn-success me-2">
-          Actualizar
+        <button 
+          type="submit" 
+          className="btn btn-success me-2"
+          disabled={cargandoActualizacion}
+        >
+          {cargandoActualizacion ? "Actualizando..." : "Actualizar"}
         </button>
         <button
           type="button"
           className="btn btn-secondary"
           onClick={() => navigate("/consultarcitas")}
+          disabled={cargandoActualizacion}
         >
           Cancelar
         </button>

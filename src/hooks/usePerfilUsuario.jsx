@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-const API_URL = import.meta.env.VITE_API_URL;
 import { jwtDecode } from "jwt-decode";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export function usePerfilUsuario() {
   const [usuario, setUsuario] = useState({});
   const [cargando, setCargando] = useState(true);
   const token = localStorage.getItem("token");
+  
   let rol = null;
   if (token) {
     try {
@@ -16,6 +18,7 @@ export function usePerfilUsuario() {
       rol = null;
     }
   }
+  
   useEffect(() => {
     async function obtenerPerfil() {
       if (!token) {
@@ -44,3 +47,5 @@ export function usePerfilUsuario() {
 
   return { usuario, cargando, rol };
 }
+
+export default usePerfilUsuario;
