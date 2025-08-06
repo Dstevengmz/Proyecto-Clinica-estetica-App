@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { Form, Row, Col, Card } from "react-bootstrap";
-import { CitasContext } from "./ConsultarCitas";
+import { CitasContext } from "../../../contexts/CitasContext";
 
 function DetallesCitas() {
   const { selectedCitas } = useContext(CitasContext);

@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useColorModes } from '@coreui/react';
@@ -15,22 +15,20 @@ import {
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilBell } from '@coreui/icons';
-import { useNotifications } from '../contexts/NotificationContext';
+import { useNotificationsUsuario } from '../contexts/NotificationUsuarioContext';
 import { useAuth } from '../contexts/AuthenticaContext';
-import { CitasContext } from '../contexts/CitasContext';
 
-const NotificationBell = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications, loadNotificationHistory } = useNotifications();
+const NotificationBellUsuario = () => {
+  const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications, loadNotificationHistory } = useNotificationsUsuario();
   const { userRole } = useAuth();
   const navigate = useNavigate();
-  const citasContext = useContext(CitasContext);
   
-  // Obtener tema actual
+  // Obtener tema actual (mismo código que el original)
   const { colorMode } = useColorModes('coreui-free-react-admin-template-theme');
   const currentTheme = useSelector((state) => state.theme);
   const isDarkMode = colorMode === 'dark' || currentTheme === 'dark';
   
-  // Estilos dinámicos basados en el tema
+  // Estilos dinámicos (mismo código que el original)
   const getThemeStyles = () => {
     if (isDarkMode) {
       return {
@@ -81,8 +79,10 @@ const NotificationBell = () => {
   
   const themeStyles = getThemeStyles();
 
-  // Solo mostrar para doctores
-  if (userRole !== 'doctor' && userRole !== 'Doctor' && userRole !== 'DOCTOR') {
+  //  Solo mostrar para usuarios/pacientes (NO doctores)
+  const isDoctor = userRole === 'doctor' || userRole === 'Doctor' || userRole === 'DOCTOR';
+  
+  if (isDoctor) {
     return null;
   }
 
@@ -99,52 +99,27 @@ const NotificationBell = () => {
   const handleViewAllNotifications = async () => {
     try {
       const historial = await loadNotificationHistory();
-      // Aquí podrías abrir un modal o navegar a una página de historial
-      console.log('Historial completo:', historial);
-      // Por ahora, vamos a navegar a una página de notificaciones
-      navigate('/historial-notificaciones', { state: { historial } });
+      navigate('/historial-notificaciones-usuario', { state: { historial } });
     } catch (error) {
-      console.error('Error al cargar historial:', error);
+      console.error('Error al cargar historial de usuario:', error);
     }
   };
 
   const handleNotificationClick = async (index, notification) => {
-    console.log(`✅ Marcando notificación ${index} como leída`);
+    console.log(` Marcando notificación de usuario ${index} como leída`);
     markAsRead(index);
     
-    // Si la notificación tiene información de cita, navegar a los detalles
-    if (notification.tipo === 'cita' && notification.citaId) {
-      try {
-        // Buscar la cita específica usando el API
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/apicitas/buscarcitas/${notification.citaId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          const citaData = await response.json();
-          
-          // Si hay contexto de citas disponible, seleccionar la cita
-          if (citasContext && citasContext.setSelectedCitas) {
-            citasContext.setSelectedCitas(citaData);
-          }
-          
-          // Navegar a detalles de citas
-          navigate('/detallescitas');
-        } else {
-          // Si no se puede obtener la cita específica, navegar a la lista
-          navigate('/consultarcitas');
-        }
-      } catch (error) {
-        console.error('Error al obtener detalles de la cita:', error);
-        // Fallback: navegar a la lista de citas
-        navigate('/consultarcitas');
-      }
+    //  Navegación específica para usuarios
+    if (notification.tipo === 'confirmacion_cita' && notification.citaId) {
+      // Navegar a mis citas o detalles de la cita
+      navigate('/mis-citas');
+    } else if (notification.tipo === 'recordatorio_cita') {
+      navigate('/mis-citas');
+    } else if (notification.tipo === 'promocion') {
+      navigate('/promociones');
     } else {
-      // Para otros tipos de notificaciones, navegar al dashboard
-      navigate('/dashboard');
+      // Para otros tipos, navegar al dashboard del usuario
+      navigate('/dashboard-usuario');
     }
   };
 
@@ -192,7 +167,7 @@ const NotificationBell = () => {
         }}
       >
         <CDropdownHeader className="d-flex justify-content-between align-items-center" style={{ color: themeStyles.dropdown.color }}>
-          <span>Notificaciones</span>
+          <span>Mis Notificaciones</span>
           {unreadCount > 0 && (
             <CBadge color="primary">{unreadCount} nuevas</CBadge>
           )}
@@ -277,26 +252,27 @@ const NotificationBell = () => {
                   }}
                 >
                   <span style={{ fontSize: '1.5rem' }}>
-                    {notification.tipo === 'cita' ? '📅' : '🔔'}
+                    {/*  Iconos específicos para usuarios */}
+                    {notification.tipo === 'confirmacion_cita' ? '📩' : 
+                     notification.tipo === 'recordatorio_cita' ? '⏰' :
+                     notification.tipo === 'promocion' ? '🎁' : '🔔'}
                   </span>
                 </div>
                 <div className="flex-grow-1 notification-content">
-                  {notification.paciente && notification.fechaCita ? (
+                  {/*  Contenido específico para usuarios */}
+                  {notification.fechaCita ? (
                     <>
                       <div className="fw-bold mb-1" style={{ fontSize: '0.9rem', color: themeStyles.item.color }}>
-                        Nueva cita registrada
-                      </div>
-                      <div className="mb-2">
-                        <span style={{ color: themeStyles.item.color, fontWeight: '600' }}>
-                          Paciente: {notification.paciente}
-                        </span>
+                        {notification.tipo === 'confirmacion_cita' ? 'Cita Confirmada' : 
+                         notification.tipo === 'recordatorio_cita' ? 'Recordatorio de Cita' : 
+                         'Notificación'}
                       </div>
                       <div className="d-flex flex-wrap gap-1 mb-2">
-                        <CBadge color="info" className="notification-type-badge">
+                        <CBadge color="success" className="notification-type-badge">
                           📅 {formatDate(notification.fechaCita)}
                         </CBadge>
                         {notification.tipoCita && (
-                          <CBadge color="success" className="notification-type-badge">
+                          <CBadge color="info" className="notification-type-badge">
                             {notification.tipoCita}
                           </CBadge>
                         )}
@@ -336,4 +312,4 @@ const NotificationBell = () => {
   );
 };
 
-export default NotificationBell;
+export default NotificationBellUsuario;

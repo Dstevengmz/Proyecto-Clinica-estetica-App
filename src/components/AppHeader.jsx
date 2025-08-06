@@ -28,10 +28,13 @@ import { AppBreadcrumb } from './index'
 import { AppHeaderDropdown } from './header/index'
 import UserInfo from './UserInfo'
 import NotificationBell from './NotificationBell'
+import NotificationBellUsuario from './NotificationBellUsuario'
+import { useAuth } from '../contexts/AuthenticaContext'
 
 const AppHeader = () => {
   const headerRef = useRef()
   const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
+  const { userRole } = useAuth()
 
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
@@ -66,7 +69,9 @@ const AppHeader = () => {
           </CNavItem>
         </CHeaderNav>
         <CHeaderNav className="ms-auto">
-          <NotificationBell />
+          {/* Mostrar campana apropiada según el rol */}
+          {(userRole === 'doctor' || userRole === 'Doctor' || userRole === 'DOCTOR') && <NotificationBell />}
+          {(userRole === 'paciente' || userRole === 'Paciente' || userRole === 'PACIENTE' || userRole === 'usuario') && <NotificationBellUsuario />}
           <CNavItem>
             <CNavLink href="#">
               <CIcon icon={cilList} size="lg" />

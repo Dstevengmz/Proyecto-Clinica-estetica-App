@@ -58,7 +58,7 @@ const HistorialNotificaciones = React.lazy(() =>
   import("./views/pages/notificaciones/HistorialNotificaciones")
 );
 //citas
-import { CitasContext } from "./views/pages/citas/ConsultarCitas";
+import { CitasContext } from "./contexts/CitasContext";
 const CrearCita = React.lazy(() => import("./views/pages/citas/RegistrarCita"));
 const ConsultarCitas = React.lazy(() =>
   import("./views/pages/citas/ConsultarCitas")
@@ -231,6 +231,14 @@ const App = () => {
                   />
                   <Route
                     path="/historial-notificaciones"
+                    element={
+                      <RutaProtegida>
+                        <HistorialNotificaciones />
+                      </RutaProtegida>
+                    }
+                  />
+                  <Route
+                    path="/historial-notificaciones-usuario"
                     element={
                       <RutaProtegida>
                         <HistorialNotificaciones />
