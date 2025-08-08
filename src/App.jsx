@@ -63,6 +63,9 @@ const CrearCita = React.lazy(() => import("./views/pages/citas/RegistrarCita"));
 const ConsultarCitas = React.lazy(() =>
   import("./views/pages/citas/ConsultarCitas")
 );
+const CalendarioCitas = React.lazy(() =>
+  import("./views/pages/citas/CalendarioCitas")
+);
 const DetallesCitas = React.lazy(() =>
   import("./views/pages/citas/DetallesCitas")
 );
@@ -207,7 +210,7 @@ const App = () => {
                     path="/mihistorialclinico/:id"
                     element={<MiHistorialMedico />}
                   />
-
+                  <Route path="/calendariocitas" element={<CalendarioCitas />} />
                   <Route path="/crearcita" element={<CrearCita />} />
                   <Route path="/consultarcitas" element={<ConsultarCitas />} />
                   <Route path="/detallescitas" element={<DetallesCitas />} />
