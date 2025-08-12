@@ -17,7 +17,8 @@ function VistaServicios() {
       .get(`${API_URL}/apiprocedimientos/buscarprocedimiento/${id}`)
       .then((res) => {
         setProcedimiento(res.data);
-        setImagenActiva(`${API_URL}/${res.data.imagen}`);
+        setImagenActiva(res.data.imagen);
+        // setImagenActiva(`${API_URL}/${res.data.imagen}`);
       })
       .catch((err) => console.error("Error al obtener el procedimiento:", err));
   }, [id]);
