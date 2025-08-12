@@ -51,15 +51,16 @@ function VistaServicios() {
               <div className="col-12 product-image-thumbs d-flex gap-2">
                 <div
                   className={`product-image-thumb border rounded p-1 ${
-                    imagenActiva === procedimiento.imagen
+                    imagenActiva === `${API_URL}/${procedimiento.imagen}`
                       ? "active border-primary"
                       : ""
                   }`}
                   style={{ cursor: "pointer" }}
-                  onClick={() => setImagenActiva(procedimiento.imagen)} 
+                  onClick={() => setImagenActiva(procedimiento.imagen)}
                 >
                   <img
-                    src={procedimiento.imagen} 
+                    src={procedimiento.imagen}
+                    // src={`${API_URL}/${procedimiento.imagen}`}
                     alt="Miniatura"
                     className="img-fluid"
                     style={{ height: "60px", objectFit: "cover" }}
