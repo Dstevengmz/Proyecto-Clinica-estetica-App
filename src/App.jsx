@@ -94,6 +94,10 @@ function RutaProtegida({ children }) {
 }
 // Rutas internas
 const Dashboard = React.lazy(() => import("./views/dashboard/Dashboard"));
+
+const AdminInfoPages = React.lazy(()=>
+  import ("./views/pages/adminInfo/AdminInfoPages")
+);
 const App = () => {
   const [selectedHistorialclinico, setSelectedHistorialclinico] =
     useState(null);
@@ -175,6 +179,9 @@ const App = () => {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/404" element={<Page404 />} />
                   <Route path="/500" element={<Page500 />} />
+
+                    {/* NUEVA RUTA PARA ACCEDER A INFORMACION DE MISION, VISION, QUIENES SOMOS Y VALORES */}
+                  <Route path="/adminInfo" element={<AdminInfoPages/>} />
 
                   <Route
                     path="/crearhistorialclinico"

@@ -50,14 +50,47 @@ const Inicio = () => {
       </div>
 
       {/* QUIÉNES SOMOS */}
-      <div className="container-fluid px-5 my-5">
-        <h2 className="text-center mb-4">¿Quiénes somos?</h2>
-        <p className="text-center">
-          Somos una clínica especializada en tratamientos estéticos para tu
-          bienestar. Ofrecemos servicios de alta calidad para revitalizar cuerpo
-          y mente.
+      
+<div className="container-fluid px-4 py-5 my-5 bg-dark text-light rounded">
+  <h2 className="text-center mb-4 text-light">¿Quiénes somos?</h2>
+  <p className="text-center mb-5">
+    Somos una clínica estética especializada en procedimientos faciales no quirúrgicos como lipopapada, blefaroplastia sin cirugía y aplicación de toxina botulínica. Nuestro equipo está conformado por profesionales del área de la salud con formación en medicina estética, comprometidos con ofrecer tratamientos personalizados, seguros y basados en evidencia científica. Aplicamos protocolos clínicos rigurosos que garantizan resultados naturales, cuidando siempre la armonía facial, la bioseguridad y el bienestar integral del paciente.
+  </p>
+
+  <div className="row g-4">
+    <div className="col-md-6 col-lg-4">
+      <div className="border border-secondary rounded p-4 h-100 bg-transparent">
+        <h4 className="text-info">Misión</h4>
+        <p>
+          Brindar servicios médico-estéticos integrales orientados al mejoramiento facial, mediante el uso de tecnología avanzada, personal especializado y estrictos protocolos clínicos, garantizando seguridad, efectividad y satisfacción del paciente.
         </p>
       </div>
+    </div>
+
+    <div className="col-md-6 col-lg-4">
+      <div className="border border-secondary rounded p-4 h-100 bg-transparent">
+        <h4 className="text-info">Visión</h4>
+        <p>
+          Ser líderes en el sector de medicina estética facial en la region, destacándonos por la innovación, calidad asistencial, ética profesional y atención humanizada, siendo referentes de excelencia a nivel regional y nacional.
+        </p>
+      </div>
+    </div>
+
+    <div className="col-md-12 col-lg-4">
+      <div className="border border-secondary rounded p-4 h-100 bg-transparent">
+        <h4 className="text-info">Valores</h4>
+        <ul>
+          <li>Ética profesional</li>
+          <li>Calidez humana</li>
+          <li>Innovación constante</li>
+          <li>Calidad y seguridad</li>
+          <li>Compromiso con el paciente</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
       {/* NUESTRO EQUIPO MÉDICO */}
       <div className="container-fluid px-5 my-5">
         <h2 className="text-center mb-4">Nuestro Equipo Médico</h2>
@@ -115,14 +148,14 @@ const Inicio = () => {
           <div className="col-md-4 mb-3">
             <div className="card h-100">
               <img
-                src="https://picsum.photos/400/200?random=4"
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0-iy041g9q7HJpISBH5mMUDr1aKPs5ZeZLw&s/400/200?random=4"
                 className="card-img-top"
                 alt="servicio1"
               />
               <div className="card-body">
-                <h5 className="card-title">Limpieza Facial</h5>
+                <h5 className="card-title">Lipopapada</h5>
                 <p className="card-text">
-                  Tratamientos para revitalizar tu piel y dejarla luminosa.
+                  es un procedimiento quirúrgico estético, también conocido como liposucción de papada, que tiene como objetivo eliminar el exceso de grasa acumulada en la zona debajo del mentón y en el cuello, mejorando así el contorno facial y la definición de la mandíbula. Es una intervención mínimamente invasiva que busca un aspecto más estilizado y juvenil. .
                 </p>
               </div>
             </div>
@@ -130,14 +163,14 @@ const Inicio = () => {
           <div className="col-md-4 mb-3">
             <div className="card h-100">
               <img
-                src="https://picsum.photos/400/200?random=5"
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbc3wkweCL-WSxTuwCZUay4cj_MlMP-B6YpA&s/400/200?random=5"
                 className="card-img-top"
                 alt="servicio2"
               />
               <div className="card-body">
-                <h5 className="card-title">Depilación Láser</h5>
+                <h5 className="card-title">Blefaroplastia</h5>
                 <p className="card-text">
-                  Eliminación del vello de forma segura y efectiva.
+                  Procedimiento quirúrgico para eliminar el exceso de piel, grasa y músculo de los párpados superiores e inferiores. Este procedimiento puede mejorar la apariencia de los párpados caídos, las bolsas debajo de los ojos y la piel flácida, dando una apariencia más juvenil y descansada. También puede mejorar la visión en casos donde el exceso de piel del párpado superior dificulta la vista. .
                 </p>
               </div>
             </div>
@@ -145,14 +178,14 @@ const Inicio = () => {
           <div className="col-md-4 mb-3">
             <div className="card h-100">
               <img
-                src="https://picsum.photos/400/200?random=6"
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTU5-gEi6kEdd_yXJYXup7VzxSjeAQ3srizCg&s/400/200?random=6"
                 className="card-img-top"
                 alt="servicio3"
               />
               <div className="card-body">
-                <h5 className="card-title">Masajes Relajantes</h5>
+                <h5 className="card-title">Toxina botulinica</h5>
                 <p className="card-text">
-                  Libérate del estrés con nuestras terapias personalizadas.
+                  comúnmente conocida como Botox, es una neurotoxina producida por la bacteria Clostridium botulinum. Se utiliza en medicina y estética para tratar diversas condiciones médicas y para reducir temporalmente las arrugas faciales.
                 </p>
               </div>
             </div>
