@@ -22,18 +22,6 @@ const getUserNavigation = () => {
     },
     {
       component: CNavGroup,
-      name: "Mis Citas",
-      icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
-      items: [
-        {
-          component: CNavItem,
-          name: "Agendar Cita",
-          to: "/crearcita",
-        },
-      ],
-    },
-    {
-      component: CNavGroup,
       name: "Historial Médico",
       icon: <CIcon icon={cilMedicalCross} customClassName="nav-icon" />,
       items: [
@@ -46,6 +34,23 @@ const getUserNavigation = () => {
           component: CNavItem,
           name: "Mi Historial Medico",
           to: `/mihistorialclinico/${userId}`,
+        },
+      ],
+    },
+        {
+      component: CNavGroup,
+      name: "Mis Citas",
+      icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
+      items: [
+        {
+          component: CNavItem,
+          name: "Agendar Cita",
+          to: "/crearcita",
+        },
+        {
+          component: CNavItem,
+          name: "Mis Citas",
+          to: "/miscitas",
         },
       ],
     },

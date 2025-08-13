@@ -70,6 +70,9 @@ const DetallesCitas = React.lazy(() =>
   import("./views/pages/citas/DetallesCitas")
 );
 const Editarcita = React.lazy(() => import("./views/pages/citas/EditarCita"));
+
+const MisCitas = React.lazy(() => import("./views/pages/citas/MisCitas"));
+
 //Procedimientos
 const CrearProcedimiento = React.lazy(() =>
   import("./views/pages/procedimientos/CrearProcedimiento")
@@ -215,7 +218,10 @@ const App = () => {
                   <Route path="/consultarcitas" element={<ConsultarCitas />} />
                   <Route path="/detallescitas" element={<DetallesCitas />} />
                   <Route path="/editarcita/:id" element={<Editarcita />} />
+                  <Route path="/miscitas" element={<MisCitas />} />
+                  <Route path="/miscitas" element={<MisCitas />} />
 
+                  {/* Procedimientos */}
                   <Route
                     path="/crearprocedimiento"
                     element={<CrearProcedimiento />}
