@@ -27,7 +27,8 @@ function Servicios() {
               >
                 <Card.Img
                   variant="top"
-                  src={`${API_URL}/${proc.imagen}`}
+                  // src={`${API_URL}/${proc.imagen}`}
+                  src={proc.imagen}
                   alt={proc.nombre}
                   style={{ objectFit: "cover", width: "100%", height: "100%" }}
                 />

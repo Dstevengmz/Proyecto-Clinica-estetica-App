@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import useListarUsuario from "../../../hooks/useListaDeUsuarios";
 import useCambiarEstado from "../../../hooks/useCambiarEstadoUsuario";
 import {
@@ -24,11 +24,7 @@ function ConsultarListaUsuarios() {
   const { selectedListarusuarios, setSelectedListarusuarios } = useListarUsuariosContext();
   const { cambiarEstado, cargando, error } = useCambiarEstado();
   const navigate = useNavigate();
-  
-  // Estado para el buscador
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
-
-  // Filtrar usuarios basado en el término de búsqueda
   const usuariosFiltrados = useMemo(() => {
     if (!terminoBusqueda.trim()) {
       return usuario;
@@ -82,6 +78,13 @@ function ConsultarListaUsuarios() {
       <div className="card-body">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h1 className="mb-0">Lista De usuarios</h1>
+          <div className="d-flex align-items-center gap-2">
+            <Link to="/crear-usuario">
+              <CButton color="primary">
+                <i className="bi bi-person-plus-fill me-1"></i> Crear Usuario
+              </CButton>
+            </Link>
+          </div>
           <CForm className="d-flex" role="search" onSubmit={(e) => e.preventDefault()}>
             <CFormInput
               type="search"

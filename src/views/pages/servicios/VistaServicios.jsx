@@ -17,7 +17,8 @@ function VistaServicios() {
       .get(`${API_URL}/apiprocedimientos/buscarprocedimiento/${id}`)
       .then((res) => {
         setProcedimiento(res.data);
-        setImagenActiva(`${API_URL}/${res.data.imagen}`);
+        setImagenActiva(res.data.imagen);
+        // setImagenActiva(`${API_URL}/${res.data.imagen}`);
       })
       .catch((err) => console.error("Error al obtener el procedimiento:", err));
   }, [id]);
@@ -51,17 +52,15 @@ function VistaServicios() {
               <div className="col-12 product-image-thumbs d-flex gap-2">
                 <div
                   className={`product-image-thumb border rounded p-1 ${
-                    imagenActiva === `${API_URL}/${procedimiento.imagen}`
+                    imagenActiva === procedimiento.imagen
                       ? "active border-primary"
                       : ""
                   }`}
                   style={{ cursor: "pointer" }}
-                  onClick={() =>
-                    setImagenActiva(`${API_URL}/${procedimiento.imagen}`)
-                  }
+                  onClick={() => setImagenActiva(procedimiento.imagen)}
                 >
                   <img
-                    src={`${API_URL}/${procedimiento.imagen}`}
+                    src={procedimiento.imagen}
                     alt="Miniatura"
                     className="img-fluid"
                     style={{ height: "60px", objectFit: "cover" }}

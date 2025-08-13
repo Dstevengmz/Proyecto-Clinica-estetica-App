@@ -34,6 +34,9 @@ const VistaServicios = React.lazy(() =>
 const ConsultarListausuarios = React.lazy(() =>
   import("./views/pages/usuarios/ListaUsuarios")
 );
+const CrearUsuario = React.lazy(() =>
+  import("./views/pages/usuarios/CrearUsuario")
+);
 import DetallesListarUsuarios from "./views/pages/usuarios/DetallesListaUsuarios";
 import { ListarUsuariosContext } from "./views/pages/usuarios/ListaUsuarios";
 
@@ -63,10 +66,16 @@ const CrearCita = React.lazy(() => import("./views/pages/citas/RegistrarCita"));
 const ConsultarCitas = React.lazy(() =>
   import("./views/pages/citas/ConsultarCitas")
 );
+const CalendarioCitas = React.lazy(() =>
+  import("./views/pages/citas/CalendarioCitas")
+);
 const DetallesCitas = React.lazy(() =>
   import("./views/pages/citas/DetallesCitas")
 );
 const Editarcita = React.lazy(() => import("./views/pages/citas/EditarCita"));
+
+const MisCitas = React.lazy(() => import("./views/pages/citas/MisCitas"));
+
 //Procedimientos
 const CrearProcedimiento = React.lazy(() =>
   import("./views/pages/procedimientos/CrearProcedimiento")
@@ -194,6 +203,10 @@ const App = () => {
                     element={<ConsultarListausuarios />}
                   />
                   <Route
+                    path="/crear-usuario"
+                    element={<CrearUsuario />}
+                  />
+                  <Route
                     path="/DetallesListarUsuarios"
                     element={<DetallesListarUsuarios />}
                   />
@@ -214,12 +227,15 @@ const App = () => {
                     path="/mihistorialclinico/:id"
                     element={<MiHistorialMedico />}
                   />
-
+                  <Route path="/calendariocitas" element={<CalendarioCitas />} />
                   <Route path="/crearcita" element={<CrearCita />} />
                   <Route path="/consultarcitas" element={<ConsultarCitas />} />
                   <Route path="/detallescitas" element={<DetallesCitas />} />
                   <Route path="/editarcita/:id" element={<Editarcita />} />
+                  <Route path="/miscitas" element={<MisCitas />} />
+                  <Route path="/miscitas" element={<MisCitas />} />
 
+                  {/* Procedimientos */}
                   <Route
                     path="/crearprocedimiento"
                     element={<CrearProcedimiento />}

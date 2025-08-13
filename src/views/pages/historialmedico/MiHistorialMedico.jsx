@@ -1,120 +1,226 @@
 import axios from "axios";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { Container, Row, Col, Card } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Spinner,
+  Alert,
+} from "react-bootstrap";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function MiHistorialMedico() {
   const { id } = useParams();
   const [mihistorialmedico, setMihistorialmedico] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const cargarHistorial = useCallback(async () => {
     const token = localStorage.getItem("token");
-
     if (!token) {
-      alert("Error", "No estás autenticado", "error");
+      setError("No estás autenticado");
+      setMihistorialmedico(null);
+      setCargando(false);
       return;
     }
-
-axios
-  .get(`${API_URL}/apihistorialmedico/mihistorialclinico/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  .then((response) => {
-    setMihistorialmedico(response.data);
-  })
-  .catch((error) => {
-    console.error("Error al cargar mi historial médico:", error);
-    alert("No tienes permiso para realizar esta acción", error);
-  });
+    try {
+      setCargando(true);
+      setError(null);
+      const { data } = await axios.get(
+        `${API_URL}/apihistorialmedico/mihistorialclinico/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMihistorialmedico(data);
+    } catch (e) {
+      console.error("Error al cargar mi historial médico:", e);
+      setError(
+        e.response?.data?.error || "No se pudo cargar el historial médico"
+      );
+      setMihistorialmedico(null);
+    } finally {
+      setCargando(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    cargarHistorial();
+  }, [cargarHistorial]);
+
+  const renderBool = (val) =>
+    val === true ? "Sí" : val === false ? "No" : "No registrado";
+
+  const Header = (
+    <div className="d-flex justify-content-between align-items-center mt-4 mb-3">
+      <h3 className="mb-0">Mi Historial Médico</h3>
+      <div className="d-flex gap-2">
+        <Button
+          variant="outline-primary"
+          size="sm"
+          onClick={cargarHistorial}
+          disabled={cargando}
+        >
+          {cargando ? (
+            <>
+              <Spinner animation="border" size="sm" className="me-2" />{" "}
+              Actualizando...
+            </>
+          ) : (
+            "Actualizar"
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (cargando) {
+    return (
+      <Container>
+        {Header}
+        <Card>
+          <Card.Body className="d-flex align-items-center gap-2">
+            <Spinner animation="border" size="sm" />
+            <span>Cargando historial...</span>
+          </Card.Body>
+        </Card>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        {Header}
+        <Alert variant="danger">{error}</Alert>
+      </Container>
+    );
+  }
+
   if (!mihistorialmedico) {
     return (
-      <div>
-        <h1>Mi Historial Médico</h1>
-        <p>No hay datos disponibles.</p>
-      </div>
+      <Container>
+        {Header}
+        <Alert variant="info">No hay datos disponibles.</Alert>
+      </Container>
     );
   }
 
   return (
     <Container>
-      <h1 className="mt-4">Mi Historial Médico</h1>
-      <Card>
+      {Header}
+
+      <Card className="mb-3">
+        <Card.Header>Condiciones generales</Card.Header>
         <Card.Body>
-          <Row className="mb-3">
-            <Col>
-              <Card.Text><strong>Enfermedades:</strong> {mihistorialmedico.enfermedades}</Card.Text>
+          <Row>
+            <Col md={6} className="mb-2">
+              <strong>Enfermedades:</strong>{" "}
+              {mihistorialmedico.enfermedades || "—"}
             </Col>
-            <Col>
-              <Card.Text><strong>Alergias:</strong> {mihistorialmedico.alergias}</Card.Text>
-            </Col>
-          </Row>
-
-          <Row className="mb-3">
-            <Col>
-              <Card.Text><strong>Cirugías Previas:</strong> {mihistorialmedico.cirugias_previas}</Card.Text>
-            </Col>
-            <Col>
-              <Card.Text><strong>Condiciones de la Piel:</strong> {mihistorialmedico.condiciones_piel}</Card.Text>
+            <Col md={6} className="mb-2">
+              <strong>Alergias:</strong> {mihistorialmedico.alergias || "—"}
             </Col>
           </Row>
-
-          <Row className="mb-3">
-            <Col>
-              <Card.Text><strong>Medicamentos Actuales:</strong> {mihistorialmedico.medicamentos}</Card.Text>
+          <Row>
+            <Col md={6} className="mb-2">
+              <strong>Cirugías previas:</strong>{" "}
+              {mihistorialmedico.cirugias_previas || "—"}
+            </Col>
+            <Col md={6} className="mb-2">
+              <strong>Condiciones de la piel:</strong>{" "}
+              {mihistorialmedico.condiciones_piel || "—"}
             </Col>
           </Row>
-
-          <Row className="mb-3">
-            <Col>
-              <Card.Text><strong>¿Usa Anticonceptivos?</strong> {mihistorialmedico.usa_anticonceptivos ? "Sí" : "No"}</Card.Text>
-              {mihistorialmedico.usa_anticonceptivos && (
-                <Card.Text><strong>Detalles de Anticonceptivos:</strong> {mihistorialmedico.detalles_anticonceptivos}</Card.Text>
-              )}
+          <Row>
+            <Col md={12} className="mb-2">
+              <strong>Medicamentos actuales:</strong>{" "}
+              {mihistorialmedico.medicamentos || "—"}
             </Col>
           </Row>
+        </Card.Body>
+      </Card>
 
-          <Row className="mb-3">
-            <Col>
-              <Card.Text><strong>¿Diabetes?</strong> {mihistorialmedico.diabetes ? "Sí" : "No"}</Card.Text>
+      <Card className="mb-3">
+        <Card.Header>Hábitos</Card.Header>
+        <Card.Body>
+          <Row>
+            <Col md={6} className="mb-2">
+              <strong>Consume tabaco:</strong>{" "}
+              {renderBool(mihistorialmedico.consume_tabaco)}
             </Col>
-            <Col>
-              <Card.Text><strong>¿Hipertensión?</strong> {mihistorialmedico.hipertension ? "Sí" : "No"}</Card.Text>
+            <Col md={6} className="mb-2">
+              <strong>Consume alcohol:</strong>{" "}
+              {renderBool(mihistorialmedico.consume_alcohol)}
             </Col>
           </Row>
+        </Card.Body>
+      </Card>
 
-          <Row className="mb-3">
-            <Col>
-              <Card.Text><strong>¿Historial de Cáncer?</strong> {mihistorialmedico.historial_cancer ? "Sí" : "No"}</Card.Text>
+      <Card className="mb-3">
+        <Card.Header>Salud reproductiva</Card.Header>
+        <Card.Body>
+          <Row>
+            <Col md={6} className="mb-2">
+              <strong>Embarazo/Lactancia:</strong>{" "}
+              {renderBool(mihistorialmedico.embarazo_lactancia)}
             </Col>
-            <Col>
-              <Card.Text><strong>¿Problemas de Coagulación?</strong> {mihistorialmedico.problemas_coagulacion ? "Sí" : "No"}</Card.Text>
+            <Col md={6} className="mb-2">
+              <strong>Usa anticonceptivos:</strong>{" "}
+              {renderBool(mihistorialmedico.usa_anticonceptivos)}
             </Col>
           </Row>
+          {mihistorialmedico.usa_anticonceptivos && (
+            <Row>
+              <Col md={12} className="mb-2">
+                <strong>Detalles anticonceptivos:</strong>{" "}
+                {mihistorialmedico.detalles_anticonceptivos || "—"}
+              </Col>
+            </Row>
+          )}
+        </Card.Body>
+      </Card>
 
-          <Row className="mb-3">
-            <Col>
-              <Card.Text><strong>¿Epilepsia?</strong> {mihistorialmedico.epilepsia ? "Sí" : "No"}</Card.Text>
+      <Card className="mb-3">
+        <Card.Header>Antecedentes</Card.Header>
+        <Card.Body>
+          <Row>
+            <Col md={6} className="mb-2">
+              <strong>Diabetes:</strong>{" "}
+              {renderBool(mihistorialmedico.diabetes)}
             </Col>
-            <Col>
-              <Card.Text><strong>¿Está Embarazada o Lactando?</strong> {mihistorialmedico.embarazo_lactancia ? "Sí" : "No"}</Card.Text>
+            <Col md={6} className="mb-2">
+              <strong>Hipertensión:</strong>{" "}
+              {renderBool(mihistorialmedico.hipertension)}
             </Col>
           </Row>
-
-          <Row className="mb-3">
-            <Col>
-              <Card.Text><strong>¿Consume Tabaco?</strong> {mihistorialmedico.consume_tabaco ? "Sí" : "No"}</Card.Text>
+          <Row>
+            <Col md={6} className="mb-2">
+              <strong>Historial de cáncer:</strong>{" "}
+              {renderBool(mihistorialmedico.historial_cancer)}
             </Col>
-            <Col>
-              <Card.Text><strong>¿Consume Alcohol?</strong> {mihistorialmedico.consume_alcohol ? "Sí" : "No"}</Card.Text>
+            <Col md={6} className="mb-2">
+              <strong>Problemas de coagulación:</strong>{" "}
+              {renderBool(mihistorialmedico.problemas_coagulacion)}
             </Col>
           </Row>
+          <Row>
+            <Col md={6} className="mb-2">
+              <strong>Epilepsia:</strong>{" "}
+              {renderBool(mihistorialmedico.epilepsia)}
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
 
-          <Row className="mb-3">
-            <Col>
-              <Card.Text><strong>Otras Condiciones:</strong> {mihistorialmedico.otras_condiciones}</Card.Text>
+      <Card className="mb-4">
+        <Card.Header>Otras condiciones</Card.Header>
+        <Card.Body>
+          <Row>
+            <Col md={12} className="mb-2">
+              {mihistorialmedico.otras_condiciones || "—"}
             </Col>
           </Row>
         </Card.Body>
