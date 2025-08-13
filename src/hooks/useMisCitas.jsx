@@ -25,7 +25,7 @@ function useMisCitas() {
       setCitas(resp.data || []);
     } catch (e) {
       console.error("Error al obtener mis citas", e);
-      setError(e.response?.data?.error || "Error al obtener mis citas");
+      setError(e.response?.data?.error || "No hay Citas registradas");
       setCitas([]);
     } finally {
       setCargando(false);
