@@ -9,7 +9,7 @@ import useRegistrarUsuario from "../../../hooks/useRegistrarUsuario";
 
 const Register = () => {
   const {
-    phone, nombre, tipodocumento, numerodocumento, correo, contrasena, confirmar, rol, genero, terminos, cargando,
+    phone, nombre, tipodocumento, numerodocumento, correo, contrasena, confirmar, genero, terminos, cargando,
     setPhone,
     setNombre,
     setTipodocumento,
@@ -17,7 +17,6 @@ const Register = () => {
     setCorreo,
     setContrasena,
     setConfirmar,
-    setRol,
     setGenero,
     setTerminos,
     registrarUsuario,
@@ -84,7 +83,7 @@ const Register = () => {
                     <CFormInput
                       placeholder="Numero de documento"
                       autoComplete="Numero de documento"
-                      maxlength="10"
+                      maxLength={10}
                       pattern="[0-9]*"
                       required
                       value={numerodocumento}
@@ -133,31 +132,7 @@ const Register = () => {
                       onChange={(e) => setConfirmar(e.target.value)}
                     />
                   </CInputGroup>
-                  <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilUser} />
-                    </CInputGroupText>
-                    <CFormSelect
-                      value={rol}
-                      required
-                      aria-label="Seleccione su rol"
-                      onChange={(e) => setRol(e.target.value)}
-                      options={[
-                        {
-                          label: "Seleccione su rol",
-                          value: "",
-                          disabled: true,
-                        },
-                        { label: "Doctor", value: "doctor" },
-                        { label: "Usuario", value: "Usuario" },
-                        {
-                          label: "Asistente",
-                          value: "asistente",
-                          disabled: true,
-                        },
-                      ]}
-                    />
-                  </CInputGroup>
+                  {/* Rol oculto: se envía por defecto como 'usuario' desde el hook */}
                   <CInputGroup className="mb-3">
                     <CInputGroupText>
                       <CIcon icon={cilUser} />

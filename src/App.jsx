@@ -34,6 +34,9 @@ const VistaServicios = React.lazy(() =>
 const ConsultarListausuarios = React.lazy(() =>
   import("./views/pages/usuarios/ListaUsuarios")
 );
+const CrearUsuario = React.lazy(() =>
+  import("./views/pages/usuarios/CrearUsuario")
+);
 import DetallesListarUsuarios from "./views/pages/usuarios/DetallesListaUsuarios";
 import { ListarUsuariosContext } from "./views/pages/usuarios/ListaUsuarios";
 
@@ -191,6 +194,10 @@ const App = () => {
                   <Route
                     path="/listarusuarios"
                     element={<ConsultarListausuarios />}
+                  />
+                  <Route
+                    path="/crear-usuario"
+                    element={<CrearUsuario />}
                   />
                   <Route
                     path="/DetallesListarUsuarios"

@@ -13,7 +13,7 @@ function useRegistrarUsuario() {
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [confirmar, setConfirmar] = useState("");
-  const [rol, setRol] = useState("");
+  const [rol, setRol] = useState("usuario");
   const [genero, setGenero] = useState("");
   const [terminos, setTerminos] = useState(false);
   const [cargando, setCargando] = useState(false);
@@ -86,8 +86,15 @@ function useRegistrarUsuario() {
     });
   };
 
-  const registrarUsuario = async (e) => {
+  const registrarUsuario = async (e, options = {}) => {
     if (e) e.preventDefault();
+    const {
+      redirectTo = "/iniciarsesion",
+      successTitle = "Registro exitoso",
+      successText = "Tu cuenta ha sido creada correctamente",
+      successConfirmText = "Iniciar sesión",
+      onSuccess,
+    } = options;
 
     const erroresValidacion = validarFormulario();
     if (erroresValidacion.length > 0) {
@@ -99,7 +106,7 @@ function useRegistrarUsuario() {
     setErrores([]);
 
     try {
-      await axios.post(`${API_URL}/apiusuarios/crearusuarios`, {
+      const respuesta = await axios.post(`${API_URL}/apiusuarios/crearusuarios`, {
         nombre,
         tipodocumento,
         numerodocumento,
@@ -110,15 +117,18 @@ function useRegistrarUsuario() {
         genero,
         terminos_condiciones: terminos,
       });
-
       Swal.fire({
         icon: "success",
-        title: "Registro exitoso",
-        text: "Tu cuenta ha sido creada correctamente",
-        confirmButtonText: "Iniciar sesión",
+        title: successTitle,
+        text: successText,
+        confirmButtonText: successConfirmText,
       }).then(() => {
         limpiarFormulario();
-        navigate("/iniciarsesion");
+        if (typeof onSuccess === "function") {
+          onSuccess(respuesta);
+        } else {
+          navigate(redirectTo);
+        }
       });
     } catch (err) {
       console.error("Error al registrar usuario:", err);
@@ -152,7 +162,7 @@ function useRegistrarUsuario() {
     setCorreo("");
     setContrasena("");
     setConfirmar("");
-    setRol("");
+  setRol("usuario");
     setGenero("");
     setTerminos(false);
     setErrores([]);
