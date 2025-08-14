@@ -4,6 +4,7 @@ import { CitasContext } from "../../../contexts/CitasContext";
 import { useAuth } from "../../../contexts/AuthenticaContext";
 import { useLocation } from "react-router-dom";
 
+
 function DetallesCitas() {
   const { selectedCitas } = useContext(CitasContext);
   const location = useLocation();
@@ -103,10 +104,10 @@ function DetallesCitas() {
             <h5>Historial Médico del Paciente</h5>
             <Row>
               <Col md={6} className="mb-2">
-                <strong>Enfermedades:</strong> {historial.enfermedades || "No registradas"}
+                <strong>Enfermedades: ha presentado enfermerdaes anteriormente </strong> {historial.enfermedades || "No registradas"}
               </Col>
               <Col md={6} className="mb-2">
-                <strong>Alergias:</strong> {historial.alergias || "No registradas"}
+                <strong>Alergiass:</strong> {historial.alergias || "No registradas"}
               </Col>
             </Row>
             <Row>

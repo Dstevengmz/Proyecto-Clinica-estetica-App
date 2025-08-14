@@ -100,229 +100,248 @@ function HistorialMedico() {
   return (
     <Container>
       <h1 className="mt-4">Historial Médico</h1>
-      <Card className="mb-4">
-        <Card.Body>
-          <h4>Detalles del Usuario</h4>
-          <Row>
-            <Col md={6}>
-              <p>
-                <strong>Nombre:</strong> {usuario.nombre}
-              </p>
-            </Col>
-            <Col md={6}>
-              <p>
-                <strong>Correo:</strong> {usuario.correo}
-              </p>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={6}>
-              <p>
-                <strong>Teléfono:</strong> {usuario.telefono}
-              </p>
-            </Col>
-            <Col md={6}>
-              <p>
-                <strong>Dirección:</strong> {usuario.direccion}
-              </p>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={6}>
-              <p>
-                <strong>Rol:</strong> {usuario.rol}
-              </p>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
+<Card className="mb-4">
+  <Card.Body>
+    <h4>Detalles del Usuario</h4>
+    <Row>
+      <Col md={6}>
+        <p><strong>Nombre:</strong> {usuario.nombre}</p>
+      </Col>
+      <Col md={6}>
+        <p><strong>Correo:</strong> {usuario.correo}</p>
+      </Col>
+    </Row>
+    <Row>
+      <Col md={6}>
+        <p><strong>Teléfono:</strong> {usuario.telefono}</p>
+      </Col>
+      <Col md={6}>
+        <p><strong>Dirección:</strong> {usuario.direccion}</p>
+      </Col>
+    </Row>
+    <Row>
+      <Col md={6}>
+        <p><strong>Rol:</strong> {usuario.rol}</p>
+      </Col>
+    </Row>
+  </Card.Body>
+</Card>
 
-      <Form onSubmit={handleSubmit}>
-        <Row className="mb-3">
-          <Col>
-            <Form.Group controlId="formEnfermedades">
-              <Form.Label>Enfermedades</Form.Label>
-              <Form.Control
-                type="text"
-                name="enfermedades"
-                value={formulario.enfermedades}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
-          <Col>
-            <Form.Group controlId="formAlergias">
-              <Form.Label>Alergias</Form.Label>
-              <Form.Control
-                type="text"
-                name="alergias"
-                value={formulario.alergias}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+<Form onSubmit={handleSubmit}>
 
-        <Row className="mb-3">
-          <Col>
-            <Form.Group controlId="formCirugias">
-              <Form.Label>Cirugías Previas</Form.Label>
-              <Form.Control
-                type="text"
-                name="cirugias_previas"
-                value={formulario.cirugias_previas}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
-          <Col>
-            <Form.Group controlId="formCondicionesPiel">
-              <Form.Label>Condiciones de la Piel</Form.Label>
-              <Form.Control
-                type="text"
-                name="condiciones_piel"
-                value={formulario.condiciones_piel}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+  {/* 1. Enfermedades actuales */}
+  <Row className="mb-3">
+    <Col md={8}>
+      <Form.Group controlId="formEnfermedades">
+        <Form.Label>¿Actualmente presenta alguna enfermedad diagnosticada?</Form.Label>
+        <Form.Control
+          type="text"
+          name="enfermedades"
+          value={formulario.enfermedades}
+          onChange={handleChange}
+          placeholder="Ej: Asma, Gastritis..."
+        />
+      </Form.Group>
+    </Col>
+    <Col md={4} className="d-flex align-items-center">
+      <Form.Check
+        type="checkbox"
+        label="Ninguna"
+        name="sin_enfermedades"
+        checked={formulario.sin_enfermedades}
+        onChange={handleChange}
+      />
+    </Col>
+  </Row>
 
-        <Row className="mb-3">
-          <Col>
-            <Form.Group controlId="formMedicamentos">
-              <Form.Label>Medicamentos actuales</Form.Label>
-              <Form.Control
-                type="text"
-                name="medicamentos"
-                value={formulario.medicamentos}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-        <Row className="mb-3">
-          <Col>
-            <Form.Check
-              type="checkbox"
-              label="¿Usa anticonceptivos?"
-              name="usa_anticonceptivos"
-              checked={formulario.usa_anticonceptivos}
-              onChange={handleChange}
-            />
-            <Col>
-              <Form.Group controlId="formDetallesAnticonceptivos">
-                <Form.Label>Detalles de anticonceptivos</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={3}
-                  name="detalles_anticonceptivos"
-                  value={formulario.detalles_anticonceptivos}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-            </Col>
-          </Col>
-        </Row>
-        <Row className="mb-3">
-          <Col>
-            <Form.Check
-              type="checkbox"
-              label="¿Diabetes?"
-              name="diabetes"
-              checked={formulario.diabetes}
-              onChange={handleChange}
-            />
-          </Col>
-          <Col>
-            <Form.Check
-              type="checkbox"
-              label="¿Hipertensión?"
-              name="hipertension"
-              checked={formulario.hipertension}
-              onChange={handleChange}
-            />
-          </Col>
-        </Row>
-        <Row className="mb-3">
-          <Col>
-            <Form.Check
-              type="checkbox"
-              label="¿Historial de cáncer?"
-              name="historial_cancer"
-              checked={formulario.historial_cancer}
-              onChange={handleChange}
-            />
-          </Col>
-          <Col>
-            <Form.Check
-              type="checkbox"
-              label="¿Problemas de coagulación?"
-              name="problemas_coagulacion"
-              checked={formulario.problemas_coagulacion}
-              onChange={handleChange}
-            />
-          </Col>
-        </Row>
-        <Row className="mb-3">
-          <Col>
-            <Form.Check
-              type="checkbox"
-              label="¿Epilepsia?"
-              name="epilepsia"
-              checked={formulario.epilepsia}
-              onChange={handleChange}
-            />
-          </Col>
-          <Col>
-            <Form.Check
-              type="checkbox"
-              label="¿Está embarazada o lactando?"
-              name="embarazo_lactancia"
-              checked={formulario.embarazo_lactancia}
-              onChange={handleChange}
-            />
-          </Col>
-        </Row>
-        <Row className="mb-3">
-          <Col>
-            <Form.Check
-              type="checkbox"
-              label="¿Consume tabaco?"
-              name="consume_tabaco"
-              checked={formulario.consume_tabaco}
-              onChange={handleChange}
-            />
-          </Col>
-          <Col>
-            <Form.Check
-              type="checkbox"
-              label="¿Consume alcohol?"
-              name="consume_alcohol"
-              checked={formulario.consume_alcohol}
-              onChange={handleChange}
-            />
-          </Col>
-        </Row>
-        <Row className="mb-3">
-          <Col>
-            <Form.Group controlId="formOtrasCondiciones">
-              <Form.Label>Otras condiciones</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                name="otras_condiciones"
-                value={formulario.otras_condiciones}
-                onChange={handleChange}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+  {/* 2. Alergias */}
+  <Row className="mb-3">
+    <Col md={6}>
+      <Form.Group controlId="formTipoAlergias">
+        <Form.Label>¿Presenta alergias?</Form.Label>
+        <Form.Select
+          multiple
+          name="tipo_alergias"
+          value={formulario.tipo_alergias}
+          onChange={handleChange}
+        >
+          <option value="Medicamentos">Medicamentos</option>
+          <option value="Alimentos">Alimentos</option>
+          <option value="Sustancias químicas">Sustancias químicas</option>
+          <option value="Cosméticos">Cosméticos</option>
+          <option value="Otros">Otros</option>
+        </Form.Select>
+      </Form.Group>
+    </Col>
+    <Col md={6}>
+      <Form.Group controlId="formDetalleAlergias">
+        <Form.Label>Especifique</Form.Label>
+        <Form.Control
+          type="text"
+          name="detalle_alergias"
+          value={formulario.detalle_alergias}
+          onChange={handleChange}
+        />
+      </Form.Group>
+    </Col>
+  </Row>
 
-        <Button variant="primary" type="submit">
-          Guardar Historial Médico
-        </Button>
-      </Form>
+  {/* 3. Cirugías previas */}
+  <Row className="mb-3">
+    <Col>
+      <Form.Group controlId="formCirugiasPrevias">
+        <Form.Label>Cirugías previas (indique cuáles y año)</Form.Label>
+        <Form.Control
+          type="text"
+          name="cirugias_previas"
+          value={formulario.cirugias_previas}
+          onChange={handleChange}
+          placeholder="Ej: Apendicectomía - 2015"
+        />
+      </Form.Group>
+    </Col>
+  </Row>
+
+  {/* 4. Medicamentos actuales */}
+  <Row className="mb-3">
+    <Col>
+      <Form.Group controlId="formMedicamentos">
+        <Form.Label>Medicamentos actuales (nombre, dosis, frecuencia)</Form.Label>
+        <Form.Control
+          as="textarea"
+          rows={2}
+          name="medicamentos"
+          value={formulario.medicamentos}
+          onChange={handleChange}
+        />
+      </Form.Group>
+    </Col>
+  </Row>
+
+  {/* 5. Antecedentes personales */}
+  {/* 5. Antecedentes personales */}
+<hr className="my-4" />
+<h5>Antecedentes Personales</h5>
+<Row className="mb-3">
+  <Col md={6}>
+    <Form.Check
+      type="checkbox"
+      label="Consumo habitual de alcohol"
+      name="consumo_alcohol"
+      checked={formulario.consumo_alcohol}
+      onChange={handleChange}
+    />
+    <Form.Check
+      type="checkbox"
+      label="Consumo de tabaco"
+      name="consumo_tabaco"
+      checked={formulario.consumo_tabaco}
+      onChange={handleChange}
+    />
+    <Form.Check
+      type="checkbox"
+      label="Consumo de sustancias psicoactivas"
+      name="sustancias_psicoactivas"
+      checked={formulario.sustancias_psicoactivas}
+      onChange={handleChange}
+    />
+    <Form.Check
+      type="checkbox"
+      label="Trastornos psiquiátricos"
+      name="trastornos_psiquiatricos"
+      checked={formulario.trastornos_psiquiatricos}
+      onChange={handleChange}
+    />
+  </Col>
+  <Col md={6}>
+    <Form.Group controlId="formOtrasPersonales">
+      <Form.Label>Otras condiciones personales</Form.Label>
+      <Form.Control
+        type="text"
+        name="otras_personales"
+        value={formulario.otras_personales}
+        onChange={handleChange}
+      />
+    </Form.Group>
+  </Col>
+</Row>
+
+{/* 6. Antecedentes familiares */}
+<hr className="my-4" />
+<h5>Antecedentes Familiares</h5>
+<Row className="mb-3">
+  <Col md={6}>
+    <Form.Check
+      type="checkbox"
+      label="Hipertensión arterial"
+      name="hipertension_familia"
+      checked={formulario.hipertension_familia}
+      onChange={handleChange}
+    />
+    <Form.Check
+      type="checkbox"
+      label="Diabetes mellitus"
+      name="diabetes_familia"
+      checked={formulario.diabetes_familia}
+      onChange={handleChange}
+    />
+    <Form.Check
+      type="checkbox"
+      label="Cáncer"
+      name="cancer_familia"
+      checked={formulario.cancer_familia}
+      onChange={handleChange}
+    />
+    <Form.Check
+      type="checkbox"
+      label="Enfermedades cardíacas"
+      name="cardiacas_familia"
+      checked={formulario.cardiacas_familia}
+      onChange={handleChange}
+    />
+    <Form.Check
+      type="checkbox"
+      label="Enfermedades dermatológicas hereditarias"
+      name="dermatologicas_familia"
+      checked={formulario.dermatologicas_familia}
+      onChange={handleChange}
+    />
+  </Col>
+  <Col md={6}>
+    <Form.Group controlId="formOtrasFamilia">
+      <Form.Label>Otras condiciones familiares</Form.Label>
+      <Form.Control
+        type="text"
+        name="otras_familia"
+        value={formulario.otras_familia}
+        onChange={handleChange}
+      />
+    </Form.Group>
+  </Col>
+</Row>
+
+
+  {/* 7. Otros datos relevantes */}
+  <Row className="mb-3">
+    <Col>
+      <Form.Group controlId="formOtrosDatos">
+        <Form.Label>¿Alguna condición médica o restricción que debamos conocer?</Form.Label>
+        <Form.Control
+          as="textarea"
+          rows={3}
+          name="otros_datos"
+          value={formulario.otros_datos}
+          onChange={handleChange}
+        />
+      </Form.Group>
+    </Col>
+  </Row>
+
+  <Button type="submit" variant="primary">
+    Guardar Historial
+  </Button>
+</Form>
+
     </Container>
   );
 }
