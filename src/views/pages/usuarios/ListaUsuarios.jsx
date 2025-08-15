@@ -1,7 +1,10 @@
-import { createContext, useContext, useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import useListarUsuario from "../../../hooks/useListaDeUsuarios";
 import useCambiarEstado from "../../../hooks/useCambiarEstadoUsuario";
+import { useAuth } from "../../../contexts/AuthenticaContext";
+import Swal from "sweetalert2";
+import { ListarUsuariosContext, useListarUsuariosContext } from "../../../contexts/ListarUsuariosContext";
 import {
   CButton,
   CForm,
@@ -16,14 +19,14 @@ import {
   CTableRow,
 } from "@coreui/react";
 
-export const ListarUsuariosContext = createContext();
-const useListarUsuariosContext = () => useContext(ListarUsuariosContext);
 
 function ConsultarListaUsuarios() {
   const { usuario, refrescarLista } = useListarUsuario();
   const { selectedListarusuarios, setSelectedListarusuarios } = useListarUsuariosContext();
   const { cambiarEstado, cargando, error } = useCambiarEstado();
   const navigate = useNavigate();
+  const { userRole, isAuthenticated } = useAuth();
+  const isDoctor = userRole === "doctor";
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
   const usuariosFiltrados = useMemo(() => {
     if (!terminoBusqueda.trim()) {
@@ -71,6 +74,39 @@ function ConsultarListaUsuarios() {
     }
   };
 
+  useEffect(() => {
+    if (isAuthenticated && !isDoctor) {
+      Swal.fire({
+        icon: "warning",
+        title: "Acceso restringido",
+        text: "No puedes ver esta interfaz. Solo los doctores tienen acceso.",
+        confirmButtonText: "Entendido",
+      });
+    }
+  }, [isAuthenticated, isDoctor]);
+
+  if (isAuthenticated && !isDoctor) {
+    return (
+      <ListarUsuariosContext.Provider value={{ selectedListarusuarios, setSelectedListarusuarios }}>
+        <div className="card-body">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h1 className="mb-0">Lista De usuarios</h1>
+            <div className="d-flex align-items-center gap-2">
+              <Link to="/">
+                <CButton color="secondary" variant="outline">
+                  Volver al inicio
+                </CButton>
+              </Link>
+            </div>
+          </div>
+          <div className="alert alert-warning">
+            No puedes ver esta interfaz. Solo los doctores tienen acceso.
+          </div>
+        </div>
+      </ListarUsuariosContext.Provider>
+    );
+  }
+
   return (
     <ListarUsuariosContext.Provider
       value={{ selectedListarusuarios, setSelectedListarusuarios }}
@@ -112,7 +148,6 @@ function ConsultarListaUsuarios() {
           </CForm>
         </div>
         
-        {/* Mostrar información de resultados de búsqueda */}
         {terminoBusqueda && (
           <div className="mb-3">
             <div className="alert alert-info d-flex justify-content-between align-items-center">

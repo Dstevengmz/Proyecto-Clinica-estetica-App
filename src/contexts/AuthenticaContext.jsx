@@ -1,11 +1,9 @@
 import { createContext, useState, useEffect, useContext } from "react"
 
 const AuthContext = createContext()
-// Función para decodificar el token JWT y extraer el rol
 const getUserRoleFromToken = (token) => {
   try {
     if (!token) return null
-    // Verificar que el token tenga el formato correcto (3 partes separadas por puntos)
     const tokenParts = token.split('.')
     if (tokenParts.length !== 3) {
       console.error('Token JWT inválido: formato incorrecto')
