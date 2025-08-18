@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useCarrito } from "../../../contexts/CarritoContext";
 import { usePerfilUsuario } from "../../../hooks/usePerfilUsuario";
-import useListarUsuario from "../../../hooks/useListaDeUsuarios";
+import useListarDoctores from "../../../hooks/useListarDoctores";
 import useHorariosDisponible from "../../../hooks/useHorariosDisponible";
 import horariosDisponibles from "../../../assets/js/HorariosDisponibles";
 import estaOcupado from "../../../assets/js/HorarioEstaOcupado";
@@ -18,7 +18,7 @@ function RegistrarCitas() {
   const { limpiarCarrito } = useCarrito();
   const navigate = useNavigate();
   const { usuario, cargando } = usePerfilUsuario();
-  const { usuario: usuarios, cargando: cargandoUsuarios } = useListarUsuario();
+  const { doctores, cargando: cargandoDoctores, error: errorDoctores } = useListarDoctores();
   const token = localStorage.getItem("token");
 
   const [horaSeleccionada, setHoraSeleccionada] = useState("");
@@ -58,7 +58,7 @@ function RegistrarCitas() {
       return;
     }
 
-    const fechaFormateada = `${formData.fecha} ${horaSeleccionada}:00`;
+  const fechaFormateada = `${formData.fecha}T${horaSeleccionada}:00`;
 
     try {
       const orden = await axios.post(
@@ -98,7 +98,7 @@ function RegistrarCitas() {
     }
   };
 
-  if (cargando || cargandoUsuarios || cargandoHorarios) {
+  if (cargando || cargandoDoctores || cargandoHorarios) {
  return <Cargando texto="Cargando Informacion" />;
   }
 
@@ -109,7 +109,8 @@ function RegistrarCitas() {
   return (
     <Container>
       <h1 className="mt-4">Registrar Cita</h1>
-      {error && <div className="alert alert-danger">{error}</div>}
+  {error && <div className="alert alert-danger">{error}</div>}
+  {errorDoctores && <div className="alert alert-warning">{errorDoctores}</div>}
       <InformacionUsuario usuario={usuario} />
       <Form onSubmit={ManejarEnvio}>
         <input type="hidden" name="id_usuario" value={formData.id_usuario} />
@@ -118,14 +119,12 @@ function RegistrarCitas() {
           <select name="id_doctor" className="form-select" value={formData.id_doctor} onChange={manejarCambio} required
           >
             <option value="">Seleccione un Doctor</option>
-            {usuarios && usuarios.length > 0 ? (
-              usuarios
-                .filter((u) => u.rol === "doctor")
-                .map((doctor) => (
-                  <option key={doctor.id} value={doctor.id}>
-                    {doctor.nombre}
-                  </option>
-                ))
+            {doctores && doctores.length > 0 ? (
+              doctores.map((doctor) => (
+                <option key={doctor.id} value={doctor.id}>
+                  {doctor.nombre}
+                </option>
+              ))
             ) : (
               <option disabled>No hay doctores disponibles</option>
             )}

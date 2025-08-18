@@ -38,7 +38,7 @@ const CrearUsuario = React.lazy(() =>
   import("./views/pages/usuarios/CrearUsuario")
 );
 import DetallesListarUsuarios from "./views/pages/usuarios/DetallesListaUsuarios";
-import { ListarUsuariosContext } from "./views/pages/usuarios/ListaUsuarios";
+import { ListarUsuariosContext } from "./contexts/ListarUsuariosContext";
 
 //historialClinico
 import { HistorialClinicoContext } from "./views/pages/historialmedico/ConsultarHistorialMedico";

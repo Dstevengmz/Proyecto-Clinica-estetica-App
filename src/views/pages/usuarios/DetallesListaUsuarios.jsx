@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { Form, Row, Col, Card } from "react-bootstrap";
-import { ListarUsuariosContext } from "./ListaUsuarios";
+import { ListarUsuariosContext } from "../../../contexts/ListarUsuariosContext";
 
 function UserDetail() {
   const { selectedListarusuarios } = useContext(ListarUsuariosContext);

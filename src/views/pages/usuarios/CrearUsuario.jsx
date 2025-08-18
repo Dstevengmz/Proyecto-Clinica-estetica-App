@@ -1,13 +1,29 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { CButton, CCard, CCardBody, CCol, CForm, CFormInput, CInputGroup, CInputGroupText, CRow, CFormSelect } from "@coreui/react";
 import CIcon from "@coreui/icons-react";
 import { cilLockLocked, cilUser, cilBook, cilClipboard } from "@coreui/icons";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/bootstrap.css";
-import useRegistrarUsuario from "../../../hooks/useRegistrarUsuario";
+import useCrearUsuarioAdmin from "../../../hooks/useCrearUsuarioAdmin";
+import { useAuth } from "../../../contexts/AuthenticaContext";
+import Swal from "sweetalert2";
 
 const CrearUsuario = () => {
+  const { userRole, isAuthenticated } = useAuth();
+  const isDoctor = userRole === "doctor";
+
+  useEffect(() => {
+    if (isAuthenticated && !isDoctor) {
+      Swal.fire({
+        icon: "warning",
+        title: "Acceso restringido",
+        text: "No puedes ver esta interfaz. Solo los doctores tienen acceso.",
+        confirmButtonText: "Entendido",
+      });
+    }
+  }, [isAuthenticated, isDoctor]);
+
   const {
     phone, nombre, tipodocumento, numerodocumento, correo, contrasena, confirmar, rol, genero, terminos,
     setPhone,
@@ -21,7 +37,30 @@ const CrearUsuario = () => {
     setGenero,
     setTerminos,
     registrarUsuario,
-  } = useRegistrarUsuario();
+  } = useCrearUsuarioAdmin();
+
+  if (isAuthenticated && !isDoctor) {
+    return (
+      <div className="mb-4">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h1 className="mb-0">Crear usuario</h1>
+          <Link to="/listarusuarios">
+            <CButton color="secondary" variant="outline">
+              Volver a la lista
+            </CButton>
+          </Link>
+        </div>
+
+        <CCard>
+          <CCardBody>
+            <div className="alert alert-warning mb-0">
+              No puedes ver esta interfaz. Solo los doctores tienen acceso.
+            </div>
+          </CCardBody>
+        </CCard>
+      </div>
+    );
+  }
 
   const registrarUsuarioAdmin = async (e) => {
     await registrarUsuario(e, {
