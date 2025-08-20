@@ -1,4 +1,5 @@
 import React from "react";
+// import ChatWidget from "../../../components/Publico/ChatWidget";
 import MapaConRuta from "../mapa/mapa";
 const Inicio = () => {
   return (
@@ -194,6 +195,7 @@ const Inicio = () => {
           </div>
         </form>
       </div>
+      {/* <ChatWidget /> */}
     </div>
   );
 };

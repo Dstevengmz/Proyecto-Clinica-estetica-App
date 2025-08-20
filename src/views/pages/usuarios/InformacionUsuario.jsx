@@ -12,7 +12,7 @@ const InformacionUsuario = ({ usuario }) => (
         <Col md={6}><p><strong>Rol:</strong> {usuario?.rol || "No disponible"}</p></Col>
       </Row>
     </Card.Body>
-  </Card>
+  </Card> 
 );
 
 export default InformacionUsuario;

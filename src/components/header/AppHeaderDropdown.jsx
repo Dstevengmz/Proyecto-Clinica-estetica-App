@@ -20,6 +20,7 @@ import {
 import CIcon from "@coreui/icons-react";
 import manejarCerrarSesion from "../../assets/js/AlertaCerrarSesion";
 import { useAuth } from "../../contexts/AuthenticaContext";
+import ObtenerUsuarioIToken from "../../assets/js/ObtenerTokenDelUsuario";
 
 
 import { useNavigate,useLocation } from "react-router-dom";
@@ -28,6 +29,7 @@ const AppHeaderDropdown = () => {
   const { logout } = useAuth(); 
   const navigate = useNavigate();
   const location = useLocation()
+  const userId = ObtenerUsuarioIToken();
 
   return (
     <CDropdown variant="nav-item">
@@ -71,7 +73,17 @@ const AppHeaderDropdown = () => {
         <CDropdownHeader className="bg-body-secondary fw-semibold my-2">
           Configuraciones
         </CDropdownHeader>
-        <CDropdownItem href="#">
+        <CDropdownItem
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            if (userId) {
+              navigate(`/editarusuario/${userId}`);
+            } else {
+              navigate("/iniciarsesion");
+            }
+          }}
+        >
           <CIcon icon={cilUser} className="me-2" />
           Profile
         </CDropdownItem>
