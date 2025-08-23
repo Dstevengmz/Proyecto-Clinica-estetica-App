@@ -11,25 +11,58 @@ import horariosDisponibles from "../../../assets/js/HorariosDisponibles";
 import estaOcupado from "../../../assets/js/HorarioEstaOcupado";
 import Cargando from "../../../components/Cargando";
 import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario";
+import useMisCitas from "../../../hooks/useMisCitas";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function RegistrarCitas() {
-  const { limpiarCarrito } = useCarrito();
-  const navigate = useNavigate();
+  const { carrito, limpiarCarrito } = useCarrito();
   const { usuario, cargando } = usePerfilUsuario();
-  const { doctores, cargando: cargandoDoctores, error: errorDoctores } = useListarDoctores();
+  const navigate = useNavigate();
+  const {
+    doctores,
+    cargando: cargandoDoctores,
+    error: errorDoctores,
+  } = useListarDoctores();
   const token = localStorage.getItem("token");
+  const {
+    citas,
+    cargando: cargandoCitas,
+  } = useMisCitas(usuario?.id);
+
+  const [esPrimeraCita, setEsPrimeraCita] = useState(false);
+  const [tieneEvaluacion, setTieneEvaluacion] = useState(false);
 
   const [horaSeleccionada, setHoraSeleccionada] = useState("");
-  const [formData, setFormData] = useState({ id_usuario: "", id_doctor: "", fecha: "", estado: "pendiente", tipo: "", observaciones: "",
+  const [formData, setFormData] = useState({
+    id_usuario: "",
+    id_doctor: "",
+    fecha: "",
+    estado: "pendiente",
+    tipo: "",
+    observaciones: "",
   });
 
-  const { horariosOcupados, cargando: cargandoHorarios, error,
+  useEffect(() => {
+    if (!cargandoCitas && citas) {
+      setEsPrimeraCita(citas.length === 0);
+      setTieneEvaluacion(citas.some((cita) => cita.tipo === "evaluacion"));
+    }
+  }, [citas, cargandoCitas]);
+
+  const {
+    horariosOcupados,
+    cargando: cargandoHorarios,
+    error,
   } = useHorariosDisponible(formData.fecha, formData.tipo, token);
 
-  useEffect(() => {
-  }, [ formData.fecha, formData.tipo, horariosOcupados, cargandoHorarios, error, token,
+  useEffect(() => {}, [
+    formData.fecha,
+    formData.tipo,
+    horariosOcupados,
+    cargandoHorarios,
+    error,
+    token,
   ]);
 
   useEffect(() => {
@@ -58,18 +91,35 @@ function RegistrarCitas() {
       return;
     }
 
-  const fechaFormateada = `${formData.fecha}T${horaSeleccionada}:00`;
+    if (esPrimeraCita && formData.tipo !== "evaluacion") {
+      Swal.fire(
+        "Advertencia",
+        "Tu primera cita debe ser de evaluación.",
+        "warning"
+      );
+      return;
+    }
+
+    if (formData.tipo === "procedimiento" && !tieneEvaluacion) {
+      Swal.fire(
+        "Advertencia",
+        "Debes tener una cita de evaluación antes de agendar un procedimiento.",
+        "warning"
+      );
+      return;
+    }
+    if (formData.tipo === "procedimiento" && carrito.length === 0) {
+      Swal.fire(
+        "Advertencia",
+        "Debes seleccionar un procedimiento (agregar al carrito) antes de agendar esta cita.",
+        "warning"
+      );
+      return;
+    }
+
+    const fechaFormateada = `${formData.fecha}T${horaSeleccionada}:00`;
 
     try {
-      const orden = await axios.post(
-        `${API_URL}/apicitas/crearordendesdecita`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      console.log("Orden creada:", orden.data);
-
       await axios.post(
         `${API_URL}/apicitas/crearcitas`,
         { ...formData, fecha: fechaFormateada },
@@ -99,24 +149,33 @@ function RegistrarCitas() {
   };
 
   if (cargando || cargandoDoctores || cargandoHorarios) {
- return <Cargando texto="Cargando Informacion" />;
+    return <Cargando texto="Cargando Informacion" />;
   }
 
   if (!usuario || !usuario.id) {
-    return <Cargando texto=" No se pudo cargar la información del usuario. Por favor, inicie sesión nuevamente." />;
+    return (
+      <Cargando texto=" No se pudo cargar la información del usuario. Por favor, inicie sesión nuevamente." />
+    );
   }
 
   return (
     <Container>
       <h1 className="mt-4">Registrar Cita</h1>
-  {error && <div className="alert alert-danger">{error}</div>}
-  {errorDoctores && <div className="alert alert-warning">{errorDoctores}</div>}
+      {error && <div className="alert alert-danger">{error}</div>}
+      {errorDoctores && (
+        <div className="alert alert-warning">{errorDoctores}</div>
+      )}
       <InformacionUsuario usuario={usuario} />
       <Form onSubmit={ManejarEnvio}>
         <input type="hidden" name="id_usuario" value={formData.id_usuario} />
         <div className="mb-3">
           <label className="form-label">Doctor:</label>
-          <select name="id_doctor" className="form-select" value={formData.id_doctor} onChange={manejarCambio} required
+          <select
+            name="id_doctor"
+            className="form-select"
+            value={formData.id_doctor}
+            onChange={manejarCambio}
+            required
           >
             <option value="">Seleccione un Doctor</option>
             {doctores && doctores.length > 0 ? (
@@ -133,23 +192,42 @@ function RegistrarCitas() {
 
         <div className="mb-3">
           <label className="form-label">Tipo:</label>
-          <select className="form-select" name="tipo" value={formData.tipo} onChange={manejarCambio} required
+          <select
+            className="form-select"
+            name="tipo"
+            value={formData.tipo}
+            onChange={manejarCambio}
+            required
           >
             <option value="">Seleccione tipo</option>
             <option value="evaluacion">Evaluación</option>
-            <option value="procedimiento">Procedimiento</option>
+            <option value="procedimiento" disabled={esPrimeraCita || !tieneEvaluacion}>
+              Procedimiento{" "} {esPrimeraCita ? "(Primero evaluación)" : !tieneEvaluacion ? "(Requiere evaluación)" : ""}
+            </option>
           </select>
         </div>
 
         <div className="mb-3">
           <label className="form-label">Fecha:</label>
-          <input type="date" name="fecha" className="form-control" value={formData.fecha} onChange={manejarCambio} min={new Date().toISOString().split("T")[0]} required
+          <input
+            type="date"
+            name="fecha"
+            className="form-control"
+            value={formData.fecha}
+            onChange={manejarCambio}
+            min={new Date().toISOString().split("T")[0]}
+            required
           />
         </div>
 
         <div className="mb-3">
           <label className="form-label">Hora:</label>
-          <select className="form-select" value={horaSeleccionada} onChange={(e) => setHoraSeleccionada(e.target.value)} required disabled={!formData.fecha || !formData.tipo || cargandoHorarios}
+          <select
+            className="form-select"
+            value={horaSeleccionada}
+            onChange={(e) => setHoraSeleccionada(e.target.value)}
+            required
+            disabled={!formData.fecha || !formData.tipo || cargandoHorarios}
           >
             <option value="">
               {!formData.fecha || !formData.tipo
@@ -162,11 +240,23 @@ function RegistrarCitas() {
               formData.tipo &&
               !cargandoHorarios &&
               horariosDisponibles.map((hora) => (
-                <option key={hora} value={hora} disabled={estaOcupado( hora, horariosOcupados, cargandoHorarios, formData
+                <option
+                  key={hora}
+                  value={hora}
+                  disabled={estaOcupado(
+                    hora,
+                    horariosOcupados,
+                    cargandoHorarios,
+                    formData
                   )}
                 >
                   {hora}{" "}
-                  {estaOcupado(hora,horariosOcupados,cargandoHorarios,formData)
+                  {estaOcupado(
+                    hora,
+                    horariosOcupados,
+                    cargandoHorarios,
+                    formData
+                  )
                     ? "🟥 Ocupado"
                     : "🟩 Disponible"}
                 </option>
@@ -177,7 +267,13 @@ function RegistrarCitas() {
 
         <div className="mb-3">
           <label className="form-label">Observaciones:</label>
-          <textarea name="observaciones" className="form-control" value={formData.observaciones} onChange={manejarCambio} rows={3} placeholder="Ingrese observaciones adicionales (opcional)"
+          <textarea
+            name="observaciones"
+            className="form-control"
+            value={formData.observaciones}
+            onChange={manejarCambio}
+            rows={3}
+            placeholder="Ingrese observaciones adicionales (opcional)"
           />
         </div>
 
@@ -195,7 +291,10 @@ function RegistrarCitas() {
           >
             {cargandoHorarios ? "Verificando horarios..." : "Registrar Cita"}
           </button>
-          <button type="button" className="btn btn-secondary" onClick={() => navigate("/dashboard")}
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => navigate("/dashboard")}
           >
             Cancelar
           </button>
