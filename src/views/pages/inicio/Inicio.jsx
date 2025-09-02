@@ -1,5 +1,6 @@
 import React from "react";
 // import ChatWidget from "../../../components/Publico/ChatWidget";
+import ImplementoValores from "./ValoresClinica"
 import MapaConRuta from "../mapa/mapa";
 const Inicio = () => {
   return (
@@ -59,6 +60,7 @@ const Inicio = () => {
           y mente.
         </p>
       </div>
+      <ImplementoValores />
       {/* NUESTRO EQUIPO MÉDICO */}
       <div className="container-fluid px-5 my-5">
         <h2 className="text-center mb-4">Nuestro Equipo Médico</h2>
