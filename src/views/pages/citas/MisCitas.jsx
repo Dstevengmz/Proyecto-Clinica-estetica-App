@@ -13,6 +13,7 @@ function MisCitas() {
     id: c.id,
     fecha: new Date(c.fecha),
     tipo: c.tipo,
+    estado: c.estado,
     doctor: c.doctor?.nombre || "N/A",
     usuario: c.usuario?.nombre || "Yo",
   })), [citas]);
@@ -54,7 +55,10 @@ function MisCitas() {
                     <th>Fecha</th>
                     <th>Tipo</th>
                     <th>Doctor</th>
+                    <th>Estado</th>
                     <th>Acciones</th>
+                    
+
                   </tr>
                 </thead>
                 <tbody>
@@ -64,6 +68,7 @@ function MisCitas() {
                       <td>{f.fecha.toLocaleString()}</td>
                       <td>{f.tipo}</td>
                       <td>{f.doctor}</td>
+                      <td>{f.estado}</td>
                       <td>
                         <Button size="sm" variant="outline-secondary" onClick={() => verDetalles(citas[idx])}>
                           Ver detalles

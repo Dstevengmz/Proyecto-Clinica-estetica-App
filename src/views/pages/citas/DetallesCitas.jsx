@@ -10,6 +10,7 @@ function DetallesCitas() {
   const { userRole } = useAuth();
   const cita = selectedCitas || location.state?.cita || null;
   const historial = cita?.usuario?.historial_medico || {};
+  const estado = cita?.estado || "—";
 
   const fechaFormateada = useMemo(() => {
     if (!cita?.fecha) return "—";
@@ -72,6 +73,9 @@ function DetallesCitas() {
               <strong>Fecha:</strong> {fechaFormateada}
             </Col>
             <Col md={6} className="mb-2">
+              <strong>Estado:</strong> {estado}
+            </Col>
+            <Col md={6} className="mb-2">
               <strong>Tipo de cita:</strong>{" "}
               {cita.tipo ? (
                 <Badge bg={cita.tipo === "evaluacion" ? "info" : "success"}>
@@ -86,7 +90,7 @@ function DetallesCitas() {
           {cita.observaciones && (
             <>
               <hr />
-              <h5>Observaciones</h5>
+              <h5>Motivo Consulta</h5>
               <Row>
                 <Col md={12}>
                   {cita.observaciones}
