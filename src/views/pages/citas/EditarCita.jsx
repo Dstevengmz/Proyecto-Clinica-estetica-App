@@ -1,4 +1,4 @@
-import { Form, Row, Col, Card, Container } from "react-bootstrap";
+import { Form, Row, Col, Card, Container, Alert } from "react-bootstrap";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import horariosDisponibles from "../../../assets/js/HorariosDisponibles";
@@ -9,10 +9,14 @@ import useCitaPorId from "../../../hooks/useBuscarCita";
 import Cargando from "../../../components/Cargando";
 import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario";
 import useActualizarCita from "../../../hooks/useEditarCita";
+import { useAuth } from "../../../contexts/AuthenticaContext";
+import useCambiarEstadoCita from "../../../hooks/useCambiarEstadoCita";
 function EditarCitas() {
   const { id } = useParams();
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const { userRole } = useAuth();
+  const isDoctor = (userRole || "").toString().toLowerCase() === "doctor";
   const [hora, setHora] = useState("");
   const [formulario, setFormulario] = useState({ id_usuario: "", id_doctor: "", fecha: "", estado: "", tipo: "", observaciones: "", usuario: {}, doctor: {},
   });
@@ -22,6 +26,7 @@ function EditarCitas() {
   const { usuario, cargando } = useListarUsuario();
   const { actualizarCita, cargando: cargandoActualizacion } = useActualizarCita( id, formulario, hora, token
   );
+  const { cambiarEstadoCita, cargando: cargandoEstado } = useCambiarEstadoCita();
   const { horariosOcupados, cargando: cargandoHorarios, error,
   } = useHorariosDisponible(formulario.fecha, formulario.tipo, token);
   useEffect(() => {
@@ -121,7 +126,7 @@ function EditarCitas() {
       <Form onSubmit={actualizarCita}>
         <Form.Group className="mb-3">
           <Form.Label>Doctor</Form.Label>
-          <Form.Select name="id_doctor" value={formulario.id_doctor} onChange={manejarCambio} required>
+          <Form.Select name="id_doctor" value={formulario.id_doctor} onChange={manejarCambio} required disabled={isDoctor}>
             <option value="">Seleccione un doctor</option>
             {usuario
               .filter((u) => u.rol === "doctor")
@@ -135,7 +140,7 @@ function EditarCitas() {
 
         <Form.Group className="mb-3">
           <Form.Label>Tipo</Form.Label>
-          <Form.Select name="tipo" value={formulario.tipo} onChange={manejarCambio} required>
+          <Form.Select name="tipo" value={formulario.tipo} onChange={manejarCambio} required disabled={isDoctor}>
             <option value="">Seleccione tipo</option>
             <option value="evaluacion">Evaluación</option>
             <option value="procedimiento">Procedimiento</option>
@@ -146,14 +151,14 @@ function EditarCitas() {
           <Col md={6}>
             <Form.Group className="mb-3">
               <Form.Label>Fecha</Form.Label>
-              <Form.Control type="date" name="fecha" value={formulario.fecha} onChange={manejarCambio} min={new Date().toISOString().split("T")[0]} required/>
+              <Form.Control type="date" name="fecha" value={formulario.fecha} onChange={manejarCambio} min={new Date().toISOString().split("T")[0]} required disabled={isDoctor}/>
             </Form.Group>
           </Col>
 
           <Col md={6}>
             <Form.Group className="mb-3">
               <Form.Label>Hora</Form.Label>
-              <Form.Select value={hora} onChange={(e) => setHora(e.target.value)} required>
+              <Form.Select value={hora} onChange={(e) => setHora(e.target.value)} required disabled={isDoctor}>
                 <option value="">Seleccione una hora</option>
                 {horariosDisponibles.map((h) => {
                   const horariosOcupadosFiltrados = horariosOcupados.filter(
@@ -172,12 +177,35 @@ function EditarCitas() {
         </Row>
 
         <Form.Group className="mb-3">
-          <Form.Label>Observaciones</Form.Label>
-          <Form.Control type="text" name="observaciones" value={formulario.observaciones} onChange={manejarCambio}/>
+          <Form.Label>Motivo Consulta</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={4}
+            name="observaciones"
+            value={formulario.observaciones}
+            onChange={manejarCambio}
+            style={{ resize: "vertical" }}
+          />
         </Form.Group>
         <button type="submit" className="btn btn-success me-2" disabled={cargandoActualizacion}>
           {cargandoActualizacion ? "Actualizando..." : "Actualizar"}
         </button>
+        {isDoctor && (
+          <button
+            type="button"
+            className="btn btn-primary me-2"
+            disabled={cargandoEstado || formulario.estado === "realizada"}
+            onClick={async () => {
+              const resp = await cambiarEstadoCita(id, "realizada");
+              if (resp) {
+                alert("Cita marcada como realizada");
+                setFormulario((prev) => ({ ...prev, estado: "realizada" }));
+              }
+            }}
+          >
+            {cargandoEstado ? "Marcando..." : "Marcar como realizada"}
+          </button>
+        )}
         <button type="button" className="btn btn-secondary" onClick={() => navigate("/consultarcitas")} disabled={cargandoActualizacion}>
           Cancelar
         </button>

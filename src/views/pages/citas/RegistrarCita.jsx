@@ -34,13 +34,7 @@ function RegistrarCitas() {
   const [tieneEvaluacion, setTieneEvaluacion] = useState(false);
 
   const [horaSeleccionada, setHoraSeleccionada] = useState("");
-  const [formData, setFormData] = useState({
-    id_usuario: "",
-    id_doctor: "",
-    fecha: "",
-    estado: "pendiente",
-    tipo: "",
-    observaciones: "",
+  const [formData, setFormData] = useState({ id_usuario: "", id_doctor: "", fecha: "", estado: "pendiente", tipo: "",
   });
 
   useEffect(() => {
@@ -264,19 +258,6 @@ function RegistrarCitas() {
           </select>
           {error && <div className="text-danger small mt-1">{error}</div>}
         </div>
-
-        <div className="mb-3">
-          <label className="form-label">Observaciones:</label>
-          <textarea
-            name="observaciones"
-            className="form-control"
-            value={formData.observaciones}
-            onChange={manejarCambio}
-            rows={3}
-            placeholder="Ingrese observaciones adicionales (opcional)"
-          />
-        </div>
-
         <div className="d-flex gap-2 mt-4">
           <button
             type="submit"

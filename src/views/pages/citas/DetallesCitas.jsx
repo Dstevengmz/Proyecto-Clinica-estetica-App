@@ -11,6 +11,7 @@ function DetallesCitas() {
   const cita = selectedCitas || location.state?.cita || null;
   const historial = cita?.usuario?.historial_medico || {};
   const orden = cita?.orden || null;
+  const estado = cita?.estado || "—";
 
   const fechaFormateada = useMemo(() => {
     if (!cita?.fecha) return "—";
@@ -35,7 +36,6 @@ function DetallesCitas() {
     <div>
       <h3 className="mb-4 text-center">Detalles de la Cita</h3>
 
-      {/* Card de Detalles del Paciente */}
       <Card className="mb-4 shadow-sm">
         <Card.Body>
           <h5 className="text-primary mb-3">Paciente</h5>
@@ -76,6 +76,10 @@ function DetallesCitas() {
               <strong>Fecha:</strong> {fechaFormateada}
             </Col>
             <Col md={6} className="mb-3">
+
+              <strong>Estado:</strong> {estado}
+            </Col>
+            <Col md={6} className="mb-2">
               <strong>Tipo de cita:</strong>{" "}
               {cita.tipo ? (
                 <Badge bg={cita.tipo === "evaluacion" ? "info" : "success"}>
@@ -91,6 +95,7 @@ function DetallesCitas() {
             <>
               <hr />
               <h5 className="text-primary mb-3">Observaciones</h5>
+              <h5>Motivo Consulta</h5>
               <Row>
                 <Col md={12}>{cita.observaciones}</Col>
               </Row>
@@ -185,7 +190,7 @@ function DetallesCitas() {
         </Card>
       )}
 
-      {userRole === "usuario" && (
+      {(userRole === "usuario" || userRole === "doctor") && (
      
       <Card className="mb-4 shadow-sm">
         <Card.Body>
