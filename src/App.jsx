@@ -66,6 +66,8 @@ const HistorialNotificaciones = React.lazy(() =>
 //citas
 import { CitasContext } from "./contexts/CitasContext";
 const CrearCita = React.lazy(() => import("./views/pages/citas/RegistrarCita"));
+const RegistrarCitaAsistente = React.lazy(() => import("./views/pages/citas/RegistrarCitaAsistente"));
+
 const ConsultarCitas = React.lazy(() =>
   import("./views/pages/citas/ConsultarCitas")
 );
@@ -229,12 +231,12 @@ const App = () => {
                   />
                   <Route path="/calendariocitas" element={<CalendarioCitas />} />
                   <Route path="/crearcita" element={<CrearCita />} />
+                  <Route path="/crearcitaasistente" element={<RegistrarCitaAsistente />} />
                   <Route path="/consultarcitas" element={<ConsultarCitas />} />
                   <Route path="/detallescitas" element={<DetallesCitas />} />
                   <Route path="/editarcita/:id" element={<Editarcita />} />
                   <Route path="/miscitas" element={<MisCitas />} />
                   <Route path="/miscitas" element={<MisCitas />} />
-
                   {/* Procedimientos */}
                   <Route
                     path="/crearprocedimiento"
