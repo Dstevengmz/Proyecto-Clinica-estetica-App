@@ -11,6 +11,7 @@ import estaOcupado from "../../../assets/js/HorarioEstaOcupado";
 import Cargando from "../../../components/Cargando";
 import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario";
 import useMisCitas from "../../../hooks/useMisCitas";
+import useOrdenesEvaluacionRealizada from "../../../hooks/useOrdenesEvaluacionRealizada";
 import useListarUsuarios from "../../../hooks/useListarUsuarios";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -38,7 +39,9 @@ function RegistraCitaAsistente() {
     id_doctor: "",
     fecha: "",
     estado: "pendiente",
-    tipo: "",
+  // En el flujo del asistente, el tipo es siempre procedimiento
+  tipo: "procedimiento",
+    id_orden: "",
   });
 
   useEffect(() => {}, [citas, cargandoCitas]);
@@ -94,11 +97,38 @@ function RegistraCitaAsistente() {
 
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+  // Cargar órdenes elegibles cuando se seleccione usuario
+  const { ordenes: ordenesElegibles, cargando: cargandoOrdenes, error: errorOrdenes } = useOrdenesEvaluacionRealizada(
+    formData.id_usuario,
+    token
+  );
+
+  // Reiniciar selección dependiente cuando cambia el usuario
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      id_orden: "",
+      fecha: "",
+      tipo: "procedimiento",
+    }));
+    setHoraSeleccionada("");
+  }, [formData.id_usuario]);
   const ManejarEnvio = async (e) => {
     e.preventDefault();
 
-    if (!formData.fecha || !horaSeleccionada || !formData.tipo) {
-      alert("Debe seleccionar la fecha, hora y tipo de cita.");
+    if (!formData.id_usuario) {
+      alert("Debe seleccionar un usuario.");
+      return;
+    }
+
+    if (!formData.fecha || !horaSeleccionada) {
+      alert("Debe seleccionar la fecha y la hora.");
+      return;
+    }
+
+    // Validación: cuando el tipo es procedimiento, debe existir una orden seleccionada
+    if (formData.tipo === "procedimiento" && !formData.id_orden) {
+      alert("Debe seleccionar una orden asociada a una evaluación realizada para agendar el procedimiento.");
       return;
     }
 
@@ -186,6 +216,39 @@ function RegistraCitaAsistente() {
           </select>
         </div>
 
+  {/* Orden elegible por evaluación realizada */}
+        <div className="mb-3">
+          <label className="form-label">Orden (requiere evaluación realizada):</label>
+          <select
+            name="id_orden"
+            className="form-select"
+            value={formData.id_orden}
+            onChange={manejarCambio}
+            disabled={!formData.id_usuario || cargandoOrdenes}
+            required
+          >
+            <option value="">
+              {!formData.id_usuario
+                ? "Primero seleccione un usuario"
+                : cargandoOrdenes
+                ? "Cargando órdenes..."
+                : ordenesElegibles && ordenesElegibles.length > 0
+                ? "Seleccione una Orden"
+                : "No hay órdenes con evaluación realizada"}
+            </option>
+            {ordenesElegibles && ordenesElegibles.length > 0 &&
+              ordenesElegibles.map((orden) => (
+                <option key={orden.id} value={orden.id}>
+                  #{orden.id} - {orden?.procedimientos?.map(p => p.nombre).join(", ")}
+                </option>
+              ))}
+          </select>
+          {errorOrdenes && (
+            <div className="text-danger small mt-1">{errorOrdenes}</div>
+          )}
+        </div>
+        {/* Fin Orden */}
+
         <div className="mb-3">
           <label className="form-label">Doctor:</label>
           <select
@@ -210,20 +273,10 @@ function RegistraCitaAsistente() {
 
         <div className="mb-3">
           <label className="form-label">Tipo:</label>
-          <select
-            className="form-select"
-            name="tipo"
-            value={formData.tipo}
-            onChange={manejarCambio}
-            required
-          >
-            <option value="">Seleccione tipo</option>
-            <option value="evaluacion">Evaluación</option>
-            <option value="procedimiento">Procedimiento</option>
-          </select>
+          <input className="form-control" value="procedimiento" readOnly />
         </div>
 
-        <div className="mb-3">
+    <div className="mb-3">
           <label className="form-label">Fecha:</label>
           <input
             type="date"
@@ -232,6 +285,7 @@ function RegistraCitaAsistente() {
             value={formData.fecha}
             onChange={manejarCambio}
             min={new Date().toISOString().split("T")[0]}
+      disabled={!formData.id_orden}
             required
           />
         </div>
@@ -243,17 +297,19 @@ function RegistraCitaAsistente() {
             value={horaSeleccionada}
             onChange={(e) => setHoraSeleccionada(e.target.value)}
             required
-            disabled={!formData.fecha || !formData.tipo || cargandoHorarios}
+            disabled={!formData.id_orden || !formData.fecha || cargandoHorarios}
           >
             <option value="">
-              {!formData.fecha || !formData.tipo
-                ? "Primero seleccione fecha y tipo"
+              {!formData.id_orden
+                ? "Primero seleccione una orden"
+                : !formData.fecha
+                ? "Luego seleccione la fecha"
                 : cargandoHorarios
                 ? "Cargando horarios disponibles..."
                 : "Seleccione una hora"}
             </option>
             {formData.fecha &&
-              formData.tipo &&
+              formData.id_orden &&
               !cargandoHorarios &&
               horariosDisponibles.map((hora) => (
                 <option
