@@ -11,7 +11,7 @@ import estaOcupado from "../../../assets/js/HorarioEstaOcupado";
 import Cargando from "../../../components/Cargando";
 import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario";
 import useMisCitas from "../../../hooks/useMisCitas";
-import useListarUsuarios from "../../../hooks/useListaDeUsuarios";
+import useListarUsuarios from "../../../hooks/useListarUsuarios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -24,7 +24,7 @@ function RegistraCitaAsistente() {
     error: errorDoctores,
   } = useListarDoctores();
   const {
-    usuario: usuarios,
+    usuarios,
     cargando: cargandoUsuarios,
     error: errorUsuarios,
   } = useListarUsuarios();
