@@ -232,6 +232,66 @@ function DetallesCitas() {
         </Card.Body>
       </Card>
        )}
+
+      {(userRole === 'doctor' || userRole === 'usuario') && (
+        <Card className="mb-4 shadow-sm">
+          <Card.Body>
+            <h5 className="text-primary mb-3">Exámenes Adjuntos</h5>
+            {Array.isArray(cita.examenes) && cita.examenes.length > 0 ? (
+              <div className="row g-3">
+                {cita.examenes.map((ex) => {
+                  const isPdf = ex.archivo_examen?.toLowerCase().includes('.pdf');
+                  return (
+                    <div key={ex.id} className="col-md-4 col-sm-6">
+                      <div className="border rounded p-2 h-100 d-flex flex-column">
+                        <div className="mb-2 fw-semibold text-truncate" title={ex.nombre_examen}>{ex.nombre_examen}</div>
+                        {isPdf ? (
+                          <div className="flex-grow-1 d-flex align-items-center justify-content-center bg-light" style={{minHeight:'120px'}}>
+                            <span className="text-muted">PDF</span>
+                          </div>
+                        ) : (
+                          <div className="ratio ratio-4x3 mb-2" style={{overflow:'hidden', borderRadius:4}}>
+                            <img
+                              src={ex.archivo_examen}
+                              alt={ex.nombre_examen}
+                              style={{objectFit:'cover', width:'100%', height:'100%'}}
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-primary mt-auto"
+                          onClick={async () => {
+                            try {
+                              const token = localStorage.getItem('token');
+                              const resp = await fetch(`${import.meta.env.VITE_API_URL}/apiexamenes/descargar/${ex.id}`, {
+                                headers: { Authorization: `Bearer ${token}` }
+                              });
+                              const data = await resp.json();
+                              if (data?.url) {
+                                window.open(data.url, '_blank');
+                              } else {
+                                alert(data.error || 'No se pudo generar enlace');
+                              }
+                            } catch {
+                              alert('Error al solicitar URL segura');
+                            }
+                          }}
+                        >
+                          Ver / Descargar
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-muted mb-0">No hay exámenes adjuntos a esta cita.</p>
+            )}
+          </Card.Body>
+        </Card>
+      )}
     </div>
   );
 }

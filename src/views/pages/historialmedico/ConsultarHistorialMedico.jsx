@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { createContext, useContext } from "react";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +25,7 @@ const useHistorialClinicoContext = () => useContext(HistorialClinicoContext);
 
 function ConsultaHistorialMedico() {
   const [historialmedico, setHistorialmedico] = useState([]);
+  const [terminoBusqueda, setTerminoBusqueda] = useState("");
   const { selectedHistorialclinico, setSelectedHistorialclinico } =
     useHistorialClinicoContext();
   const navigate = useNavigate();
@@ -50,6 +51,25 @@ function ConsultaHistorialMedico() {
       });
   }, []);
 
+  // Filtrado (por id, nombre usuario, correo, rol, genero)
+  const historialFiltrado = useMemo(() => {
+    if (!terminoBusqueda.trim()) return historialmedico;
+    const t = terminoBusqueda.toLowerCase().trim();
+    return historialmedico.filter((item) => {
+      const u = item.usuario || {};
+      return (
+        (item.id && item.id.toString().includes(t)) ||
+        (u.nombre && u.nombre.toLowerCase().includes(t)) ||
+        (u.correo && u.correo.toLowerCase().includes(t)) ||
+        (u.rol && u.rol.toLowerCase().includes(t)) ||
+        (u.genero && u.genero.toLowerCase().includes(t))
+      );
+    });
+  }, [historialmedico, terminoBusqueda]);
+
+  const handleBusquedaChange = (e) => setTerminoBusqueda(e.target.value);
+  const limpiarBusqueda = () => setTerminoBusqueda("");
+
   const selectUser = (historialmedico) => {
     setSelectedHistorialclinico(historialmedico);
     navigate("/DetallesHistorialMedico");
@@ -60,19 +80,57 @@ function ConsultaHistorialMedico() {
       value={{ selectedHistorialclinico, setSelectedHistorialclinico }}
     >
       <div className="card-body">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h1 className="mb-0">Historial Médico</h1>
-          <CForm className="d-flex" role="search">
+        <h1 className="mb-0 text-center">Historial Médico</h1>
+        <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-center justify-content-md-between mb-3 gap-2 mt-3">
+          <div />
+          <CForm
+            className="d-flex justify-content-center justify-content-md-end"
+            role="search"
+            onSubmit={(e) => e.preventDefault()}
+          >
             <CFormInput
               type="search"
               className="me-2"
-              placeholder="Buscar..."
+              placeholder="Buscar por ID, nombre, correo, rol o género..."
+              value={terminoBusqueda}
+              onChange={handleBusquedaChange}
+              style={{ minWidth: "300px" }}
             />
-            <CButton type="submit" color="success" variant="outline">
-              Buscar
+            {terminoBusqueda && (
+              <CButton
+                type="button"
+                color="secondary"
+                variant="outline"
+                className="me-2"
+                onClick={limpiarBusqueda}
+                title="Limpiar búsqueda"
+              >
+                <i className="bi bi-x-lg"></i>
+              </CButton>
+            )}
+            <CButton type="button" color="success" variant="outline">
+              <i className="bi bi-search"></i>
             </CButton>
           </CForm>
         </div>
+
+        {terminoBusqueda && (
+          <div className="mb-3">
+            <div className="alert alert-info d-flex justify-content-between align-items-center">
+              <span>
+                <i className="bi bi-info-circle me-2"></i>
+                Mostrando {historialFiltrado.length} de {historialmedico.length} registros
+                {terminoBusqueda && ` para "${terminoBusqueda}"`}
+              </span>
+              {historialFiltrado.length === 0 && (
+                <span className="text-muted">
+                  <i className="bi bi-search me-1"></i>
+                  No se encontraron resultados
+                </span>
+              )}
+            </div>
+          </div>
+        )}
         <CTable striped hover responsive>
           <CTableHead>
             <CTableRow>
@@ -85,52 +143,54 @@ function ConsultaHistorialMedico() {
             </CTableRow>
           </CTableHead>
           <CTableBody>
-            {historialmedico.map((historialmedico) => (
-              <CTableRow key={historialmedico.id}>
-                <CTableDataCell>{historialmedico.id}</CTableDataCell>
-                <CTableDataCell>
-                  {historialmedico.usuario?.nombre || "Sin nombre"}
-                </CTableDataCell>
-                <CTableDataCell>
-                  {historialmedico.usuario?.correo || "Sin correo"}
-                </CTableDataCell>
-                <CTableDataCell>
-                  {historialmedico.usuario?.rol || "Sin rol"}
-                </CTableDataCell>
-                <CTableDataCell>
-                  {historialmedico.usuario?.genero || "Sin género"}
-                </CTableDataCell>
-                <CTableDataCell className="text-center">
-                  <div className="d-flex justify-content-center align-items-center gap-2">
-                    <a
-                      onClick={() => selectUser(historialmedico)}
-                      className="btn btn-sm btn-info"
-                      title="Ver detalles"
-                    >
-                      <i class="bi bi-eye-fill"></i>
-                    </a>
-                    <a
-                      onClick={() => {
-                        console.log(
-                          "ID que se va a enviar:",
-                          historialmedico.id
-                        );
-                        navigate(
-                          `/editarhistorialmedico/${historialmedico.id}`
-                        );
-                      }}
-                      className="btn btn-sm btn-primary"
-                      title="Editar"
-                    >
-                      <i class="bi bi-pencil-square"></i>
-                    </a>
-                    <a className="btn btn-sm btn-danger" title="Eliminar">
-                      <i class="bi bi-trash"></i>
-                    </a>
-                  </div>
+            {historialFiltrado.length === 0 ? (
+              <CTableRow>
+                <CTableDataCell colSpan={6} className="text-center text-muted py-4">
+                  {terminoBusqueda ? (
+                    <>
+                      <i className="bi bi-search me-2"></i>
+                      No se encontraron registros que coincidan con "{terminoBusqueda}"
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-x-circle me-2"></i>
+                      No hay registros de historial médico
+                    </>
+                  )}
                 </CTableDataCell>
               </CTableRow>
-            ))}
+            ) : (
+              historialFiltrado.map((hm) => (
+                <CTableRow key={hm.id}>
+                  <CTableDataCell>{hm.id}</CTableDataCell>
+                  <CTableDataCell>{hm.usuario?.nombre || "Sin nombre"}</CTableDataCell>
+                  <CTableDataCell>{hm.usuario?.correo || "Sin correo"}</CTableDataCell>
+                  <CTableDataCell>{hm.usuario?.rol || "Sin rol"}</CTableDataCell>
+                  <CTableDataCell>{hm.usuario?.genero || "Sin género"}</CTableDataCell>
+                  <CTableDataCell className="text-center">
+                    <div className="d-flex justify-content-center align-items-center gap-2">
+                      <a
+                        onClick={() => selectUser(hm)}
+                        className="btn btn-sm btn-info"
+                        title="Ver detalles"
+                      >
+                        <i className="bi bi-eye-fill"></i>
+                      </a>
+                      <a
+                        onClick={() => navigate(`/editarhistorialmedico/${hm.id}`)}
+                        className="btn btn-sm btn-primary"
+                        title="Editar"
+                      >
+                        <i className="bi bi-pencil-square"></i>
+                      </a>
+                      <a className="btn btn-sm btn-danger" title="Eliminar">
+                        <i className="bi bi-trash"></i>
+                      </a>
+                    </div>
+                  </CTableDataCell>
+                </CTableRow>
+              ))
+            )}
           </CTableBody>
         </CTable>
       </div>

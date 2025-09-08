@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from "react"
+import { createContext, useState, useEffect, useContext, useRef, useCallback } from "react"
 
 const AuthContext = createContext()
 const getUserRoleFromToken = (token) => {
@@ -24,29 +24,91 @@ const getUserRoleFromToken = (token) => {
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userRole, setUserRole] = useState(null)
+  const logoutTimerRef = useRef(null)
+
+  const clearLogoutTimer = () => {
+    if (logoutTimerRef.current) {
+      clearTimeout(logoutTimerRef.current)
+      logoutTimerRef.current = null
+    }
+  }
+
+  const scheduleAutoLogout = useCallback((token) => {
+    clearLogoutTimer()
+    try {
+      if (!token) return
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      if (!payload.exp) return
+      const expMs = payload.exp * 1000
+      const delay = expMs - Date.now()
+      if (delay <= 0) {
+        // Ya expiró
+        logout()
+        return
+      }
+      logoutTimerRef.current = setTimeout(() => {
+        logout()
+        // Opcional: podríamos disparar un evento custom para mostrar modal fuera del contexto
+        window.dispatchEvent(new CustomEvent('token-expired'))
+      }, delay)
+    } catch (e) {
+      console.error('No se pudo programar el auto-logout:', e)
+    }
+  }, [])
+
   useEffect(() => {
     const token = localStorage.getItem("token")
     if (token) {
       setIsAuthenticated(true)
       const role = getUserRoleFromToken(token)
       setUserRole(role)
+      scheduleAutoLogout(token)
     } else {
       setIsAuthenticated(false)
       setUserRole(null)
     }
-  }, [])
+  }, [scheduleAutoLogout])
+
+  // Escuchar cambios externos al localStorage (otra pestaña) y evento de expiración
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === 'token') {
+        const newToken = e.newValue
+        if (!newToken) {
+          // Eliminado
+          logout()
+        } else {
+          setIsAuthenticated(true)
+          setUserRole(getUserRoleFromToken(newToken))
+          scheduleAutoLogout(newToken)
+        }
+      }
+    }
+    const handleExpired = () => {
+      // Ya se ejecutó logout en timeout, aquí podríamos mostrar algo adicional si se quiere.
+    }
+    window.addEventListener('storage', handleStorage)
+    window.addEventListener('token-expired', handleExpired)
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('token-expired', handleExpired)
+      clearLogoutTimer()
+    }
+  }, [scheduleAutoLogout])
 
   const login = (token) => {
     localStorage.setItem("token", token)
     setIsAuthenticated(true)
     const role = getUserRoleFromToken(token)
     setUserRole(role)
+  scheduleAutoLogout(token)
   }
 
   const logout = () => {
     localStorage.removeItem("token")
     setIsAuthenticated(false)
     setUserRole(null)
+  clearLogoutTimer()
   }
 
   return (

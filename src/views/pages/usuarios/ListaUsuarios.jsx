@@ -48,7 +48,6 @@ function ConsultarListaUsuarios() {
     });
   }, [usuario, terminoBusqueda]);
 
-  // Manejar el cambio en el input de búsqueda
   const handleBusquedaChange = (e) => {
     setTerminoBusqueda(e.target.value);
   };

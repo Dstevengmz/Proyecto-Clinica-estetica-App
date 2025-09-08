@@ -34,7 +34,7 @@ import { useAuth } from '../contexts/AuthenticaContext'
 const AppHeader = () => {
   const headerRef = useRef()
   const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
-  const { userRole } = useAuth()
+  const { userRole, isAuthenticated } = useAuth()
 
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
@@ -134,7 +134,7 @@ const AppHeader = () => {
           <li className="nav-item py-1">
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
-          <AppHeaderDropdown />
+          {isAuthenticated && <AppHeaderDropdown />}
         </CHeaderNav>
       </CContainer>
       <CContainer className="px-4" fluid>

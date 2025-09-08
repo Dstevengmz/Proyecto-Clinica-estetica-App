@@ -1,9 +1,8 @@
-import { useContext } from "react";
 import { Form, Row, Col, Card } from "react-bootstrap";
-import { ProcedimientoContext } from "./ConsultarProcedimientos";
+import { useProcedimientoContext } from "../../../contexts/ProcedimientoContext";
 
 function UserDetail() {
-  const { selectedProcedimiento } = useContext(ProcedimientoContext);
+  const { selectedProcedimiento } = useProcedimientoContext();
 
   if (!selectedProcedimiento) {
     return (

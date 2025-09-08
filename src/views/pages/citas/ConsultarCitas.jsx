@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Container } from "react-bootstrap";
 import { CitasContext, useCitasContext } from "../../../contexts/CitasContext";
 import FiltrosCitas from "./FiltrosCitas";
@@ -25,6 +25,7 @@ import {
   CTableDataCell,
   CButton,
 } from "@coreui/react";
+import BuscadorCitas from "./BuscadorCitas";
 
 
 function Consultarcitas() {
@@ -40,25 +41,22 @@ function Consultarcitas() {
   const [tipoSeleccionado, setTipoSeleccionado] = useState("");
   const [fechaTipo, setFechaTipo] = useState("");
 
-  // Hook para obtener citas por día
   const { citas: citasPorDia, loading: cargandoCitasDia } =
     useCitasPorDiaDoctor(tipoFiltro === "dia" ? fechaSeleccionada : "");
 
-  // Hook para obtener citas por rango
   const { citas: citasPorRango, loading: cargandoCitasRango } =
     useCitasPorRangoDoctor(
       tipoFiltro === "rango" ? fechaDesde : "",
       tipoFiltro === "rango" ? fechaHasta : ""
     );
 
-  // Hook para obtener citas por tipo
   const { citas: citasPorTipo, loading: cargandoCitasTipo } =
     useCitasPorTipoDoctor(
       tipoFiltro === "tipo" ? tipoSeleccionado : "",
       tipoFiltro === "tipo" ? fechaTipo : ""
     );
 
-  const citasAMostrar =
+  const citasBaseRaw =
     tipoFiltro === "dia"
       ? citasPorDia
       : tipoFiltro === "rango"
@@ -66,6 +64,37 @@ function Consultarcitas() {
       : tipoFiltro === "tipo"
       ? citasPorTipo
       : todasLasCitas;
+  const citasBase = useMemo(() => Array.isArray(citasBaseRaw) ? citasBaseRaw : [], [citasBaseRaw]);
+
+  // Búsqueda libre
+  const [terminoBusqueda, setTerminoBusqueda] = useState("");
+  const [citasFiltradasBusqueda, setCitasFiltradasBusqueda] = useState(citasBase);
+
+  // Actualiza filtradas cuando cambian las citas base
+  const citasAMostrar = useMemo(() => {
+    return citasFiltradasBusqueda;
+  }, [citasFiltradasBusqueda]);
+
+  // Si cambia la base (por filtros de fecha/tipo) re-aplico búsqueda
+  useEffect(() => {
+    if (!terminoBusqueda.trim()) {
+      setCitasFiltradasBusqueda(citasBase);
+    } else {
+      // delegamos al componente BuscadorCitas mediante onResultado al cambiar termino
+      // aquí sólo aseguramos que la base cambió
+      const t = terminoBusqueda.toLowerCase().trim();
+      setCitasFiltradasBusqueda(
+        citasBase.filter(c =>
+          (c.id && c.id.toString().includes(t)) ||
+          (c.usuario?.nombre && c.usuario.nombre.toLowerCase().includes(t)) ||
+          (c.doctor?.nombre && c.doctor.nombre.toLowerCase().includes(t)) ||
+          (c.tipo && c.tipo.toLowerCase().includes(t)) ||
+          (c.estado && c.estado.toLowerCase().includes(t)) ||
+          (c.usuario?.correo && c.usuario.correo.toLowerCase().includes(t))
+        )
+      );
+    }
+  }, [citasBase, terminoBusqueda]);
 
   const estasCargando =
     tipoFiltro === "dia"
@@ -131,39 +160,33 @@ function Consultarcitas() {
       </Container>
     );
   }
-  if (!estasCargando && citasAMostrar.length === 0) {
-    return (
-      <Container>
-        <div
-          className="d-flex flex-column justify-content-center align-items-center"
-          style={{ minHeight: "200px" }}
-        >
-          <div className="text-center mb-3">
-            <h5>
-              No hay citas disponibles
-              {tipoFiltro !== "todas" ? " para el filtro seleccionado" : ""}
-            </h5>
-            {tipoFiltro !== "todas" && (
-              <p className="text-muted">
-                Intenta con otra fecha o tipo de cita, o ve todas las citas
-                disponibles.
-              </p>
-            )}
-          </div>
-          {tipoFiltro !== "todas" && (
-            <CButton color="primary" onClick={handleMostrarTodasLasCitas}>
-              <CIcon icon={cilCalendarCheck} className="me-1" />
-              Ver todas las citas
-            </CButton>
-          )}
-        </div>
-      </Container>
-    );
-  }
+  // Eliminamos early return por lista vacía; ahora se maneja dentro de la tabla.
   return (
     <CitasContext.Provider value={{ selectedCitas, setSelectedCitas }}>
       <div className="card-body">
-        <FiltrosCitas fechaSeleccionada={fechaSeleccionada} setFechaSeleccionada={setFechaSeleccionada} handleFiltrarPorDia={handleFiltrarPorDia} fechaDesde={fechaDesde} setFechaDesde={setFechaDesde} fechaHasta={fechaHasta} setFechaHasta={setFechaHasta} handleFiltrarPorRango={handleFiltrarPorRango} tipoSeleccionado={tipoSeleccionado} setTipoSeleccionado={setTipoSeleccionado} fechaTipo={fechaTipo} setFechaTipo={setFechaTipo} handleFiltrarPorTipo={handleFiltrarPorTipo} tipoFiltro={tipoFiltro} setTipoFiltro={setTipoFiltro} handleMostrarTodasLasCitas={handleMostrarTodasLasCitas}
+        <FiltrosCitas
+          fechaSeleccionada={fechaSeleccionada}
+          setFechaSeleccionada={setFechaSeleccionada}
+          handleFiltrarPorDia={handleFiltrarPorDia}
+          fechaDesde={fechaDesde}
+          setFechaDesde={setFechaDesde}
+          fechaHasta={fechaHasta}
+          setFechaHasta={setFechaHasta}
+          handleFiltrarPorRango={handleFiltrarPorRango}
+          tipoSeleccionado={tipoSeleccionado}
+            setTipoSeleccionado={setTipoSeleccionado}
+          fechaTipo={fechaTipo}
+          setFechaTipo={setFechaTipo}
+          handleFiltrarPorTipo={handleFiltrarPorTipo}
+          tipoFiltro={tipoFiltro}
+          setTipoFiltro={setTipoFiltro}
+          handleMostrarTodasLasCitas={handleMostrarTodasLasCitas}
+        />
+        <BuscadorCitas
+          citas={citasBase}
+          termino={terminoBusqueda}
+          onTerminoChange={setTerminoBusqueda}
+          onResultado={setCitasFiltradasBusqueda}
         />
         <CTable striped hover responsive>
           <CTableHead>
@@ -178,65 +201,74 @@ function Consultarcitas() {
             </CTableRow>
           </CTableHead>
           <CTableBody>
-            {citasAMostrar.map((cita) => (
-              <CTableRow key={cita.id}>
-                <CTableDataCell>{cita.id}</CTableDataCell>
-                <CTableDataCell>{cita.usuario?.nombre || "N/A"}</CTableDataCell>
-                <CTableDataCell>{cita.doctor?.nombre || "N/A"}</CTableDataCell>
-                <CTableDataCell>
-                  {new Date(cita.fecha).toLocaleString("es-CO", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </CTableDataCell>
-                <CTableDataCell>
-                  <span
-                    className={`badge ${
-                      cita.tipo === "evaluacion" ? "bg-info" : "bg-success"
-                    }`}
-                  >
-                    {cita.tipo || "N/A"}
-                  </span>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <span
-                    className={`badge ${
-                      cita.estado === "confirmada"
-                        ? "bg-success"
-                        : cita.estado === "pendiente"
-                        ? "bg-warning"
-                        : "bg-danger"
-                    }`}
-                  >
-                    {cita.estado || "N/A"}
-                  </span>
-                </CTableDataCell>
-                <CTableDataCell>
-                  <div className="d-flex gap-2 justify-content-center">
-                    <button
-                      className="btn btn-sm btn-info"
-                      title="Ver detalles"
-                      onClick={() => selectCitas(cita)}
-                    >
-                      <CIcon icon={cibCassandra} size="sm" />
-                    </button>
-                    <button
-                      className="btn btn-sm btn-primary"
-                      title="Editar"
-                      onClick={() => navigate(`/editarcita/${cita.id}`)}
-                    >
-                      <CIcon icon={cilPenAlt} size="sm" />
-                    </button>
-                    <button className="btn btn-sm btn-danger" title="Eliminar">
-                      <CIcon icon={cilXCircle} size="sm" />
-                    </button>
+            {(!citasAMostrar || citasAMostrar.length === 0) ? (
+              <CTableRow>
+                <CTableDataCell colSpan={7} className="text-center text-muted py-4">
+                  <div className="mb-2">
+                    <i className="bi bi-x-circle me-2" />
+                    No hay citas {tipoFiltro !== 'todas' ? 'para el filtro o búsqueda aplicada' : 'registradas'}.
                   </div>
+                  {(tipoFiltro !== 'todas' || terminoBusqueda) && (
+                    <CButton size="sm" color="primary" variant="outline" onClick={handleMostrarTodasLasCitas}>
+                      <CIcon icon={cilCalendarCheck} className="me-1" /> Ver todas
+                    </CButton>
+                  )}
                 </CTableDataCell>
               </CTableRow>
-            ))}
+            ) : (
+              citasAMostrar.map((cita) => (
+                <CTableRow key={cita.id}>
+                  <CTableDataCell>{cita.id}</CTableDataCell>
+                  <CTableDataCell>{cita.usuario?.nombre || "N/A"}</CTableDataCell>
+                  <CTableDataCell>{cita.doctor?.nombre || "N/A"}</CTableDataCell>
+                  <CTableDataCell>
+                    {new Date(cita.fecha).toLocaleString("es-CO", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    <span className={`badge ${cita.tipo === "evaluacion" ? "bg-info" : "bg-success"}`}>
+                      {cita.tipo || "N/A"}
+                    </span>
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    <span className={`badge ${
+                        cita.estado === "confirmada"
+                          ? "bg-success"
+                          : cita.estado === "pendiente"
+                          ? "bg-warning"
+                          : "bg-danger"}`}>
+                      {cita.estado || "N/A"}
+                    </span>
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    <div className="d-flex gap-2 justify-content-center">
+                      <button
+                        className="btn btn-sm btn-info"
+                        title="Ver detalles"
+                        onClick={() => selectCitas(cita)}
+                      >
+                        <CIcon icon={cibCassandra} size="sm" />
+                      </button>
+                      <button
+                        className="btn btn-sm btn-primary"
+                        title="Editar"
+                        onClick={() => navigate(`/editarcita/${cita.id}`)}
+                      >
+                        <CIcon icon={cilPenAlt} size="sm" />
+                      </button>
+                      <button className="btn btn-sm btn-danger" title="Eliminar">
+                        <CIcon icon={cilXCircle} size="sm" />
+                      </button>
+                    </div>
+                  </CTableDataCell>
+                </CTableRow>
+              ))
+            )}
           </CTableBody>
         </CTable>
       </div>

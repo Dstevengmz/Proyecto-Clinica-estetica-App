@@ -10,6 +10,7 @@ import "./scss/examples.scss";
 //Verificar Token
 import VerificarTokenExpirado from "./assets/js/ValidarTokenExpirado";
 import TokenExpiradoAlerta from "./assets/js/MensajeTokenEXpirado";
+import { useAuth } from "./contexts/AuthenticaContext";
 
 // Layout
 const DefaultLayout = React.lazy(() => import("./layout/DefaultLayout"));
@@ -91,7 +92,7 @@ const ConsultarProcedimientos = React.lazy(() =>
 const DetallesProcedimientos = React.lazy(() =>
   import("./views/pages/procedimientos/DetallesProcedimientos")
 );
-import { ProcedimientoContext } from "./views/pages/procedimientos/ConsultarProcedimientos";
+import { ProcedimientoProvider } from "./contexts/ProcedimientoContext";
 const EditarProcedimiento = React.lazy(() =>
   import("./views/pages/procedimientos/EditarProcedimiento")
 );
@@ -106,13 +107,12 @@ function RutaProtegida({ children }) {
   const autenticacionValida = localStorage.getItem("token");
   return autenticacionValida ? children : <Navigate to="/iniciarsesion" />;
 }
-// Rutas internas
-const Dashboard = React.lazy(() => import("./views/dashboard/Dashboard"));
+// Rutas internas (router de dashboards por rol)
+const DashboardRouter = React.lazy(() => import("./views/dashboard/DashboardRouter"));
 const App = () => {
   const [selectedHistorialclinico, setSelectedHistorialclinico] =
     useState(null);
   const [selectedCitas, setSelectedCitas] = useState(null);
-  const [selectedProcedimiento, setSelectedProcedimiento] = useState(null);
   const [selectedListarusuarios, setSelectedListarusuarios] = useState(null);
   const { isColorModeSet, setColorMode } = useColorModes(
     "coreui-free-react-admin-template-theme"
@@ -127,22 +127,21 @@ const App = () => {
     if (!isColorModeSet()) setColorMode(storedTheme);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const { logout } = useAuth();
   useEffect(() => {
     const token = VerificarTokenExpirado.obtenerToken();
     if (token && !VerificarTokenExpirado.tokenEsValido(token)) {
-      localStorage.removeItem("token");
+      logout();
       TokenExpiradoAlerta(navigate);
     }
-  }, [navigate]);
+  }, [navigate, logout]);
 
   return (
     <HistorialClinicoContext.Provider
       value={{ selectedHistorialclinico, setSelectedHistorialclinico }}
     >
       <CitasContext.Provider value={{ selectedCitas, setSelectedCitas }}>
-        <ProcedimientoContext.Provider
-          value={{ selectedProcedimiento, setSelectedProcedimiento }}
-        >
+  <ProcedimientoProvider>
           <ListarUsuariosContext.Provider
             value={{ selectedListarusuarios, setSelectedListarusuarios }}
           >
@@ -186,7 +185,7 @@ const App = () => {
                     </RutaProtegida>
                   }
                 >
-                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/dashboard" element={<DashboardRouter />} />
                   <Route path="/404" element={<Page404 />} />
                   <Route path="/500" element={<Page500 />} />
 
@@ -280,7 +279,7 @@ const App = () => {
               </Routes>
             </Suspense>
           </ListarUsuariosContext.Provider>
-        </ProcedimientoContext.Provider>
+        </ProcedimientoProvider>
       </CitasContext.Provider>
     </HistorialClinicoContext.Provider>
   );

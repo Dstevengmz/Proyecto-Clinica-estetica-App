@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Form, Container, Row, Col, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -77,6 +77,30 @@ function RegistrarCitas() {
 
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+  // Estado para exámenes opcionales
+  const [archivosExamenes, setArchivosExamenes] = useState([]); // Array<File>
+  const fileInputRef = useRef(null);
+
+  const handleAddFiles = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setArchivosExamenes((prev) => {
+      const merged = [...prev, ...files];
+      // Limite opcional de 10
+      return merged.slice(0, 10);
+    });
+    // Reset para permitir volver a seleccionar el mismo archivo si se desea
+    e.target.value = '';
+  };
+
+  const handleRemoveFile = (index) => {
+    setArchivosExamenes((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const triggerFileDialog = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
   const ManejarEnvio = async (e) => {
     e.preventDefault();
 
@@ -114,7 +138,7 @@ function RegistrarCitas() {
     const fechaFormateada = `${formData.fecha}T${horaSeleccionada}:00`;
 
     try {
-      await axios.post(
+      const resp = await axios.post(
         `${API_URL}/apicitas/crearcitas`,
         { ...formData, fecha: fechaFormateada },
         {
@@ -124,6 +148,22 @@ function RegistrarCitas() {
           },
         }
       );
+
+      const citaCreada = resp.data; // debe contener id
+
+      // Subir exámenes si el usuario seleccionó archivos
+  if (citaCreada?.id && archivosExamenes && archivosExamenes.length > 0) {
+        const fd = new FormData();
+        [...archivosExamenes].forEach((f) => fd.append("archivos", f));
+        try {
+          await axios.post(`${API_URL}/apiexamenes/subir/${citaCreada.id}` , fd, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        } catch (subErr) {
+          console.error("Error subiendo exámenes:", subErr);
+          Swal.fire("Advertencia", "La cita se creó pero los exámenes no se pudieron subir.", "warning");
+        }
+      }
 
       Swal.fire(
         "Éxito",
@@ -258,7 +298,41 @@ function RegistrarCitas() {
           </select>
           {error && <div className="text-danger small mt-1">{error}</div>}
         </div>
-        <div className="d-flex gap-2 mt-4">
+        {/* Sección opcional de subida de exámenes */}
+        <hr />
+        <div className="mb-3">
+          <label className="form-label">Exámenes (opcional):</label>
+          <div className="d-flex gap-2 mb-2">
+            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={triggerFileDialog}>
+              Agregar Archivo
+            </button>
+            {archivosExamenes.length > 0 && (
+              <span className="text-success small align-self-center">{archivosExamenes.length} archivo(s) listos</span>
+            )}
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,application/pdf"
+            className="d-none"
+            onChange={handleAddFiles}
+          />
+          {archivosExamenes.length > 0 && (
+            <ul className="list-group mb-2">
+              {archivosExamenes.map((f, i) => (
+                <li key={i} className="list-group-item d-flex justify-content-between align-items-center">
+                  <span className="text-truncate" style={{maxWidth:'70%'}} title={f.name}>{f.name}</span>
+                  <button type="button" className="btn btn-sm btn-danger" onClick={() => handleRemoveFile(i)}>X</button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <small className="text-muted d-block">Formatos: Imágenes o PDF. Máx 10 archivos (10MB c/u).</small>
+        </div>
+  {/* Eliminados campos de nombre y observaciones según solicitud */}
+
+        <div className="d-flex gap-2 mt-2">
           <button
             type="submit"
             className="btn btn-primary"
