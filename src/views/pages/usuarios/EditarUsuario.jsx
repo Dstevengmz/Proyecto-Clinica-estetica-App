@@ -14,6 +14,13 @@ function EditarUsuario() {
     nombre: "",
     correo: "",
     rol: "",
+    numerodocumento:"",
+    telefono:"",
+    direccion:"",
+    genero:"",
+    fecha_nacimiento:"",
+    ocupacion:"",
+    estado_civil:"",
     
   });
 
@@ -22,10 +29,23 @@ function EditarUsuario() {
 
   useEffect(() => {
     if (usuario) {
+      const formatDateForInput = (dateString) => {
+        if (!dateString) return "";
+        const d = new Date(dateString);
+        if (isNaN(d)) return dateString; // fallback if already formatted or invalid
+        return d.toISOString().split("T")[0];
+      };
       setFormulario({
         nombre: usuario.nombre || "",
         correo: usuario.correo || "",
         rol: usuario.rol || "",
+        numerodocumento:usuario.numerodocumento || "",
+        telefono:usuario.telefono|| "",
+        direccion:usuario.direccion || "",
+        genero:usuario.genero || "",
+        fecha_nacimiento: formatDateForInput(usuario.fecha_nacimiento),
+        ocupacion:usuario.ocupacion || "",
+        estado_civil:usuario.estado_civil || "",
       });
     }
   }, [usuario]);
@@ -100,13 +120,45 @@ function EditarUsuario() {
 
       <Form onSubmit={manejarSubmit}>
         <Form.Group className="mb-3">
-          <Form.Label>Nombre</Form.Label>
+          <Form.Label>Nombre : </Form.Label>
           <Form.Control type="text" name="nombre" value={formulario.nombre} onChange={manejarCambio} required/>
         </Form.Group>
-
         <Form.Group className="mb-3">
-          <Form.Label>Correo</Form.Label>
+          <Form.Label>Correo : </Form.Label>
           <Form.Control type="email" name="email" value={formulario.correo} onChange={manejarCambio} required/>
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Label>Numero documento : </Form.Label>
+          <Form.Control type="text" name="numerodocumento" value={formulario.numerodocumento} onChange={manejarCambio} required/>
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Label>Numero Ceular : </Form.Label>
+          <Form.Control type="text" name="telefono" value={formulario.telefono} onChange={manejarCambio} required/>
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Label>Direccion : </Form.Label>
+          <Form.Control type="text" name="direccion" value={formulario.direccion} onChange={manejarCambio} required/>
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Label>Genero : </Form.Label>
+          <Form.Select name="genero" value={formulario.genero} onChange={manejarCambio} required>
+            <option value="">Seleccione su género</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Femenino">Femenino</option>
+            <option value="Otro">Otro</option>
+          </Form.Select>
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Label>Fecha De Nacimiento : </Form.Label>
+          <Form.Control type="date" name="fecha_nacimiento" value={formulario.fecha_nacimiento} onChange={manejarCambio} required/>
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Label>Ocupacion : </Form.Label>
+          <Form.Control type="text" name="ocupacion" value={formulario.ocupacion} onChange={manejarCambio} required/>
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Label>Estado Civil : </Form.Label>
+          <Form.Control type="text" name="estado_civil" value={formulario.estado_civil} onChange={manejarCambio} required/>
         </Form.Group>
         <button type="submit" className="btn btn-success me-2" disabled={cargandoActualizacion}>
           {cargandoActualizacion ? "Actualizando..." : "Actualizar"}

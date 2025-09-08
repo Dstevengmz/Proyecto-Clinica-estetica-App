@@ -18,7 +18,7 @@ function EditarCitas() {
   const { userRole } = useAuth();
   const isDoctor = (userRole || "").toString().toLowerCase() === "doctor";
   const [hora, setHora] = useState("");
-  const [formulario, setFormulario] = useState({ id_usuario: "", id_doctor: "", fecha: "", estado: "", tipo: "", observaciones: "", usuario: {}, doctor: {},
+  const [formulario, setFormulario] = useState({ id_usuario: "", id_doctor: "", fecha: "", estado: "", tipo: "", observaciones: "", examenes_requeridos: "", usuario: {}, doctor: {},
   });
 
   const { cita, hora: horaInicial, cargando: citaidcargando, error: erroridcita,
@@ -35,7 +35,7 @@ function EditarCitas() {
 
   useEffect(() => {
     if (cita) {
-      setFormulario({id_usuario: cita.id_usuario || "",id_doctor: cita.id_doctor || "",fecha: cita.fecha || "",estado: cita.estado || "",tipo: cita.tipo || "",observaciones: cita.observaciones || "",usuario: cita.usuario || {},doctor: cita.doctor || {},
+  setFormulario({id_usuario: cita.id_usuario || "",id_doctor: cita.id_doctor || "",fecha: cita.fecha || "",estado: cita.estado || "",tipo: cita.tipo || "",observaciones: cita.observaciones || "",examenes_requeridos: cita.examenes_requeridos || "",usuario: cita.usuario || {},doctor: cita.doctor || {},
       });
     }
     if (horaInicial) {
@@ -49,6 +49,10 @@ function EditarCitas() {
 
     if (name === "fecha" || name === "tipo") {
       setHora("");
+      if (name === 'tipo' && value !== 'evaluacion') {
+        // Si deja de ser evaluación limpiamos exámenes requeridos
+        setFormulario((prev)=>({...prev, examenes_requeridos: ''}));
+      }
     }
   };
   if (cargando || citaidcargando) {
@@ -186,6 +190,29 @@ function EditarCitas() {
             onChange={manejarCambio}
             style={{ resize: "vertical" }}
           />
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Label>Exámenes Requeridos</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={3}
+            name="examenes_requeridos"
+            value={formulario.examenes_requeridos}
+            onChange={manejarCambio}
+            style={{ resize: "vertical" }}
+            placeholder="Escriba los exámenes o estudios que necesita el paciente"
+            disabled={!isDoctor || formulario.tipo !== 'evaluacion'}
+          />
+          {!isDoctor && (
+            <Form.Text muted>
+              Solo el doctor puede modificar los exámenes requeridos.
+            </Form.Text>
+          )}
+          {isDoctor && formulario.tipo !== 'evaluacion' && (
+            <Form.Text muted>
+              Solo disponible en citas de evaluación.
+            </Form.Text>
+          )}
         </Form.Group>
         <button type="submit" className="btn btn-success me-2" disabled={cargandoActualizacion}>
           {cargandoActualizacion ? "Actualizando..." : "Actualizar"}
