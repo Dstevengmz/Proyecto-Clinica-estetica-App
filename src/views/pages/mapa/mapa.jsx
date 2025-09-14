@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
+import { Button, Alert, Spinner } from "react-bootstrap";
 import "leaflet/dist/leaflet.css";
 
 const containerStyle = {
@@ -78,11 +79,7 @@ function MapaConRuta() {
   return (
     <div>
       {/* Mapa */}
-      <MapContainer
-        center={clinicaUbicacion}
-        zoom={14}
-        style={containerStyle}
-      >
+      <MapContainer center={clinicaUbicacion} zoom={14} style={containerStyle}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -104,39 +101,42 @@ function MapaConRuta() {
         {ruta && <Polyline positions={ruta} color="blue" />}
       </MapContainer>
 
-      {/* Botón de acción */}
+      {/* Botón y mensajes */}
       <div className="text-center mt-3">
         {!posCliente && !error && (
           <div>
-            <button
-              className="btn btn-primary"
+            <Button
+              variant="primary"
               onClick={solicitarUbicacion}
               disabled={solicitandoUbicacion}
             >
               {solicitandoUbicacion ? (
                 <>
-                  <span
-                    className="spinner-border spinner-border-sm me-2"
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
                     role="status"
                     aria-hidden="true"
-                  ></span>
+                    className="me-2"
+                  />
                   Obteniendo ubicación...
                 </>
               ) : (
                 <>📍 Obtener mi ubicación y ruta</>
               )}
-            </button>
+            </Button>
             <p className="text-muted mt-2 small">
               Haz clic para permitir el acceso a tu ubicación y ver la ruta a la clínica
             </p>
           </div>
         )}
 
-        {/* Errores */}
+        {/* Errores con Alert */}
         {error && (
-          <div className="alert alert-warning mt-3">
-            <p>{error}</p>
-          </div>
+          <Alert variant="warning" className="mt-3">
+            {error}
+          </Alert>
         )}
       </div>
     </div>
