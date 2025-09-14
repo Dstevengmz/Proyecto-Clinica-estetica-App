@@ -1,32 +1,19 @@
-import React, { useState, useEffect } from "react";
-import {
-  GoogleMap,
-  Marker,
-  DirectionsRenderer,
-  useJsApiLoader,
-} from "@react-google-maps/api";
+import React, { useState } from "react";
+import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 const containerStyle = {
   width: "100%",
   height: "400px",
 };
 
-const clinicaUbicacion = {
-  lat: 2.444814,
-  lng: -76.614739,
-};
+const clinicaUbicacion = [2.444814, -76.614739]; // Clínica
 
 function MapaConRuta() {
-  const [direccion, setDireccion] = useState(null);
   const [posCliente, setPosCliente] = useState(null);
+  const [ruta, setRuta] = useState(null);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [solicitandoUbicacion, setSolicitandoUbicacion] = useState(false);
-
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_KEY,
-    libraries: ["places"],
-  });
 
   const solicitarUbicacion = () => {
     setSolicitandoUbicacion(true);
@@ -40,58 +27,43 @@ function MapaConRuta() {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const origen = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
+        const origen = [pos.coords.latitude, pos.coords.longitude];
         setPosCliente(origen);
         setSolicitandoUbicacion(false);
 
-        if (window.google && window.google.maps) {
-          const directionsService = new window.google.maps.DirectionsService();
-          directionsService.route(
-            {
-              origin: origen,
-              destination: clinicaUbicacion,
-              travelMode: window.google.maps.TravelMode.DRIVING,
-            },
-            (result, status) => {
-              if (status === "OK") {
-                setDireccion(result);
-              } else {
-                setError("No se pudo calcular la ruta: " + status);
-              }
+        // Llamada al servicio de rutas OSRM (gratis)
+        fetch(
+          `https://router.project-osrm.org/route/v1/driving/${origen[1]},${origen[0]};${clinicaUbicacion[1]},${clinicaUbicacion[0]}?overview=full&geometries=geojson`
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.routes && data.routes.length > 0) {
+              const coords = data.routes[0].geometry.coordinates.map((c) => [
+                c[1],
+                c[0],
+              ]);
+              setRuta(coords);
+            } else {
+              setError("No se pudo calcular la ruta");
             }
-          );
-        } else {
-          setError("Google Maps no está disponible");
-        }
+          })
+          .catch(() => setError("Error al obtener la ruta"));
       },
-      (error) => {
+      (err) => {
         setSolicitandoUbicacion(false);
         let errorMessage = "No se pudo obtener tu ubicación. ";
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            if (
-              window.location.protocol === "http:" &&
-              !window.location.hostname.includes("localhost")
-            ) {
-              errorMessage +=
-                "Los navegadores requieren HTTPS para geolocalización. Prueba accediendo desde localhost o configura HTTPS.";
-            } else {
-              errorMessage +=
-                "Permiso denegado. Por favor, permite el acceso a la ubicación en tu navegador.";
-            }
+        switch (err.code) {
+          case err.PERMISSION_DENIED:
+            errorMessage += "Permiso denegado. Activa la ubicación en tu navegador.";
             break;
-          case error.POSITION_UNAVAILABLE:
+          case err.POSITION_UNAVAILABLE:
             errorMessage += "Ubicación no disponible.";
             break;
-          case error.TIMEOUT:
+          case err.TIMEOUT:
             errorMessage += "Tiempo de espera agotado.";
             break;
           default:
             errorMessage += "Error desconocido.";
-            break;
         }
         setError(errorMessage);
       },
@@ -103,85 +75,36 @@ function MapaConRuta() {
     );
   };
 
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (loadError) {
-      setError("Error cargando Google Maps: " + loadError.message);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(false);
-
-    // Verificar si geolocation está disponible
-    if (!navigator.geolocation) {
-      setError("La geolocalización no está disponible en este navegador");
-      return;
-    }
-  }, [isLoaded, loadError]);
-
-  // Manejo de errores de carga
-  if (loadError) {
-    return (
-      <div className="text-center my-5">
-        <div className="alert alert-danger">
-          <h5>Error cargando Google Maps</h5>
-          <p>
-            <strong>Error:</strong> {loadError.message}
-          </p>
-          <hr />
-          <h6>Posibles soluciones:</h6>
-          <ul className="text-start">
-            <li>
-              Verifica la configuración de tu API key en Google Cloud Console
-            </li>
-            <li>
-              Asegúrate de que las APIs estén habilitadas (Maps JavaScript API,
-              Directions API)
-            </li>
-            <li>Revisa las restricciones de dominio de la API key</li>
-          </ul>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isLoaded || loading)
-    return <p className="text-center my-5">Cargando mapa...</p>;
-
-  if (error) {
-    return (
-      <div className="text-center my-5">
-        <div className="alert alert-warning">
-          <h6>Aviso</h6>
-          <p>{error}</p>
-        </div>
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={clinicaUbicacion}
-          zoom={13}
-        >
-          <Marker position={clinicaUbicacion} label="Clínica" />
-        </GoogleMap>
-        <p className="text-muted mt-2">
-          Mapa básico mostrando solo la ubicación de la clínica
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div>
-      <GoogleMap
-        mapContainerStyle={containerStyle}
+      {/* Mapa */}
+      <MapContainer
         center={clinicaUbicacion}
-        zoom={13}
+        zoom={14}
+        style={containerStyle}
       >
-        <Marker position={clinicaUbicacion} label="Clínica" />
-        {posCliente && <Marker position={posCliente} label="Tú" />}
-        {direccion && <DirectionsRenderer directions={direccion} />}
-      </GoogleMap>
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
 
+        {/* Marcador clínica */}
+        <Marker position={clinicaUbicacion}>
+          <Popup>Clínica</Popup>
+        </Marker>
+
+        {/* Marcador cliente */}
+        {posCliente && (
+          <Marker position={posCliente}>
+            <Popup>Tú</Popup>
+          </Marker>
+        )}
+
+        {/* Ruta en azul */}
+        {ruta && <Polyline positions={ruta} color="blue" />}
+      </MapContainer>
+
+      {/* Botón de acción */}
       <div className="text-center mt-3">
         {!posCliente && !error && (
           <div>
@@ -204,9 +127,15 @@ function MapaConRuta() {
               )}
             </button>
             <p className="text-muted mt-2 small">
-              Haz clic para permitir el acceso a tu ubicación y ver la ruta a la
-              clínica
+              Haz clic para permitir el acceso a tu ubicación y ver la ruta a la clínica
             </p>
+          </div>
+        )}
+
+        {/* Errores */}
+        {error && (
+          <div className="alert alert-warning mt-3">
+            <p>{error}</p>
           </div>
         )}
       </div>
