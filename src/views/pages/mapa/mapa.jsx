@@ -2,13 +2,28 @@ import React, { useState } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 import { Button, Alert, Spinner } from "react-bootstrap";
 import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+const defaultLeafletIcon = L.icon({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
 
 const containerStyle = {
   width: "100%",
   height: "400px",
 };
 
-const clinicaUbicacion = [2.444814, -76.614739]; // Clínica
+
+const clinicaUbicacion = [2.444814, -76.614739]; 
 
 function MapaConRuta() {
   const [posCliente, setPosCliente] = useState(null);
@@ -27,28 +42,29 @@ function MapaConRuta() {
     }
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const origen = [pos.coords.latitude, pos.coords.longitude];
-        setPosCliente(origen);
-        setSolicitandoUbicacion(false);
+      async (pos) => {
+        try {
+          const origen = [pos.coords.latitude, pos.coords.longitude];
+          setPosCliente(origen);
 
-        // Llamada al servicio de rutas OSRM (gratis)
-        fetch(
-          `https://router.project-osrm.org/route/v1/driving/${origen[1]},${origen[0]};${clinicaUbicacion[1]},${clinicaUbicacion[0]}?overview=full&geometries=geojson`
-        )
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.routes && data.routes.length > 0) {
-              const coords = data.routes[0].geometry.coordinates.map((c) => [
-                c[1],
-                c[0],
-              ]);
-              setRuta(coords);
-            } else {
-              setError("No se pudo calcular la ruta");
-            }
-          })
-          .catch(() => setError("Error al obtener la ruta"));
+          const res = await fetch(
+            `https://router.project-osrm.org/route/v1/driving/${origen[1]},${origen[0]};${clinicaUbicacion[1]},${clinicaUbicacion[0]}?overview=full&geometries=geojson`
+          );
+          const data = await res.json();
+          if (data.routes && data.routes.length > 0) {
+            const coords = data.routes[0].geometry.coordinates.map((c) => [
+              c[1],
+              c[0],
+            ]);
+            setRuta(coords);
+          } else {
+            setError("No se pudo calcular la ruta");
+          }
+        } catch {
+          setError("Error al obtener la ruta");
+        } finally {
+          setSolicitandoUbicacion(false);
+        }
       },
       (err) => {
         setSolicitandoUbicacion(false);
@@ -77,31 +93,26 @@ function MapaConRuta() {
   };
 
   return (
-    <div>
-      {/* Mapa */}
+  <div>
       <MapContainer center={clinicaUbicacion} zoom={14} style={containerStyle}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Marcador clínica */}
-        <Marker position={clinicaUbicacion}>
+        <Marker position={clinicaUbicacion} icon={defaultLeafletIcon}>
           <Popup>Clínica</Popup>
         </Marker>
 
-        {/* Marcador cliente */}
         {posCliente && (
-          <Marker position={posCliente}>
+          <Marker position={posCliente} icon={defaultLeafletIcon}>
             <Popup>Tú</Popup>
           </Marker>
         )}
 
-        {/* Ruta en azul */}
         {ruta && <Polyline positions={ruta} color="blue" />}
       </MapContainer>
 
-      {/* Botón y mensajes */}
       <div className="text-center mt-3">
         {!posCliente && !error && (
           <div>
@@ -132,7 +143,6 @@ function MapaConRuta() {
           </div>
         )}
 
-        {/* Errores con Alert */}
         {error && (
           <Alert variant="warning" className="mt-3">
             {error}

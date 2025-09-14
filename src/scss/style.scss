@@ -65,3 +65,20 @@ body {
     --cui-footer-bg: var(--cui-body-bg);
   }
 }
+
+// --- Fix Leaflet icons/tiles being distorted by global CSS (e.g., Bootstrap) ---
+// Algunos frameworks aplican img { max-width: 100%; height: auto; } que afecta a los íconos de Leaflet
+// y a los tiles del mapa. Estas reglas restauran su tamaño correcto.
+.leaflet-container img.leaflet-marker-icon,
+.leaflet-container .leaflet-marker-icon,
+.leaflet-container .leaflet-marker-shadow,
+.leaflet-container .leaflet-tile,
+.leaflet-container img.leaflet-tile {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.leaflet-container .leaflet-marker-icon,
+.leaflet-container .leaflet-marker-shadow {
+  image-rendering: auto;
+}
