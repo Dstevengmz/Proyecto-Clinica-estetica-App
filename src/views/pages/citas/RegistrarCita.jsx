@@ -1,123 +1,212 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import axios from "axios";
-import { Form, Container, Row, Col, Card } from "react-bootstrap";
+import { Modal, Button, Form, Spinner } from "react-bootstrap";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import format from "date-fns/format";
+import parse from "date-fns/parse";
+import startOfWeek from "date-fns/startOfWeek";
+import getDay from "date-fns/getDay";
+import esES from "date-fns/locale/es";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import useCitasDoctor from "../../../hooks/useCitaDoctorIdParaAsistente";
 import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-import { useCarrito } from "../../../contexts/CarritoContext";
 import { usePerfilUsuario } from "../../../hooks/usePerfilUsuario";
 import useListarDoctores from "../../../hooks/useListarDoctores";
-import useHorariosDisponible from "../../../hooks/useHorariosDisponible";
 import horariosDisponibles from "../../../assets/js/HorariosDisponibles";
-import estaOcupado from "../../../assets/js/HorarioEstaOcupado";
+import AlertaCitas from "../../../assets/js/alertas/citas/AlertaCitas";
+import { useCarrito } from "../../../contexts/CarritoContext";
 import Cargando from "../../../components/Cargando";
 import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario";
-import useMisCitas from "../../../hooks/useMisCitas";
+
+const locales = { es: esES };
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales,
+});
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-function RegistrarCitas() {
-  const { carrito, limpiarCarrito } = useCarrito();
-  const { usuario, cargando } = usePerfilUsuario();
+function toISODate(date) {
+  // YYYY-MM-DD en zona local
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function combineDateTime(dateStr, hhmm) {
+  // "YYYY-MM-DD" + "HH:mm" -> Date local
+  const [hh, mm] = hhmm.split(":").map(Number);
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d, hh, mm, 0, 0);
+}
+
+function addMinutes(date, minutes) {
+  return new Date(date.getTime() + minutes * 60000);
+}
+
+export default function RegistrarCitasCalendario() {
   const navigate = useNavigate();
+  const alerta = new AlertaCitas();
+
+  const { usuario, cargando: cargandoUsuario } = usePerfilUsuario();
   const {
     doctores,
     cargando: cargandoDoctores,
     error: errorDoctores,
   } = useListarDoctores();
+  const { carrito, limpiarCarrito } = useCarrito();
+
   const token = localStorage.getItem("token");
-  const {
-    citas,
-    cargando: cargandoCitas,
-  } = useMisCitas(usuario?.id);
 
-  const [esPrimeraCita, setEsPrimeraCita] = useState(false);
-  const [tieneEvaluacion, setTieneEvaluacion] = useState(false);
+  // Vista del calendario: por simplicidad, "day" para que coincida con tu hook de horarios por fecha
+  const [view, setView] = useState("day");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const onNavigate = (date) => {
+    setCurrentDate(date);
+  }
+  // Selección de doctor (debe ir antes de obtener horarios para poder filtrar)
+  const [doctorSeleccionado, setDoctorSeleccionado] = useState("");
 
-  const [horaSeleccionada, setHoraSeleccionada] = useState("");
-  const [formData, setFormData] = useState({ id_usuario: "", id_doctor: "", fecha: "", estado: "pendiente", tipo: "",
+  // Hook de horarios ocupados (tipo fijo "evaluacion").
+  // Solo se consultan horarios cuando ya hay un doctor seleccionado para no traer datos globales.
+
+  // Eventos que pinta el calendario (derivados de horariosOcupados)
+  const [eventos, setEventos] = useState([]);
+
+  // Modal
+  const [showModal, setShowModal] = useState(false);
+  const [slotSeleccionado, setSlotSeleccionado] = useState(null);
+  const [enviando, setEnviando] = useState(false);
+const { citas: citasDoctor, cargando: cargandoCitasDoctor } = useCitasDoctor(doctorSeleccionado);
+  // Ajusta la ventana visible del calendario a tu horario laboral usando horariosDisponibles
+const minTime = useMemo(() => {
+  const first = horariosDisponibles[0] || "08:00";
+  return combineDateTime(toISODate(currentDate), first);
+}, [currentDate]);
+
+const maxTime = useMemo(() => {
+  const last = horariosDisponibles[horariosDisponibles.length - 1] || "18:00";
+  return addMinutes(combineDateTime(toISODate(currentDate), last), 30);
+}, [currentDate]);
+
+
+useEffect(() => {
+  if (!doctorSeleccionado || !citasDoctor || citasDoctor.length === 0) {
+    setEventos([]);
+    return;
+  }
+
+  const mapped = citasDoctor.map((cita) => {
+    const start = new Date(cita.fecha);
+    const duracion = cita.tipo === "evaluacion" ? 30 : 60;
+    const end = new Date(start.getTime() + duracion * 60000);
+
+    return {
+      title: "🟥 Ocupado",
+      start,
+      end,
+      tipo: "ocupado",
+      resource: cita,
+    };
   });
 
-  useEffect(() => {
-    if (!cargandoCitas && citas) {
-      setEsPrimeraCita(citas.length === 0);
-      setTieneEvaluacion(citas.some((cita) => cita.tipo === "evaluacion"));
-    }
-  }, [citas, cargandoCitas]);
+  setEventos(mapped);
+}, [citasDoctor, doctorSeleccionado]);
 
-  const {
-    horariosOcupados,
-    cargando: cargandoHorarios,
-    error,
-  } = useHorariosDisponible(formData.fecha, formData.tipo, token);
 
-  useEffect(() => {}, [
-    formData.fecha,
-    formData.tipo,
-    horariosOcupados,
-    cargandoHorarios,
-    error,
-    token,
-  ]);
 
-  useEffect(() => {
-    if (usuario?.id && !cargando) {
-      setFormData((prev) => ({
-        ...prev,
-        id_usuario: usuario.id,
-      }));
-    }
-  }, [usuario?.id, cargando]);
+  const onView = (nextView) => setView(nextView);
 
-  const manejarCambio = (e) => {
-    const { name, value } = e.target;
+  // Verificaciones de selección
+  function validarSlot(start) {
+    const ahora = new Date();
+    const horaStr = `${String(start.getHours()).padStart(2, "0")}:${String(
+      start.getMinutes()
+    ).padStart(2, "0")}`;
 
-    if (name === "fecha" || name === "tipo") {
-      setHoraSeleccionada("");
+    // 1) No pasado
+    if (start < ahora) {
+      alerta.alertaLaCitaNoPuedeSerPasada();
+      return false;
     }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (!horariosDisponibles.includes(horaStr)) {
+    alerta.alertaErrorCrearCita("Seleccione una hora válida según el horario disponible.");
+    return false;
+  }
+
+   const ocupado = eventos.some(
+  (ev) => start >= ev.start && start < ev.end
+);
+
+    if (ocupado) {
+      alerta.alertaErrorCrearCita("Ese horario ya está ocupado. Elige otro.");
+      return false;
+    }
+
+    return true;
+  }
+
+  const onSelectSlot = ({ start }) => {
+    const startRounded = new Date(start);
+    startRounded.setMinutes(
+      startRounded.getMinutes() - (startRounded.getMinutes() % 30),
+      0,
+      0
+    );
+    const endRounded = addMinutes(startRounded, 30);
+
+    if (!doctorSeleccionado) {
+      alerta.alertaErrorCrearCita("Primero seleccione un doctor para agendar la cita.");
+      return;
+    }
+
+    if (!validarSlot(startRounded)) return;
+
+    setSlotSeleccionado({ start: startRounded, end: endRounded });
+    setShowModal(true);
   };
 
-  const ManejarEnvio = async (e) => {
-    e.preventDefault();
-
-    if (!formData.fecha || !horaSeleccionada || !formData.tipo) {
-      alert("Debe seleccionar la fecha, hora y tipo de cita.");
-      return;
-    }
-
-    if (esPrimeraCita && formData.tipo !== "evaluacion") {
-      Swal.fire(
-        "Advertencia",
-        "Tu primera cita debe ser de evaluación.",
-        "warning"
+  const guardarCita = async () => {
+    if (!usuario?.id) {
+      await alerta.alertaErrorCrearCita(
+        "No se pudo cargar la información del usuario. Inicie sesión."
       );
       return;
     }
-
-    if (formData.tipo === "procedimiento" && !tieneEvaluacion) {
-      Swal.fire(
-        "Advertencia",
-        "Debes tener una cita de evaluación antes de agendar un procedimiento.",
-        "warning"
-      );
+    if (!doctorSeleccionado) {
+      await alerta.alertaValidacionCampos();
       return;
     }
-    if (formData.tipo === "procedimiento" && carrito.length === 0) {
-      Swal.fire(
-        "Advertencia",
-        "Debes seleccionar un procedimiento (agregar al carrito) antes de agendar esta cita.",
-        "warning"
-      );
+    if (!slotSeleccionado?.start) return;
+
+    if (!carrito || carrito.length === 0) {
+      const { isConfirmed } = await alerta.alertaCarritoVacioIrServicios();
+      if (isConfirmed) navigate("/servicios");
       return;
     }
 
-    const fechaFormateada = `${formData.fecha}T${horaSeleccionada}:00`;
+    const fechaISO = toISODate(slotSeleccionado.start);
+    const hh = String(slotSeleccionado.start.getHours()).padStart(2, "0");
+    const mm = String(slotSeleccionado.start.getMinutes()).padStart(2, "0");
+    const fechaFormateada = `${fechaISO}T${hh}:${mm}:00`;
 
     try {
-      await axios.post(
+      setEnviando(true);
+      const resp = await axios.post(
         `${API_URL}/apicitas/crearcitas`,
-        { ...formData, fecha: fechaFormateada },
+        {
+          id_usuario: usuario.id,
+          id_doctor: doctorSeleccionado,
+          fecha: fechaFormateada,
+          tipo: "evaluacion",
+          estado: "pendiente",
+        },
         {
           headers: {
             "Content-Type": "application/json",
@@ -125,168 +214,202 @@ function RegistrarCitas() {
           },
         }
       );
-      // Cita creada correctamente (ya no se gestionan exámenes aquí)
 
-      Swal.fire(
-        "Éxito",
-        "Tu orden y cita han sido registradas Correctamente",
-        "success"
-      );
+      await alerta.alertaCitaAgendada();
       limpiarCarrito();
-      navigate("/dashboard");
+      setShowModal(false);
+
+      const citaCreada = resp?.data?.cita || resp?.data || {
+        id_usuario: usuario.id,
+        id_doctor: doctorSeleccionado,
+        fecha: fechaFormateada,
+        tipo: "evaluacion",
+        estado: "pendiente",
+      };
+
+      setEventos((prev) => [
+        ...prev,
+        {
+          title: "🟥 Ocupado",
+          start: slotSeleccionado.start,
+          end: slotSeleccionado.end,
+          tipo: "ocupado",
+          resource: citaCreada,
+        },
+      ]);
     } catch (error) {
-      console.error("Error al registrar cita/orden:", error);
-      Swal.fire(
-        "Error",
-        "Hubo un error al registrar la orden o la cita",
-        "error"
-      );
+      console.error("Error al registrar cita:", error);
+      const backendMsg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.response?.data?.msg ||
+        error?.message ||
+        "Hubo un error al registrar la cita";
+      if (
+        String(backendMsg)
+          .toLowerCase()
+          .includes("la fecha de la cita no puede ser pasada")
+      ) {
+        await alerta.alertaLaCitaNoPuedeSerPasada();
+      } else {
+        await alerta.alertaErrorCrearCita(backendMsg);
+      }
+    } finally {
+      setEnviando(false);
     }
   };
 
-  if (cargando || cargandoDoctores || cargandoHorarios) {
-    return <Cargando texto="Cargando Informacion" />;
+
+  const eventPropGetter = (event) => {
+    if (event.tipo === "ocupado") {
+      return {
+        style: {
+          backgroundColor: "rgba(220, 53, 69, 0.25)",
+          borderColor: "rgba(220, 53, 69, 0.8)",
+          color: "#000",
+        },
+      };
+    }
+    return {};
+  };
+
+  const messages = {
+    date: "Fecha",
+    time: "Hora",
+    event: "Evento",
+    allDay: "Todo el día",
+    week: "Semana",
+    work_week: "Semana laboral",
+    day: "Día",
+    month: "Mes",
+    previous: "Anterior",
+    next: "Siguiente",
+    yesterday: "Ayer",
+    tomorrow: "Mañana",
+    today: "Hoy",
+    agenda: "Agenda",
+    noEventsInRange: "No hay eventos en este rango.",
+    showMore: (total) => `+ Ver más (${total})`,
+  };
+
+  if (cargandoUsuario || cargandoDoctores ||cargandoCitasDoctor) {
+    return <Cargando texto="Cargando información del calendario…" />;
   }
 
-  if (!usuario || !usuario.id) {
+  if (!usuario?.id) {
     return (
-      <Cargando texto=" No se pudo cargar la información del usuario. Por favor, inicie sesión nuevamente." />
+      <Cargando texto="No se pudo cargar el usuario. Inicie sesión nuevamente." />
     );
   }
 
   return (
-    <Container>
-      <h1 className="mt-4">Registrar Cita</h1>
-      {error && <div className="alert alert-danger">{error}</div>}
+    <div className="container mt-4">
+      <h1 className="mb-3">Registrar Cita</h1>
+
       {errorDoctores && (
         <div className="alert alert-warning">{errorDoctores}</div>
       )}
+
       <InformacionUsuario usuario={usuario} />
-      <Form onSubmit={ManejarEnvio}>
-        <input type="hidden" name="id_usuario" value={formData.id_usuario} />
-        <div className="mb-3">
-          <label className="form-label">Doctor:</label>
-          <select
-            name="id_doctor"
-            className="form-select"
-            value={formData.id_doctor}
-            onChange={manejarCambio}
-            required
-          >
-            <option value="">Seleccione un Doctor</option>
-            {doctores && doctores.length > 0 ? (
-              doctores.map((doctor) => (
-                <option key={doctor.id} value={doctor.id}>
-                  {doctor.nombre}
-                </option>
-              ))
-            ) : (
-              <option disabled>No hay doctores disponibles</option>
-            )}
-          </select>
-        </div>
 
-        <div className="mb-3">
-          <label className="form-label">Tipo:</label>
-          <select
-            className="form-select"
-            name="tipo"
-            value={formData.tipo}
-            onChange={manejarCambio}
-            required
-          >
-            <option value="">Seleccione tipo</option>
-            <option value="evaluacion">Evaluación</option>
-            <option value="procedimiento" disabled={esPrimeraCita || !tieneEvaluacion}>
-              Procedimiento{" "} {esPrimeraCita ? "(Primero evaluación)" : !tieneEvaluacion ? "(Requiere evaluación)" : ""}
-            </option>
-          </select>
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Fecha:</label>
-          <input
-            type="date"
-            name="fecha"
-            className="form-control"
-            value={formData.fecha}
-            onChange={manejarCambio}
-            min={new Date().toISOString().split("T")[0]}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Hora:</label>
-          <select
-            className="form-select"
-            value={horaSeleccionada}
-            onChange={(e) => setHoraSeleccionada(e.target.value)}
-            required
-            disabled={!formData.fecha || !formData.tipo || cargandoHorarios}
-          >
-            <option value="">
-              {!formData.fecha || !formData.tipo
-                ? "Primero seleccione fecha y tipo"
-                : cargandoHorarios
-                ? "Cargando horarios disponibles..."
-                : "Seleccione una hora"}
-            </option>
-            {formData.fecha &&
-              formData.tipo &&
-              !cargandoHorarios &&
-              horariosDisponibles.map((hora) => (
-                <option
-                  key={hora}
-                  value={hora}
-                  disabled={estaOcupado(
-                    hora,
-                    horariosOcupados,
-                    cargandoHorarios,
-                    formData
-                  )}
-                >
-                  {hora}{" "}
-                  {estaOcupado(
-                    hora,
-                    horariosOcupados,
-                    cargandoHorarios,
-                    formData
-                  )
-                    ? "🟥 Ocupado"
-                    : "🟩 Disponible"}
+      <div className="card mt-3">
+        <div className="card-body">
+          <Form.Group className="mb-3">
+            <Form.Label>Doctores</Form.Label>
+            <Form.Select
+              value={doctorSeleccionado}
+              onChange={(e) => {
+                setDoctorSeleccionado(e.target.value);
+                setSlotSeleccionado(null); 
+              }}
+              disabled={cargandoDoctores}
+              required
+            >
+              <option value="">Seleccione un doctor</option>
+              {doctores?.map((doc) => (
+                <option key={doc.id} value={doc.id}>
+                  {doc.nombre}
                 </option>
               ))}
-          </select>
-          {error && <div className="text-danger small mt-1">{error}</div>}
-        </div>
-  {/* Se eliminó la carga de exámenes aquí. Ahora el usuario los sube desde Detalles de la cita (tipo procedimiento). */}
+            </Form.Select>
+          </Form.Group>
 
-        <div className="d-flex gap-2 mt-2">
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={
-              !formData.id_doctor ||
-              !formData.fecha ||
-              !horaSeleccionada ||
-              !formData.tipo ||
-              cargandoHorarios
-            }
-          >
-            {cargandoHorarios ? "Verificando horarios..." : "Registrar Cita"}
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => navigate("/dashboard")}
-          >
-            Cancelar
-          </button>
+          {!doctorSeleccionado ? (
+            <div className="alert alert-info mb-0">
+              Primero seleccione un doctor para cargar la disponibilidad.
+            </div>
+          ) : (
+            <Calendar
+              localizer={localizer}
+              events={eventos}
+              startAccessor="start"
+              endAccessor="end"
+              style={{ height: 650 }}
+              selectable
+              onSelectSlot={onSelectSlot}
+              onNavigate={onNavigate}
+              onView={onView}
+              view={view}
+              date={currentDate}
+              step={30} 
+              timeslots={2}
+              min={minTime} 
+              max={maxTime} 
+              toolbar
+              popup
+              messages={messages}
+              eventPropGetter={eventPropGetter}
+              views={["day", "week", "month"]} 
+            />
+          )}
         </div>
-      </Form>
-    </Container>
+      </div>
+
+      {/* Modal de confirmación */}
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Cita</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="mb-2">
+            <strong>Fecha y hora:</strong>{" "}
+            {slotSeleccionado?.start?.toLocaleString("es-CO", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
+
+          <p className="mb-2">
+            <strong>Doctores:</strong> {(
+              doctores?.find((d) => String(d.id) === String(doctorSeleccionado))?.nombre || ""
+            )}
+          </p>
+
+          <Form.Group>
+            <Form.Label>Tipo</Form.Label>
+            <Form.Control type="text" value="evaluacion" readOnly />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={guardarCita} disabled={enviando}>
+            {enviando ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />{" "}
+                Guardando…
+              </>
+            ) : (
+              "Guardar Cita"
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
   );
 }
-
-export default RegistrarCitas;

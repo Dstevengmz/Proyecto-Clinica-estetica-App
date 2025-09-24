@@ -1,88 +1,132 @@
-import { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import axios from "axios";
+import { useState } from "react";
+import { Container, Row, Col, Card, Button, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
-const API_URL = import.meta.env.VITE_API_URL;
+import { cilFilter } from "@coreui/icons";
+import { CButton } from "@coreui/react";
+import CIcon from "@coreui/icons-react";
+import useListarCategorias from "../../../hooks/useListarCategorias";
+import useListaProcedimientos from "../../../hooks/useProcedimientoCategoria";
+import Cargando from "../../../components/Cargando";
+import ErrorCargando from "../../../components/ErrorCargar";
 
 function Servicios() {
-  const [procedimientos, setProcedimientos] = useState([]);
-  useEffect(() => {
-    axios
-      .get(`${API_URL}/apiprocedimientos/listarprocedimiento`)
-      .then((res) => setProcedimientos(res.data))
-      .catch((err) => console.error(err));
-  }, []);
+  
+  const {
+    categorias,
+    loading: loadingCategorias,
+    error: errorCategorias,
+  } = useListarCategorias();
+  const [categoriaId, setCategoriaId] = useState("");
+  const {
+    procedimientos,
+    loading: loadingProcedimientos,
+    error: errorProcedimientos,
+  } = useListaProcedimientos(categoriaId);
+
+  if (loadingCategorias) return <Cargando texto="Cargando categorías..." />;
+  if (errorCategorias)
+    return <ErrorCargando texto="Error al cargar las categorías." />;
+  if (errorProcedimientos)
+    return <ErrorCargando texto="Error al cargar los procedimientos." />;
+
   return (
     <Container className="my-5">
-      <Row className="g-4">
-        {procedimientos.map((proc) => (
-          <Col key={proc.id} xs={12} sm={6} md={4} lg={3}>
-            <Card className="h-100 shadow border-0 rounded-4 overflow-hidden">
-              <div
-                style={{
-                  height: "180px",
-                  overflow: "hidden",
-                  background: "#f8f9fa",
-                }}
-              >
-                <Card.Img
-                  variant="top"
-                  // src={`${API_URL}/${proc.imagen}`}
-                  src={proc.imagen}
-                  alt={proc.nombre}
-                  style={{ objectFit: "cover", width: "100%", height: "100%" }}
-                />
-              </div>
-              <Card.Body className="d-flex flex-column p-4">
-                <Card.Title
-                  className="mb-2 fw-bold text-primary"
-                  style={{ fontSize: "1.2rem" }}
+      <div className="d-flex flex-row-reverse bd-highlight mb-4">
+        <div
+          className="d-flex align-items-center"
+          style={{ gap: 12, minWidth: 280 }}
+        >
+          <Form.Select
+            aria-label="Filtrar por categoría"
+            value={categoriaId}
+            onChange={(e) => setCategoriaId(e.target.value)}
+          >
+            <option value="">Todas las categorías</option>
+            {categorias.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.nombre}
+              </option>
+            ))}
+          </Form.Select>
+          <CButton
+            color="secondary"
+            variant="outline"
+            className="d-flex align-items-center"
+            onClick={() => setCategoriaId("")}
+            title="Limpiar filtro"
+          >
+            <CIcon icon={cilFilter} className="me-2" />
+            {categoriaId ? "Limpiar" : "Filtrar"}
+          </CButton>
+        </div>
+      </div>
+
+      {loadingProcedimientos ? (
+        <Cargando texto="Cargando procedimientos..." />
+      ) : procedimientos.length === 0 ? (
+        <div className="text-center text-muted py-5">
+          <p>No se encontraron procedimientos para esta categoría.</p>
+        </div>
+      ) : (
+        <Row className="g-4">
+          {procedimientos.map((proc) => (
+            <Col key={proc.id} xs={12} sm={6} md={4} lg={3}>
+              <Card className="h-100 shadow border-0 rounded-4 overflow-hidden">
+                <div
+                  style={{
+                    height: "180px",
+                    overflow: "hidden",
+                    background: "#f8f9fa",
+                  }}
                 >
-                  {proc.nombre}
-                </Card.Title>
-                <Card.Text
-                  className="mb-3 text-muted"
-                  style={{ minHeight: "60px" }}
-                >
-                  {proc.descripcion}
-                </Card.Text>
-                <ul className="list-unstyled mb-4">
-                  <li>
-                    <span className="fw-semibold">💲 Precio:</span>{" "}
-                    {Number(proc.precio).toLocaleString("es-CO", {
-                      style: "currency",
-                      currency: "COP",
-                      minimumFractionDigits: 0,
-                    })}
-                  </li>
-                  <li>
-                    <span className="fw-semibold">⏱️ Duración:</span>{" "}
-                    {proc.duracion}
-                  </li>
-                  <li>
-                    <span className="fw-semibold">🩺 Evaluación:</span>{" "}
-                    {proc.requiere_evaluacion ? "Sí" : "No"}
-                  </li>
-                </ul>
-                <div className="mt-auto">
-                  <Link
-                    to={`/reservar/${proc.id}`}
-                    style={{ textDecoration: "none" }}
-                  >
-                    <Button
-                      variant="primary"
-                      className="w-100 rounded-pill fw-semibold"
-                      style={{ letterSpacing: "1px" }}
-                    >
-                      Ver más
-                    </Button>
-                  </Link>
+                  <Card.Img
+                    variant="top"
+                    src={proc.imagen}
+                    alt={proc.nombre}
+                    style={{
+                      objectFit: "cover",
+                      width: "100%",
+                      height: "100%",
+                    }}
+                  />
                 </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+                <Card.Body className="d-flex flex-column p-4">
+                  <Card.Title
+                    className="mb-2 fw-bold text-primary"
+                    style={{ fontSize: "1.2rem" }}
+                  >
+                    {proc.nombre}
+                  </Card.Title>
+                  <ul className="list-unstyled mb-4">
+                    <li>
+                      <span className="fw-semibold">💲 Precio:</span>{" "}
+                      {Number(proc.precio).toLocaleString("es-CO", {
+                        style: "currency",
+                        currency: "COP",
+                        minimumFractionDigits: 0,
+                      })}
+                    </li>
+                  </ul>
+                  <div className="mt-auto">
+                    <Link
+                      to={`/reservar/${proc.id}`}
+                      style={{ textDecoration: "none" }}
+                    >
+                      <Button
+                        variant="primary"
+                        className="w-100 rounded-pill fw-semibold"
+                        style={{ letterSpacing: "1px" }}
+                      >
+                        Ver más
+                      </Button>
+                    </Link>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
     </Container>
   );
 }

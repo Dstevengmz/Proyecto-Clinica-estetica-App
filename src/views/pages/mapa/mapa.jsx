@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 import { Button, Alert, Spinner } from "react-bootstrap";
 import "leaflet/dist/leaflet.css";
@@ -30,6 +30,12 @@ function MapaConRuta() {
   const [ruta, setRuta] = useState(null);
   const [error, setError] = useState(null);
   const [solicitandoUbicacion, setSolicitandoUbicacion] = useState(false);
+  // Seguimiento en tiempo real
+  const [tracking, setTracking] = useState(false);
+  const [livePath, setLivePath] = useState([]);
+  const [followUser, setFollowUser] = useState(true);
+  const watchIdRef = useRef(null);
+  const [map, setMap] = useState(null);
 
   const solicitarUbicacion = () => {
     setSolicitandoUbicacion(true);
@@ -92,9 +98,73 @@ function MapaConRuta() {
     );
   };
 
+  // Iniciar seguimiento en tiempo real
+  const iniciarSeguimiento = () => {
+    setError(null);
+    if (!navigator.geolocation) {
+      setError("La geolocalización no está disponible en este navegador");
+      return;
+    }
+    if (watchIdRef.current !== null) return; // ya activo
+
+    const id = navigator.geolocation.watchPosition(
+      (pos) => {
+        const nuevaPos = [pos.coords.latitude, pos.coords.longitude];
+        setPosCliente(nuevaPos);
+        setLivePath((prev) => [...prev, nuevaPos]);
+        if (followUser && map) {
+          map.panTo(nuevaPos);
+        }
+      },
+      (err) => {
+        let errorMessage = "No se pudo obtener tu ubicación en tiempo real. ";
+        switch (err.code) {
+          case err.PERMISSION_DENIED:
+            errorMessage += "Permiso denegado. Activa la ubicación en tu navegador.";
+            break;
+          case err.POSITION_UNAVAILABLE:
+            errorMessage += "Ubicación no disponible.";
+            break;
+          case err.TIMEOUT:
+            errorMessage += "Tiempo de espera agotado.";
+            break;
+          default:
+            errorMessage += "Error desconocido.";
+        }
+        setError(errorMessage);
+        detenerSeguimiento();
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 5000,
+      }
+    );
+    watchIdRef.current = id;
+    setTracking(true);
+  };
+
+  // Detener seguimiento en tiempo real
+  const detenerSeguimiento = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setTracking(false);
+  };
+
+  // Limpieza al desmontar
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
+
   return (
   <div>
-      <MapContainer center={clinicaUbicacion} zoom={14} style={containerStyle}>
+      <MapContainer center={clinicaUbicacion} zoom={14} style={containerStyle} whenCreated={setMap}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -110,7 +180,10 @@ function MapaConRuta() {
           </Marker>
         )}
 
-        {ruta && <Polyline positions={ruta} color="blue" />}
+        {ruta && <Polyline positions={ruta} color="blue" />} {/* Ruta a la clínica */}
+        {livePath.length > 1 && (
+          <Polyline positions={livePath} color="green" />
+        )} {/* Trayectoria en tiempo real */}
       </MapContainer>
 
       <div className="text-center mt-3">
@@ -142,6 +215,28 @@ function MapaConRuta() {
             </p>
           </div>
         )}
+
+        {/* Controles de seguimiento en tiempo real */}
+        <div className="d-flex justify-content-center gap-2 mt-2 flex-wrap">
+          <Button
+            variant={tracking ? "danger" : "success"}
+            onClick={tracking ? detenerSeguimiento : iniciarSeguimiento}
+          >
+            {tracking ? "Detener seguimiento" : "Iniciar seguimiento"}
+          </Button>
+          <div className="form-check d-inline-flex align-items-center">
+            <input
+              className="form-check-input me-2"
+              type="checkbox"
+              id="seguirUsuario"
+              checked={followUser}
+              onChange={(e) => setFollowUser(e.target.checked)}
+            />
+            <label className="form-check-label" htmlFor="seguirUsuario">
+              Seguir mi posición
+            </label>
+          </div>
+        </div>
 
         {error && (
           <Alert variant="warning" className="mt-3">

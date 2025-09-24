@@ -13,7 +13,7 @@ export default function DashboardUsuario() {
         <CardAction icon='➕' title='Agendar Cita' description='Nueva cita' onClick={()=>nav('/crearcita')} />
         <CardAction icon='📅' title='Mis Citas' description='Historial y próximas' onClick={()=>nav('/miscitas')} />
         <CardAction icon='🩺' title='Mi Historia' description='Ver / Crear' onClick={()=>nav(`/mihistorialclinico/${userId}`)} />
-        <CardAction icon='🔔' title='Notificaciones' description='Alertas recientes' onClick={()=>nav('/historial-notificaciones-usuario')} />
+        <CardAction icon='🔔' title='Notificaciones' description='Alertas recientes' onClick={()=>nav('/notificaciones/usuario/historial')} />
         <CardAction icon='🛒' title='Carrito' description='Procedimientos seleccionados' onClick={()=>nav('/carrito')} />
       </div>
     </div>

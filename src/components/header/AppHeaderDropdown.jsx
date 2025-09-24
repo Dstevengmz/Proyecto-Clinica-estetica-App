@@ -1,4 +1,3 @@
-import React from "react";
 import {
   CAvatar,
   CBadge,
@@ -18,7 +17,7 @@ import {
   cilUser,
 } from "@coreui/icons";
 import CIcon from "@coreui/icons-react";
-import manejarCerrarSesion from "../../assets/js/AlertaCerrarSesion";
+import manejarCerrarSesion from "../../assets/js/alertas/logout/AlertaCerrarSesion";
 import { useAuth } from "../../contexts/AuthenticaContext";
 import ObtenerUsuarioIToken from "../../assets/js/ObtenerTokenDelUsuario";
 
@@ -41,35 +40,6 @@ const AppHeaderDropdown = () => {
         <CAvatar src={avatar8} size="md" />
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
-        {/* <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">Account</CDropdownHeader> */}
-        {/* <CDropdownItem href="#">
-          <CIcon icon={cilBell} className="me-2" />
-          Updates
-          <CBadge color="info" className="ms-2">
-            42
-          </CBadge>
-        </CDropdownItem> */}
-        {/* <CDropdownItem href="#">
-          <CIcon icon={cilEnvelopeOpen} className="me-2" />
-          Messages
-          <CBadge color="success" className="ms-2">
-            42
-          </CBadge>
-        </CDropdownItem> */}
-        {/* <CDropdownItem href="#">
-          <CIcon icon={cilTask} className="me-2" />
-          Tasks
-          <CBadge color="danger" className="ms-2">
-            42
-          </CBadge>
-        </CDropdownItem> */}
-        {/* <CDropdownItem href="#">
-          <CIcon icon={cilCommentSquare} className="me-2" />
-          Comments
-          <CBadge color="warning" className="ms-2">
-            42
-          </CBadge>
-        </CDropdownItem> */}
         <CDropdownHeader className="bg-body-secondary fw-semibold my-2">
           Configuraciones
         </CDropdownHeader>

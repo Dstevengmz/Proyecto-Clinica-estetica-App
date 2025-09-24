@@ -3,6 +3,7 @@ import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const CarritoContext = createContext();
+
 export const useCarrito = () => useContext(CarritoContext);
 
  const CarritoProvider = ({ children }) => {
@@ -20,8 +21,19 @@ const cargarCarritoDesdeBackend = async () => {
   }
 };
 
+const estaEnCarrito = (id_procedimiento) =>
+  carrito?.some(
+    (item) =>
+      item?.procedimiento?.id === id_procedimiento ||
+      item?.id_procedimiento === id_procedimiento
+  );
+
 const agregarAlCarrito = async (id_procedimiento) => {
   try {
+    if (estaEnCarrito(id_procedimiento)) {
+      return { added: false, reason: "already-in-cart" };
+    }
+
     const res = await axios.post(
       `${API_URL}/apicarrito/agregaramicarrito`,
       { id_procedimiento },
@@ -30,8 +42,19 @@ const agregarAlCarrito = async (id_procedimiento) => {
       }
     );
     setCarrito((prev) => [...prev, res.data]);
+    return { added: true };
   } catch (error) {
+    const msg = error?.response?.data?.error || error?.message;
+    const status = error?.response?.status;
+    if (
+      status === 400 &&
+      typeof msg === "string" &&
+      msg.toLowerCase().includes("ya está en el carrito")
+    ) {
+      return { added: false, reason: "already-in-cart" };
+    }
     console.error("Error al agregar al carrito:", error);
+    return { added: false, reason: "error", error };
   }
 };
 
@@ -69,6 +92,7 @@ const limpiarCarrito = async () => {
         eliminarDelCarrito,
         cargarCarritoDesdeBackend,
         limpiarCarrito,
+        estaEnCarrito,
       }}
     >
       {children}

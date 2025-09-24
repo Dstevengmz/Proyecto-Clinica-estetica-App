@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect, useContext, useRef, useCallback } from "react"
 
 const AuthContext = createContext()
@@ -24,14 +25,23 @@ const getUserRoleFromToken = (token) => {
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userRole, setUserRole] = useState(null)
+  const [token, setToken] = useState(null)
   const logoutTimerRef = useRef(null)
 
-  const clearLogoutTimer = () => {
+  const clearLogoutTimer = useCallback(() => {
     if (logoutTimerRef.current) {
       clearTimeout(logoutTimerRef.current)
       logoutTimerRef.current = null
     }
-  }
+  }, [])
+
+  const logout = useCallback(() => {
+    localStorage.removeItem("token")
+    setIsAuthenticated(false)
+    setUserRole(null)
+    setToken(null)
+    clearLogoutTimer()
+  }, [clearLogoutTimer])
 
   const scheduleAutoLogout = useCallback((token) => {
     clearLogoutTimer()
@@ -54,20 +64,22 @@ export const AuthProvider = ({ children }) => {
     } catch (e) {
       console.error('No se pudo programar el auto-logout:', e)
     }
-  }, [])
+  }, [clearLogoutTimer, logout])
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (token) {
+    const storedToken = localStorage.getItem("token")
+    if (storedToken) {
       setIsAuthenticated(true)
-      const role = getUserRoleFromToken(token)
+      setToken(storedToken)
+      const role = getUserRoleFromToken(storedToken)
       setUserRole(role)
-      scheduleAutoLogout(token)
+      scheduleAutoLogout(storedToken)
     } else {
       setIsAuthenticated(false)
       setUserRole(null)
+      setToken(null)
     }
-  }, [scheduleAutoLogout])
+  }, [scheduleAutoLogout, logout, clearLogoutTimer])
 
   // Escuchar cambios externos al localStorage (otra pestaña) y evento de expiración
   useEffect(() => {
@@ -79,6 +91,7 @@ export const AuthProvider = ({ children }) => {
           logout()
         } else {
           setIsAuthenticated(true)
+          setToken(newToken)
           setUserRole(getUserRoleFromToken(newToken))
           scheduleAutoLogout(newToken)
         }
@@ -94,25 +107,21 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener('token-expired', handleExpired)
       clearLogoutTimer()
     }
-  }, [scheduleAutoLogout])
+  }, [scheduleAutoLogout, clearLogoutTimer, logout])
 
   const login = (token) => {
     localStorage.setItem("token", token)
     setIsAuthenticated(true)
+    setToken(token)
     const role = getUserRoleFromToken(token)
     setUserRole(role)
   scheduleAutoLogout(token)
   }
 
-  const logout = () => {
-    localStorage.removeItem("token")
-    setIsAuthenticated(false)
-    setUserRole(null)
-  clearLogoutTimer()
-  }
+  // logout ya definido arriba
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userRole, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, userRole, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   )

@@ -16,14 +16,19 @@ import {
 import CIcon from "@coreui/icons-react";
 import Swal from "sweetalert2";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { cilLockLocked, cilUser } from "@coreui/icons";
 import { useAuth } from "../../../contexts/AuthenticaContext";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  const rawFromState = location.state?.from;
+  const savedReturnTo = sessionStorage.getItem("returnTo");
+  const sanitized = (v) => (typeof v === "string" && v.startsWith("/") ? v : null);
+  const from = sanitized(savedReturnTo) || sanitized(rawFromState) || "/dashboard";
   const [formulario, setFormulario] = useState({
     correo: "",
     contrasena: "",
@@ -54,7 +59,8 @@ const Login = () => {
           timer: 1500,
         });
         setTimeout(() => {
-            navigate("/dashboard");
+          if (savedReturnTo) sessionStorage.removeItem("returnTo");
+          navigate(from, { replace: true });
         }, 1600);
       } else {
         Swal.fire({
@@ -66,20 +72,20 @@ const Login = () => {
       }
     } catch (error) {
       console.log("Error con las credenciales", error);
-       if (error.response && error.response.status === 429) {
-    Swal.fire({
-      icon: "warning",
-      title: "Demasiados intentos",
-      text: error.response.data.mensaje || "Intenta más tarde",
-    });
-  }else{
-      Swal.fire({
-        icon: "error",
-        title: "Error al iniciar sesión",
-        text: "Correo o contraseña incorrectos",
-      });
+      if (error.response && error.response.status === 429) {
+        Swal.fire({
+          icon: "warning",
+          title: "Demasiados intentos",
+          text: error.response.data.mensaje || "Intenta más tarde",
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error al iniciar sesión",
+          text: "Correo o contraseña incorrectos",
+        });
+      }
     }
-  }
   };
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
@@ -91,9 +97,6 @@ const Login = () => {
                 <CCardBody>
                   <CForm onSubmit={manejarEnvio}>
                     <h1>Inicio de Sesión</h1>
-                    <p className="text-body-secondary">
-                      Sign In to your account
-                    </p>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
@@ -128,7 +131,7 @@ const Login = () => {
                         </CButton>
                       </CCol>
                       <CCol xs={6} className="text-right">
-                        <Link to="/registrar">
+                        <Link to="/registrar" state={{ from }}>
                           <CButton color="link" className="px-0">
                             ¿Crear una cuenta?
                           </CButton>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
 
-const useHorariosDisponible = (fecha, tipo, token) => {
+const useHorariosDisponible = (fecha, tipo, token, doctorId = null) => {
   const [horariosOcupados, setHorariosOcupados] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
@@ -20,8 +20,9 @@ const useHorariosDisponible = (fecha, tipo, token) => {
       setError(null);
 
       try {
+        const query = doctorId ? `?doctorId=${doctorId}` : '';
         const respuesta = await axios.get(
-          `${API_URL}/apicitas/horarios/${fecha}`,
+          `${API_URL}/apicitas/horarios/${fecha}${query}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -38,7 +39,7 @@ const useHorariosDisponible = (fecha, tipo, token) => {
     };
     
     obtenerHorarios();
-  }, [fecha, tipo, token]);
+  }, [fecha, tipo, token, doctorId]);
   
   return { horariosOcupados, cargando, error };
 };

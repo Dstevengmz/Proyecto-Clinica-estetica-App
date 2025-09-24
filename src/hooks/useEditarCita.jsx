@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import AlertaCitas from "../assets/js/alertas/citas/AlertaCitas";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -11,21 +12,22 @@ const useActualizarCita = (id, formulario, hora, token) => {
 
   const actualizarCita = async (e) => {
     e.preventDefault();
+    const alertas = new AlertaCitas();
 
     if (!formulario.id_doctor) {
-      alert("Por favor seleccione un doctor");
+      await alertas.alertaValidacionDoctor();
       return;
     }
     if (!formulario.tipo) {
-      alert("Por favor seleccione el tipo de cita");
+      await alertas.alertaValidacionTipo();
       return;
     }
     if (!formulario.fecha) {
-      alert("Por favor seleccione una fecha");
+      await alertas.alertaValidacionFecha();
       return;
     }
     if (!hora) {
-      alert("Por favor seleccione una hora");
+      await alertas.alertaValidacionHora();
       return;
     }
 
@@ -38,13 +40,13 @@ const useActualizarCita = (id, formulario, hora, token) => {
         { ...formulario, fecha: fechaCompleta },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Cita actualizada correctamente");
+      await alertas.alertaCitaActualizada();
       navigate("/consultarcitas");
     } catch (err) {
       console.error("Error al actualizar cita:", err);
       const errorMessage = err.response?.data?.message || "No se pudo actualizar la cita";
       setError(errorMessage);
-      alert(errorMessage);
+      await alertas.alertaErrorActualizarCita(errorMessage);
     } finally {
       setCargando(false);
     }

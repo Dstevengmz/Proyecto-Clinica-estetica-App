@@ -1,22 +1,53 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
-import { Form, Container, Row, Col, Card } from "react-bootstrap";
+import { Form, Container, Button, Modal, Spinner } from "react-bootstrap";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import format from "date-fns/format";
+import parse from "date-fns/parse";
+import startOfWeek from "date-fns/startOfWeek";
+import getDay from "date-fns/getDay";
+import esES from "date-fns/locale/es";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
 import { usePerfilUsuario } from "../../../hooks/usePerfilUsuario";
 import useListarDoctores from "../../../hooks/useListarDoctores";
 import useHorariosDisponible from "../../../hooks/useHorariosDisponible";
 import horariosDisponibles from "../../../assets/js/HorariosDisponibles";
 import estaOcupado from "../../../assets/js/HorarioEstaOcupado";
+import AlertaCitas from "../../../assets/js/alertas/citas/AlertaCitas";
 import Cargando from "../../../components/Cargando";
 import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario";
-import useMisCitas from "../../../hooks/useMisCitas";
 import useOrdenesEvaluacionRealizada from "../../../hooks/useOrdenesEvaluacionRealizada";
 import useListarUsuarios from "../../../hooks/useListarUsuarios";
+import useCitasDoctor from "../../../hooks/useCitaDoctorIdParaAsistente";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function RegistraCitaAsistente() {
+  const locales = { es: esES };
+  const localizer = dateFnsLocalizer({
+    format,
+    parse,
+    startOfWeek,
+    getDay,
+    locales,
+  });
+
+  function toISODate(date) {
+    const d = new Date(date);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  function combineDateTime(dateStr, hhmm) {
+    const [hh, mm] = hhmm.split(":").map(Number);
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return new Date(y, m - 1, d, hh, mm, 0, 0);
+  }
+  function addMinutes(date, minutes) {
+    return new Date(date.getTime() + minutes * 60000);
+  }
   const { usuario, cargando } = usePerfilUsuario();
   const navigate = useNavigate();
   const {
@@ -31,38 +62,46 @@ function RegistraCitaAsistente() {
   } = useListarUsuarios();
 
   const token = localStorage.getItem("token");
-  const { citas, cargando: cargandoCitas } = useMisCitas(usuario?.id);
 
-  const [horaSeleccionada, setHoraSeleccionada] = useState("");
+
+  const [view, setView] = useState("day");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [fechaVista, setFechaVista] = useState(toISODate(new Date()));
+  const [eventos, setEventos] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [slotSeleccionado, setSlotSeleccionado] = useState(null);
+
+  const [enviando, setEnviando] = useState(false);
+  const alerta = new AlertaCitas();
   const [formData, setFormData] = useState({
     id_usuario: "",
     id_doctor: "",
-    fecha: "",
     estado: "pendiente",
-  // En el flujo del asistente, el tipo es siempre procedimiento
-  tipo: "procedimiento",
+    tipo: "procedimiento",
     id_orden: "",
   });
-
-  useEffect(() => {}, [citas, cargandoCitas]);
 
   const {
     horariosOcupados,
     cargando: cargandoHorarios,
     error,
-  } = useHorariosDisponible(formData.fecha, formData.tipo, token);
-
-  useEffect(() => {}, [
-    formData.fecha,
+  } = useHorariosDisponible(
+    fechaVista,
     formData.tipo,
-    horariosOcupados,
-    cargandoHorarios,
-    error,
     token,
-  ]);
+    formData.id_doctor || null
+  );
+  const { citas: citasDoctor, cargando: cargandoCitasDoctor } = useCitasDoctor(
+    formData.id_doctor
+  );
 
   useEffect(() => {
-    if (!cargando && usuario?.id && usuario?.rol === "usuario" && !formData.id_usuario) {
+    if (
+      !cargando &&
+      usuario?.id &&
+      usuario?.rol === "usuario" &&
+      !formData.id_usuario
+    ) {
       setFormData((prev) => ({
         ...prev,
         id_usuario: usuario.id,
@@ -90,20 +129,14 @@ function RegistraCitaAsistente() {
 
   const manejarCambio = (e) => {
     const { name, value } = e.target;
-
-    if (name === "fecha" || name === "tipo") {
-      setHoraSeleccionada("");
-    }
-
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  // Cargar órdenes elegibles cuando se seleccione usuario
-  const { ordenes: ordenesElegibles, cargando: cargandoOrdenes, error: errorOrdenes } = useOrdenesEvaluacionRealizada(
-    formData.id_usuario,
-    token
-  );
+  const {
+    ordenes: ordenesElegibles,
+    cargando: cargandoOrdenes,
+    error: errorOrdenes,
+  } = useOrdenesEvaluacionRealizada(formData.id_usuario, token);
 
-  // Reiniciar selección dependiente cuando cambia el usuario
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
@@ -111,33 +144,122 @@ function RegistraCitaAsistente() {
       fecha: "",
       tipo: "procedimiento",
     }));
-    setHoraSeleccionada("");
+    setSlotSeleccionado(null);
   }, [formData.id_usuario]);
-  const ManejarEnvio = async (e) => {
-    e.preventDefault();
+  const minTime = useMemo(() => {
+    const first = horariosDisponibles[0] || "08:00";
+    return combineDateTime(fechaVista, first);
+  }, [fechaVista]);
+  const maxTime = useMemo(() => {
+    const last = horariosDisponibles[horariosDisponibles.length - 1] || "18:00";
+    return addMinutes(combineDateTime(fechaVista, last), 30);
+  }, [fechaVista]);
 
+  useEffect(() => {
+    if (!formData.id_doctor) {
+      setEventos([]);
+      return;
+    }
+
+    if (!citasDoctor || citasDoctor.length === 0) {
+      setEventos([]);
+      return;
+    }
+
+    const mapped = citasDoctor.map((cita) => {
+      const start = new Date(cita.fecha);
+      const duracion = cita.tipo === "evaluacion" ? 30 : 60;
+      const end = new Date(start.getTime() + duracion * 60000);
+
+      return {
+        title: "🟥 Ocupado",
+        start,
+        end,
+        tipo: "ocupado",
+        resource: cita,
+      };
+    });
+
+    setEventos(mapped);
+  }, [citasDoctor, formData.id_doctor]);
+
+  function validarSlot(start) {
+    const ahora = new Date();
+    const fechaStr = toISODate(start);
+    const horaStr = `${String(start.getHours()).padStart(2, "0")}:${String(
+      start.getMinutes()
+    ).padStart(2, "0")}`;
+    if (start < ahora) {
+      alerta.alertaLaCitaNoPuedeSerPasada();
+      return false;
+    }
+    if (!horariosDisponibles.includes(horaStr)) {
+      alerta.alertaErrorCrearCita("Seleccione una hora válida.");
+      return false;
+    }
+    const ocupado = estaOcupado(horaStr, horariosOcupados, false, {
+      fecha: fechaStr,
+      tipo: "procedimiento",
+    });
+    if (ocupado) {
+      alerta.alertaErrorCrearCita("Ese horario ya está ocupado.");
+      return false;
+    }
+    return true;
+  }
+
+  const onSelectSlot = ({ start }) => {
     if (!formData.id_usuario) {
-      alert("Debe seleccionar un usuario.");
+      alerta.alertaValidacionCampos("Primero seleccione un usuario.");
       return;
     }
-
-    if (!formData.fecha || !horaSeleccionada) {
-      alert("Debe seleccionar la fecha y la hora.");
+    if (!formData.id_orden) {
+      alerta.alertaErrorCrearCita(
+        "Debe seleccionar una orden con evaluación realizada."
+      );
       return;
     }
+    const rounded = new Date(start);
+    rounded.setMinutes(
+      rounded.getMinutes() - (rounded.getMinutes() % 30),
+      0,
+      0
+    );
+    if (!validarSlot(rounded)) return;
+    const end = addMinutes(rounded, 60);
+    setSlotSeleccionado({ start: rounded, end });
+    setShowModal(true);
+  };
 
-    // Validación: cuando el tipo es procedimiento, debe existir una orden seleccionada
-    if (formData.tipo === "procedimiento" && !formData.id_orden) {
-      alert("Debe seleccionar una orden asociada a una evaluación realizada para agendar el procedimiento.");
+  const onNavigate = (date) => {
+    setCurrentDate(date);
+    setFechaVista(toISODate(date));
+  };
+  const onView = (next) => setView(next);
+
+  const guardarCita = async () => {
+    if (
+      !slotSeleccionado?.start 
+    ) {
+      await alerta.alertaValidacionCampos("Seleccione doctor y horario.");
       return;
     }
-
-    const fechaFormateada = `${formData.fecha}T${horaSeleccionada}:00`;
-
     try {
+      setEnviando(true);
+      const fechaISO = toISODate(slotSeleccionado.start);
+      const hh = String(slotSeleccionado.start.getHours()).padStart(2, "0");
+      const mm = String(slotSeleccionado.start.getMinutes()).padStart(2, "0");
+      const fechaFormateada = `${fechaISO}T${hh}:${mm}:00`;
       await axios.post(
         `${API_URL}/apicitas/crearcitas`,
-        { ...formData, fecha: fechaFormateada },
+        {
+          id_usuario: formData.id_usuario,
+          id_doctor: formData.id_doctor,
+          fecha: fechaFormateada,
+          tipo: "procedimiento",
+          estado: "pendiente",
+          id_orden: formData.id_orden,
+        },
         {
           headers: {
             "Content-Type": "application/json",
@@ -145,24 +267,78 @@ function RegistraCitaAsistente() {
           },
         }
       );
-
-      Swal.fire(
-        "Éxito",
-        "Tu orden y cita han sido registradas Correctamente",
-        "success"
-      );
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Error al registrar cita/orden:", error);
-      Swal.fire(
-        "Error",
-        "Hubo un error al registrar la orden o la cita",
-        "error"
-      );
+      await alerta.alertaCitaAgendada();
+      setEventos((prev) => [
+        ...prev,
+        {
+          title: "🟥 Ocupado",
+          start: slotSeleccionado.start,
+          end: slotSeleccionado.end,
+          tipo: "ocupado",
+          resource: {
+            fecha: fechaFormateada,
+            tipo: "procedimiento",
+            id_doctor: formData.id_doctor,
+          },
+        },
+      ]);
+      setShowModal(false);
+    } catch (e) {
+      console.error("Error al registrar cita:", e);
+      const backendMsg =
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        e.message ||
+        "Hubo un error al registrar la cita";
+      if (String(backendMsg).toLowerCase().includes("pasada")) {
+        await alerta.alertaLaCitaNoPuedeSerPasada();
+      } else {
+        await alerta.alertaErrorCrearCita(backendMsg);
+      }
+    } finally {
+      setEnviando(false);
     }
   };
 
-  if (cargando || cargandoDoctores || cargandoHorarios || cargandoUsuarios) {
+  const eventPropGetter = (event) => {
+    if (event.tipo === "ocupado") {
+      return {
+        style: {
+          backgroundColor: "rgba(220,53,69,0.25)",
+          borderColor: "rgba(220,53,69,0.8)",
+          color: "#000",
+        },
+      };
+    }
+    return {};
+  };
+
+  const messages = {
+    date: "Fecha",
+    time: "Hora",
+    event: "Evento",
+    allDay: "Todo el día",
+    week: "Semana",
+    work_week: "Semana laboral",
+    day: "Día",
+    month: "Mes",
+    previous: "Anterior",
+    next: "Siguiente",
+    yesterday: "Ayer",
+    tomorrow: "Mañana",
+    today: "Hoy",
+    agenda: "Agenda",
+    noEventsInRange: "No hay eventos en este rango.",
+    showMore: (total) => `+ Ver más (${total})`,
+  };
+
+  if (
+    cargando ||
+    cargandoDoctores ||
+    cargandoHorarios ||
+    cargandoUsuarios ||
+    cargandoCitasDoctor
+  ) {
     return <Cargando texto="Cargando Informacion" />;
   }
 
@@ -183,7 +359,7 @@ function RegistraCitaAsistente() {
         <div className="alert alert-warning">{errorUsuarios}</div>
       )}
       <InformacionUsuario usuario={usuario} />
-      <Form onSubmit={ManejarEnvio}>
+      <Form onSubmit={(e) => e.preventDefault()}>
         <input type="hidden" name="id_usuario" value={formData.id_usuario} />
 
         <div className="mb-3">
@@ -216,9 +392,10 @@ function RegistraCitaAsistente() {
           </select>
         </div>
 
-  {/* Orden elegible por evaluación realizada */}
         <div className="mb-3">
-          <label className="form-label">Orden (requiere evaluación realizada):</label>
+          <label className="form-label">
+            Orden (requiere evaluación realizada):
+          </label>
           <select
             name="id_orden"
             className="form-select"
@@ -236,10 +413,12 @@ function RegistraCitaAsistente() {
                 ? "Seleccione una Orden"
                 : "No hay órdenes con evaluación realizada"}
             </option>
-            {ordenesElegibles && ordenesElegibles.length > 0 &&
+            {ordenesElegibles &&
+              ordenesElegibles.length > 0 &&
               ordenesElegibles.map((orden) => (
                 <option key={orden.id} value={orden.id}>
-                  #{orden.id} - {orden?.procedimientos?.map(p => p.nombre).join(", ")}
+                  #{orden.id} -{" "}
+                  {orden?.procedimientos?.map((p) => p.nombre).join(", ")}
                 </option>
               ))}
           </select>
@@ -247,7 +426,6 @@ function RegistraCitaAsistente() {
             <div className="text-danger small mt-1">{errorOrdenes}</div>
           )}
         </div>
-        {/* Fin Orden */}
 
         <div className="mb-3">
           <label className="form-label">Doctor:</label>
@@ -276,80 +454,36 @@ function RegistraCitaAsistente() {
           <input className="form-control" value="procedimiento" readOnly />
         </div>
 
-    <div className="mb-3">
-          <label className="form-label">Fecha:</label>
-          <input
-            type="date"
-            name="fecha"
-            className="form-control"
-            value={formData.fecha}
-            onChange={manejarCambio}
-            min={new Date().toISOString().split("T")[0]}
-      disabled={!formData.id_orden}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Hora:</label>
-          <select
-            className="form-select"
-            value={horaSeleccionada}
-            onChange={(e) => setHoraSeleccionada(e.target.value)}
-            required
-            disabled={!formData.id_orden || !formData.fecha || cargandoHorarios}
-          >
-            <option value="">
-              {!formData.id_orden
-                ? "Primero seleccione una orden"
-                : !formData.fecha
-                ? "Luego seleccione la fecha"
-                : cargandoHorarios
-                ? "Cargando horarios disponibles..."
-                : "Seleccione una hora"}
-            </option>
-            {formData.fecha &&
-              formData.id_orden &&
-              !cargandoHorarios &&
-              horariosDisponibles.map((hora) => (
-                <option
-                  key={hora}
-                  value={hora}
-                  disabled={estaOcupado(
-                    hora,
-                    horariosOcupados,
-                    cargandoHorarios,
-                    formData
-                  )}
-                >
-                  {hora}{" "}
-                  {estaOcupado(
-                    hora,
-                    horariosOcupados,
-                    cargandoHorarios,
-                    formData
-                  )
-                    ? "🟥 Ocupado"
-                    : "🟩 Disponible"}
-                </option>
-              ))}
-          </select>
-          {error && <div className="text-danger small mt-1">{error}</div>}
-        </div>
+        {formData.id_orden ? (
+          <div className="card mb-3">
+            <div className="card-body">
+              <Calendar
+                localizer={localizer}
+                events={eventos}
+                selectable
+                startAccessor="start"
+                endAccessor="end"
+                style={{ height: 600 }}
+                onSelectSlot={onSelectSlot}
+                onNavigate={onNavigate}
+                onView={onView}
+                view={view}
+                date={currentDate}
+                step={30}
+                timeslots={2}
+                min={minTime}
+                max={maxTime}
+                messages={messages}
+                eventPropGetter={eventPropGetter}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="alert alert-info">
+            Seleccione primero una orden válida para mostrar el calendario.
+          </div>
+        )}
         <div className="d-flex gap-2 mt-4">
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={
-              !formData.id_doctor ||
-              !formData.fecha ||
-              !horaSeleccionada ||
-              !formData.tipo ||
-              cargandoHorarios
-            }
-          >
-            {cargandoHorarios ? "Verificando horarios..." : "Registrar Cita"}
-          </button>
           <button
             type="button"
             className="btn btn-secondary"
@@ -359,6 +493,78 @@ function RegistraCitaAsistente() {
           </button>
         </div>
       </Form>
+
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Cita (Procedimiento)</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="mb-2">
+            <strong>Usuario:</strong>{" "}
+            {usuarios && usuarios.length > 0
+              ? usuarios.find(
+                  (u) => String(u.id) === String(formData.id_usuario)
+                )?.nombre || "Desconocido"
+              : "Cargando..."}
+          </p>
+          <p className="mb-2">
+            <strong>Orden:</strong> #{formData.id_orden}
+          </p>
+          <p className="mb-2">
+            <strong>Fecha y hora:</strong>{" "}
+            {slotSeleccionado?.start?.toLocaleString("es-CO", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
+          <Form.Group className="mb-3">
+            <Form.Label>Doctor</Form.Label>
+            {formData.id_doctor ? (
+              <div className="form-control bg-light">
+                {doctores?.find((d) => d.id === parseInt(formData.id_doctor))
+                  ?.nombre || "—"}
+              </div>
+            ) : (
+              <Form.Select
+                name="id_doctor"
+                value={formData.id_doctor}
+                onChange={manejarCambio}
+                required
+              >
+                <option value="">Seleccione un doctor</option>
+                {doctores?.map((doc) => (
+                  <option key={doc.id} value={doc.id}>
+                    {doc.nombre}
+                  </option>
+                ))}
+              </Form.Select>
+            )}
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Tipo</Form.Label>
+            <Form.Control type="text" value="procedimiento" readOnly />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={guardarCita} disabled={enviando}>
+            {enviando ? (
+              <>
+                <Spinner size="sm" animation="border" className="me-2" />{" "}
+                Guardando…
+              </>
+            ) : (
+              "Guardar Cita"
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 }

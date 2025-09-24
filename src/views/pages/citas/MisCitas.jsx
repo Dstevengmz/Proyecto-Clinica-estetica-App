@@ -20,7 +20,7 @@ function MisCitas() {
 
   const verDetalles = (cita) => {
     setSelectedCitas?.(cita);
-    navigate("/detallescitas");
+    navigate("/detallescitas/" + cita.id);
   };
 
   return (

@@ -52,7 +52,6 @@ function ConsultarListaUsuarios() {
     setTerminoBusqueda(e.target.value);
   };
 
-  // Limpiar búsqueda
   const limpiarBusqueda = () => {
     setTerminoBusqueda("");
   };

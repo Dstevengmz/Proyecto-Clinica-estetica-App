@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect } from 'react';
 import { CForm, CFormInput, CButton } from '@coreui/react';
 
-export default function BuscadorCitas({ citas, termino, onTerminoChange, onResultado }) {
+  function BuscadorCitas({ citas, termino, onTerminoChange, onResultado }) {
   const filtradas = useMemo(() => {
     if (!termino.trim()) return citas;
     const t = termino.toLowerCase().trim();
@@ -75,3 +75,4 @@ export default function BuscadorCitas({ citas, termino, onTerminoChange, onResul
     </div>
   );
 }
+export default BuscadorCitas;

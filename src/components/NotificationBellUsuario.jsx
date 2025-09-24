@@ -79,7 +79,6 @@ const NotificationBellUsuario = () => {
   
   const themeStyles = getThemeStyles();
 
-  //  Solo mostrar para usuarios/pacientes (NO doctores)
   const isDoctor = userRole === 'doctor' || userRole === 'Doctor' || userRole === 'DOCTOR';
   
   if (isDoctor) {
@@ -99,28 +98,31 @@ const NotificationBellUsuario = () => {
   const handleViewAllNotifications = async () => {
     try {
       const historial = await loadNotificationHistory();
-      navigate('/historial-notificaciones-usuario', { state: { historial } });
+      navigate('/notificaciones/usuario/historial', { state: { historial } });
     } catch (error) {
       console.error('Error al cargar historial de usuario:', error);
     }
   };
 
   const handleNotificationClick = async (index, notification) => {
-    console.log(` Marcando notificación de usuario ${index} como leída`);
+    console.log(`Marcando notificación de usuario ${index} como leída`, notification);
     markAsRead(index);
-    
-    //  Navegación específica para usuarios
-    if (notification.tipo === 'confirmacion_cita' && notification.citaId) {
-      // Navegar a mis citas o detalles de la cita
-      navigate('/mis-citas');
-    } else if (notification.tipo === 'recordatorio_cita') {
-      navigate('/mis-citas');
-    } else if (notification.tipo === 'promocion') {
-      navigate('/promociones');
-    } else {
-      // Para otros tipos, navegar al dashboard del usuario
-      navigate('/dashboard-usuario');
+
+    const { tipo, citaId } = notification || {};
+
+    if ((tipo === 'confirmacion_cita' || tipo === 'recordatorio_cita' || tipo === 'cita_actualizada' || tipo === 'cita_cancelada') && citaId) {
+      return navigate(`/citas/${citaId}`);
     }
+
+    if (tipo === 'promocion') {
+      return navigate('/promociones');
+    }
+
+    if (tipo === 'confirmacion_cita' || tipo === 'recordatorio_cita') {
+      return navigate('/miscitas');
+    }
+
+    navigate('/dashboard-usuario');
   };
 
   return (

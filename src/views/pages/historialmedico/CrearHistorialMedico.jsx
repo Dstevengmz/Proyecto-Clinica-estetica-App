@@ -3,11 +3,16 @@ import { Form, Button, Container, Row, Col, Card } from "react-bootstrap";
 import axios from "axios";
 import { usePerfilUsuario } from "../../../hooks/usePerfilUsuario";
 import { useNavigate } from "react-router-dom";
+import BuscarHistorialClinicaPorUSuario from "../../../hooks/useBuscarHistorialClinicaPorUSuario";
+import AlertHistorialMedico from "../../../assets/js/alertas/historialmedico/HistorialMedico";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function HistorialMedico() {
   const navigate = useNavigate();
+  const alertas = new AlertHistorialMedico();
   const { usuario } = usePerfilUsuario();
+  const { verificarHistorialMedico } =
+    BuscarHistorialClinicaPorUSuario(usuario);
   const [formulario, setFormulario] = useState({
     enfermedades: "",
     alergias: "",
@@ -26,6 +31,7 @@ function HistorialMedico() {
     epilepsia: false,
     otras_condiciones: "",
   });
+
   const [enfermedadesHabilitado, setEnfermedadesHabilitado] = useState(false);
   const [enfermedadActual, setEnfermedadActual] = useState("");
   const [enfermedadesLista, setEnfermedadesLista] = useState([]);
@@ -43,7 +49,7 @@ function HistorialMedico() {
   const [cirugiasHabilitado, setCirugiasHabilitado] = useState(false);
   const [condicionActual, setCondicionActual] = useState("");
   const [condicionesLista, setCondicionesLista] = useState([]);
-
+  const [enviando, setEnviando] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -57,80 +63,73 @@ function HistorialMedico() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const yaTieneHistorial = await verificarHistorialMedico();
+    if (yaTieneHistorial) {
+      await alertas.alertaYaTieneHistorialMedico();
+      return;
+    }
+
+    // Confirmación antes de crear
+    const confirm = await alertas.confirmarGuardarHistorialMedico?.();
+    if (confirm && !confirm.isConfirmed) return;
+
     try {
-      const response = await axios.get(
-        `${API_URL}/apihistorialmedico/buscarhistorialclinicoporusuario/${usuario.id}`,
+      setEnviando(true);
+      const payload = {
+        ...formulario,
+        enfermedades: enfermedadesLista.join(", "),
+        alergias: alergiasLista.join(", "),
+        medicamentos: medicamentosLista.join(", "),
+        cirugias_previas: cirugiasLista.join(", "),
+        condiciones_piel: condicionesLista.join(", "),
+        id_usuario: usuario.id,
+      };
+      await axios.post(
+        `${API_URL}/apihistorialmedico/crearhistorialclinico`,
+        payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
-      if (response.data) {
-        alert("Ya Tienes un historial médico registrado");
-        return;
-      }
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
-        try {
-          const payload = {
-            ...formulario,
-            enfermedades: enfermedadesLista.join(", "),
-            alergias: alergiasLista.join(", "),
-            medicamentos: medicamentosLista.join(", "),
-            cirugias_previas: cirugiasLista.join(", "),
-            condiciones_piel: condicionesLista.join(", "),
-            id_usuario: usuario.id,
-          };
-          await axios.post(
-            `${API_URL}/apihistorialmedico/crearhistorialclinico`,
-            payload,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-
-          alert("Historial médico guardado correctamente");
-          navigate("/crearcita");
-          setFormulario({
-            enfermedades: "",
-            alergias: "",
-            cirugias_previas: "",
-            condiciones_piel: "",
-            embarazo_lactancia: false,
-            medicamentos: "",
-            consume_tabaco: false,
-            consume_alcohol: false,
-            usa_anticonceptivos: false,
-            detalles_anticonceptivos: "",
-            diabetes: false,
-            hipertension: false,
-            historial_cancer: false,
-            problemas_coagulacion: false,
-            epilepsia: false,
-            otras_condiciones: "",
-          });
-          setEnfermedadesHabilitado(false);
-          setEnfermedadActual("");
-          setEnfermedadesLista([]);
-          setAlergiasHabilitado(false);
-          setAlergiaActual("");
-          setAlergiasLista([]);
-          setMedicamentosHabilitado(false);
-          setMedicamentoActual("");
-          setMedicamentosLista([]);
-          setCirugiaActual("");
-          setCirugiasLista([]);
-          setCirugiasHabilitado(false);
-          setCondicionActual("");
-          setCondicionesLista([]);
-        } catch (postError) {
-          console.error("Error al guardar historial médico", postError);
-          alert("Error al guardar historial médico");
-        }
-      } else {
-        console.error("Error al verificar existencia del historial", error);
-        alert("Error al verificar historial médico existente");
-      }
+      await alertas.alertaHistorialMedicoCreadoExito?.();
+      navigate("/crearcita");
+      setFormulario({
+        enfermedades: "",
+        alergias: "",
+        cirugias_previas: "",
+        condiciones_piel: "",
+        embarazo_lactancia: false,
+        medicamentos: "",
+        consume_tabaco: false,
+        consume_alcohol: false,
+        usa_anticonceptivos: false,
+        detalles_anticonceptivos: "",
+        diabetes: false,
+        hipertension: false,
+        historial_cancer: false,
+        problemas_coagulacion: false,
+        epilepsia: false,
+        otras_condiciones: "",
+      });
+      setEnfermedadesHabilitado(false);
+      setEnfermedadActual("");
+      setEnfermedadesLista([]);
+      setAlergiasHabilitado(false);
+      setAlergiaActual("");
+      setAlergiasLista([]);
+      setMedicamentosHabilitado(false);
+      setMedicamentoActual("");
+      setMedicamentosLista([]);
+      setCirugiaActual("");
+      setCirugiasLista([]);
+      setCirugiasHabilitado(false);
+      setCondicionActual("");
+      setCondicionesLista([]);
+    } catch (postError) {
+      console.error("Error al guardar historial médico", postError);
+      await alertas.alertaNoSePudoCrearHistorialMedico?.();
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -510,7 +509,7 @@ function HistorialMedico() {
           </Col>
         </Row>
 
-              {/* Medicamentos */}
+        {/* Medicamentos */}
         <Row className="mb-3">
           <Col>
             <Form.Group controlId="formMedicamentos">
@@ -603,9 +602,6 @@ function HistorialMedico() {
           </Col>
         </Row>
 
-
-
-
         <Row className="mb-3">
           <Col>
             <Form.Check
@@ -616,7 +612,10 @@ function HistorialMedico() {
               onChange={handleChange}
             />
             {formulario.usa_anticonceptivos && (
-              <Form.Group controlId="formDetallesAnticonceptivos" className="mt-2">
+              <Form.Group
+                controlId="formDetallesAnticonceptivos"
+                className="mt-2"
+              >
                 <Form.Label>Detalles de anticonceptivos</Form.Label>
                 <Form.Control
                   as="textarea"
@@ -730,8 +729,8 @@ function HistorialMedico() {
           </Col>
         </Row>
 
-        <Button variant="primary" type="submit">
-          Guardar Historial Médico
+        <Button variant="primary" type="submit" disabled={enviando}>
+          {enviando ? "Guardando..." : "Guardar Historial Médico"}
         </Button>
       </Form>
     </Container>

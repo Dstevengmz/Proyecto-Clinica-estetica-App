@@ -10,7 +10,6 @@ import {
 import { CNavGroup, CNavItem, CNavTitle } from "@coreui/react";
 import ObtenerUserIdFromToken from "./assets/js/ObtenerTokenDelUsuario";
 
-
 // Navegacion para usuarios
 const getUserNavigation = () => {
   const userId = ObtenerUserIdFromToken();
@@ -39,7 +38,7 @@ const getUserNavigation = () => {
         },
       ],
     },
-        {
+    {
       component: CNavGroup,
       name: "Mis Citas",
       icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
@@ -53,6 +52,18 @@ const getUserNavigation = () => {
           component: CNavItem,
           name: "Mis Citas",
           to: "/miscitas",
+        },
+      ],
+    },
+    {
+      component: CNavGroup,
+      name: "Notificaciones",
+      icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
+      items: [
+        {
+          component: CNavItem,
+          name: "Mis notificaciones",
+          to: "/notificaciones/usuario/historial",
         },
       ],
     },
@@ -85,7 +96,6 @@ const getAsistenteNavigation = () => [
       },
     ],
   },
-
 ];
 
 // Navegacion para doctores
@@ -142,8 +152,19 @@ const getDoctorNavigation = () => [
       },
       {
         component: CNavItem,
-        name: "Consultar Servicio",
+        name: "Crear Categoria",
+        to: "/categoriaprocedimientoscrear",
+      },
+      {
+        component: CNavItem,
+        name: "Consultar Servicios",
         to: "/consultarprocedimientos",
+      },
+
+      {
+        component: CNavItem,
+        name: "Consultar Categorias",
+        to: "/categoriaprocedimientos",
       },
     ],
   },
@@ -161,7 +182,6 @@ const getDoctorNavigation = () => [
   },
 ];
 
-
 const getNavigationByRole = (userRole) => {
   switch (userRole) {
     case "doctor":
@@ -175,7 +195,7 @@ const getNavigationByRole = (userRole) => {
     case "asistente":
     case "Asistente":
     case "ASISTENTE":
-      return getAsistenteNavigation(); 
+      return getAsistenteNavigation();
     default:
       return getUserNavigation();
   }

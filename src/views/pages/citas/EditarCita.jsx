@@ -11,6 +11,7 @@ import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario
 import useActualizarCita from "../../../hooks/useEditarCita";
 import { useAuth } from "../../../contexts/AuthenticaContext";
 import useCambiarEstadoCita from "../../../hooks/useCambiarEstadoCita";
+import AlertaCitas from "../../../assets/js/alertas/citas/AlertaCitas";
 function EditarCitas() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -18,25 +19,65 @@ function EditarCitas() {
   const { userRole } = useAuth();
   const isDoctor = (userRole || "").toString().toLowerCase() === "doctor";
   const [hora, setHora] = useState("");
-  const [formulario, setFormulario] = useState({ id_usuario: "", id_doctor: "", fecha: "", estado: "", tipo: "", observaciones: "", examenes_requeridos: "", usuario: {}, doctor: {},
+  const [formulario, setFormulario] = useState({
+    id_usuario: "",
+    id_doctor: "",
+    fecha: "",
+    estado: "",
+    tipo: "",
+    observaciones: "",
+    examenes_requeridos: "",
+    nota_evolucion: "",
+    usuario: {},
+    doctor: {},
   });
-
-  const { cita, hora: horaInicial, cargando: citaidcargando, error: erroridcita,
+  const [requiereExamenes, setRequiereExamenes] = useState(false);
+  //
+  const esProcedimiento = formulario?.tipo === "procedimiento";
+  const {
+    cita,
+    hora: horaInicial,
+    cargando: citaidcargando,
+    error: erroridcita,
   } = useCitaPorId(id, token);
   const { usuario, cargando } = useListarUsuario();
-  const { actualizarCita, cargando: cargandoActualizacion } = useActualizarCita( id, formulario, hora, token
+  const { actualizarCita, cargando: cargandoActualizacion } = useActualizarCita(
+    id,
+    formulario,
+    hora,
+    token
   );
-  const { cambiarEstadoCita, cargando: cargandoEstado } = useCambiarEstadoCita();
-  const { horariosOcupados, cargando: cargandoHorarios, error,
+  const { cambiarEstadoCita, cargando: cargandoEstado } =
+    useCambiarEstadoCita();
+  const {
+    horariosOcupados,
+    cargando: cargandoHorarios,
+    error,
   } = useHorariosDisponible(formulario.fecha, formulario.tipo, token);
-  useEffect(() => {
-  }, [ formulario.fecha, formulario.tipo, horariosOcupados, cargandoHorarios, error, token,
+  useEffect(() => {}, [
+    formulario.fecha,
+    formulario.tipo,
+    horariosOcupados,
+    cargandoHorarios,
+    error,
+    token,
   ]);
 
   useEffect(() => {
     if (cita) {
-  setFormulario({id_usuario: cita.id_usuario || "",id_doctor: cita.id_doctor || "",fecha: cita.fecha || "",estado: cita.estado || "",tipo: cita.tipo || "",observaciones: cita.observaciones || "",examenes_requeridos: cita.examenes_requeridos || "",usuario: cita.usuario || {},doctor: cita.doctor || {},
+      setFormulario({
+        id_usuario: cita.id_usuario || "",
+        id_doctor: cita.id_doctor || "",
+        fecha: cita.fecha || "",
+        estado: cita.estado || "",
+        tipo: cita.tipo || "",
+        observaciones: cita.observaciones || "",
+        examenes_requeridos: cita.examenes_requeridos || "",
+        nota_evolucion: cita.nota_evolucion || "",
+        usuario: cita.usuario || {},
+        doctor: cita.doctor || {},
       });
+      setRequiereExamenes(!!cita.examenes_requeridos);
     }
     if (horaInicial) {
       setHora(horaInicial);
@@ -49,14 +90,14 @@ function EditarCitas() {
 
     if (name === "fecha" || name === "tipo") {
       setHora("");
-      if (name === 'tipo' && value !== 'evaluacion') {
-        // Si deja de ser evaluación limpiamos exámenes requeridos
-        setFormulario((prev)=>({...prev, examenes_requeridos: ''}));
+      if (name === "tipo" && value !== "evaluacion") {
+        setFormulario((prev) => ({ ...prev, examenes_requeridos: "" }));
+        setRequiereExamenes(false);
       }
     }
   };
   if (cargando || citaidcargando) {
-      return <Cargando texto="Cargando datos de la cita..." />;
+    return <Cargando texto="Cargando datos de la cita..." />;
   }
 
   if (erroridcita) {
@@ -68,7 +109,8 @@ function EditarCitas() {
           <hr />
           <button
             className="btn btn-outline-danger"
-            onClick={() => navigate("/consultarcitas")}>
+            onClick={() => navigate("/consultarcitas")}
+          >
             Volver a la lista de citas
           </button>
         </div>
@@ -88,7 +130,8 @@ function EditarCitas() {
           <hr />
           <button
             className="btn btn-outline-warning"
-            onClick={() => navigate("/consultarcitas")}>
+            onClick={() => navigate("/consultarcitas")}
+          >
             Volver a la lista de citas
           </button>
         </div>
@@ -130,7 +173,13 @@ function EditarCitas() {
       <Form onSubmit={actualizarCita}>
         <Form.Group className="mb-3">
           <Form.Label>Doctor</Form.Label>
-          <Form.Select name="id_doctor" value={formulario.id_doctor} onChange={manejarCambio} required disabled={isDoctor}>
+          <Form.Select
+            name="id_doctor"
+            value={formulario.id_doctor}
+            onChange={manejarCambio}
+            required
+            disabled={isDoctor}
+          >
             <option value="">Seleccione un doctor</option>
             {usuario
               .filter((u) => u.rol === "doctor")
@@ -141,34 +190,56 @@ function EditarCitas() {
               ))}
           </Form.Select>
         </Form.Group>
-
         <Form.Group className="mb-3">
           <Form.Label>Tipo</Form.Label>
-          <Form.Select name="tipo" value={formulario.tipo} onChange={manejarCambio} required disabled={isDoctor}>
+          <Form.Select
+            name="tipo"
+            value={formulario.tipo}
+            onChange={manejarCambio}
+            required
+            disabled={isDoctor}
+          >
             <option value="">Seleccione tipo</option>
             <option value="evaluacion">Evaluación</option>
             <option value="procedimiento">Procedimiento</option>
           </Form.Select>
         </Form.Group>
-
         <Row>
           <Col md={6}>
             <Form.Group className="mb-3">
               <Form.Label>Fecha</Form.Label>
-              <Form.Control type="date" name="fecha" value={formulario.fecha} onChange={manejarCambio} min={new Date().toISOString().split("T")[0]} required disabled={isDoctor}/>
+              <Form.Control
+                type="date"
+                name="fecha"
+                value={formulario.fecha}
+                onChange={manejarCambio}
+                min={new Date().toISOString().split("T")[0]}
+                required
+                disabled={isDoctor}
+              />
             </Form.Group>
           </Col>
 
           <Col md={6}>
             <Form.Group className="mb-3">
               <Form.Label>Hora</Form.Label>
-              <Form.Select value={hora} onChange={(e) => setHora(e.target.value)} required disabled={isDoctor}>
+              <Form.Select
+                value={hora}
+                onChange={(e) => setHora(e.target.value)}
+                required
+                disabled={isDoctor}
+              >
                 <option value="">Seleccione una hora</option>
                 {horariosDisponibles.map((h) => {
                   const horariosOcupadosFiltrados = horariosOcupados.filter(
                     (cita) => cita.id !== parseInt(id)
                   );
-                  const ocupado = estaOcupado(h, horariosOcupadosFiltrados, cargandoHorarios, formulario);
+                  const ocupado = estaOcupado(
+                    h,
+                    horariosOcupadosFiltrados,
+                    cargandoHorarios,
+                    formulario
+                  );
                   return (
                     <option key={h} value={h} disabled={ocupado}>
                       {h} {ocupado ? "🟥 Ocupado" : "🟩 Disponible"}
@@ -179,42 +250,100 @@ function EditarCitas() {
             </Form.Group>
           </Col>
         </Row>
+        {" "}
+        {!esProcedimiento && (
+          <Form.Group className="mb-3">
+            <Form.Label>Motivo Consulta</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={4}
+              name="observaciones"
+              value={formulario.observaciones}
+              onChange={manejarCambio}
+              style={{ resize: "vertical" }}
+            />
+          </Form.Group>
+        )}
+        {isDoctor && esProcedimiento && (
+  <>
+    <hr />
+     <Form.Group className="mb-3">
+            <Form.Label>Nota Evolucion</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={4}
+              name="nota_evolucion"
+              value={formulario.nota_evolucion}
+              onChange={manejarCambio}
+              style={{ resize: "vertical" }}
+            />
+          </Form.Group>
+  </>
+)}
+
 
         <Form.Group className="mb-3">
-          <Form.Label>Motivo Consulta</Form.Label>
+          <div className="d-flex justify-content-between align-items-center">
+            <Form.Label className="mb-0">Exámenes Requeridos</Form.Label>
+            {isDoctor && formulario.tipo === "evaluacion" && (
+              <Form.Check
+                type="switch"
+                id="switch-requiere-examenes"
+                label="Requiere exámenes"
+                checked={requiereExamenes}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setRequiereExamenes(checked);
+                  if (!checked) {
+                    setFormulario((prev) => ({
+                      ...prev,
+                      examenes_requeridos: "",
+                    }));
+                  }
+                }}
+              />
+            )}
+          </div>
           <Form.Control
-            as="textarea"
-            rows={4}
-            name="observaciones"
-            value={formulario.observaciones}
-            onChange={manejarCambio}
-            style={{ resize: "vertical" }}
-          />
-        </Form.Group>
-        <Form.Group className="mb-3">
-          <Form.Label>Exámenes Requeridos</Form.Label>
-          <Form.Control
+            className="mt-2"
             as="textarea"
             rows={3}
             name="examenes_requeridos"
             value={formulario.examenes_requeridos}
             onChange={manejarCambio}
             style={{ resize: "vertical" }}
-            placeholder="Escriba los exámenes o estudios que necesita el paciente"
-            disabled={!isDoctor || formulario.tipo !== 'evaluacion'}
+            placeholder={
+              isDoctor
+                ? "Escriba los exámenes requeridos para el paciente"
+                : "El doctor indicará aquí los exámenes si son necesarios"
+            }
+            disabled={
+              !isDoctor || formulario.tipo !== "evaluacion" || !requiereExamenes
+            }
           />
           {!isDoctor && (
             <Form.Text muted>
-              Solo el doctor puede modificar los exámenes requeridos.
+              Solo el doctor puede indicar y modificar los exámenes requeridos.
             </Form.Text>
           )}
-          {isDoctor && formulario.tipo !== 'evaluacion' && (
+          {isDoctor &&
+            formulario.tipo === "evaluacion" &&
+            !requiereExamenes && (
+              <Form.Text muted>
+                Active "Requiere exámenes" para escribirlos.
+              </Form.Text>
+            )}
+          {isDoctor && formulario.tipo !== "evaluacion" && (
             <Form.Text muted>
-              Solo disponible en citas de evaluación.
+              Los exámenes solo se asignan en citas de evaluación.
             </Form.Text>
           )}
         </Form.Group>
-        <button type="submit" className="btn btn-success me-2" disabled={cargandoActualizacion}>
+        <button
+          type="submit"
+          className="btn btn-success me-2"
+          disabled={cargandoActualizacion}
+        >
           {cargandoActualizacion ? "Actualizando..." : "Actualizar"}
         </button>
         {isDoctor && (
@@ -223,17 +352,28 @@ function EditarCitas() {
             className="btn btn-primary me-2"
             disabled={cargandoEstado || formulario.estado === "realizada"}
             onClick={async () => {
+              const alertas = new AlertaCitas();
+              const confirm = await alertas.confirmarMarcarRealizada();
+              if (!confirm.isConfirmed) return;
               const resp = await cambiarEstadoCita(id, "realizada");
               if (resp) {
-                alert("Cita marcada como realizada");
+                await alertas.alertaEstadoActualizado();
                 setFormulario((prev) => ({ ...prev, estado: "realizada" }));
+              } else if (resp === null) {
+                // El hook ya puso mensaje de error en 'error'
+                await alertas.alertaErrorEstado();
               }
             }}
           >
             {cargandoEstado ? "Marcando..." : "Marcar como realizada"}
           </button>
         )}
-        <button type="button" className="btn btn-secondary" onClick={() => navigate("/consultarcitas")} disabled={cargandoActualizacion}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => navigate("/consultarcitas")}
+          disabled={cargandoActualizacion}
+        >
           Cancelar
         </button>
       </Form>

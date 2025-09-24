@@ -9,6 +9,18 @@ import getDay from "date-fns/getDay";
 import es from "date-fns/locale/es";
 import useListarCitas from "../../../hooks/useListarCitas";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import horariosDisponibles from "../../../assets/js/HorariosDisponibles";
+
+function combineTime(hhmm) {
+  const [hh, mm] = hhmm.split(":").map(Number);
+  const d = new Date();
+  d.setHours(hh, mm, 0, 0);
+  return d;
+}
+
+function addMinutes(date, minutes) {
+  return new Date(date.getTime() + minutes * 60000);
+}
 const locales = {
   es: es,
 };
@@ -28,7 +40,7 @@ function CalendarioCitas() {
   const citasAMostrar = todasLasCitas;
   const selectCitas = (citas) => {
     setSelectedCitas(citas);
-    navigate("/detallesCitas");
+    navigate("/detallesCitas/" + citas.id);
   };
   if (cargandoCitas) {
     return (
@@ -40,6 +52,11 @@ function CalendarioCitas() {
       </div>
     );
   }
+
+  const firstSlot = horariosDisponibles?.[0] || "08:00";
+  const lastSlot = horariosDisponibles?.[horariosDisponibles.length - 1] || "18:00";
+  const minTime = combineTime(firstSlot);
+  const maxTime = addMinutes(combineTime(lastSlot), 30);
 
   const eventosCalendario = citasAMostrar.map((cita) => ({
     title: `${
@@ -82,6 +99,11 @@ function CalendarioCitas() {
             style={{ height: "100%" }}
             defaultView="week"
             views={["day", "week", "month"]}
+            step={30}
+            timeslots={2}
+            min={minTime}
+            max={maxTime}
+            scrollToTime={minTime}
             eventPropGetter={customEventStyleGetter}
             onSelectEvent={(event) => {
               selectCitas(event.resource);

@@ -1,138 +1,204 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useCarrito } from "../../../contexts/CarritoContext";
-const API_URL = import.meta.env.VITE_API_URL;
+import { useProcedimiento } from "../../../hooks/useVistaServicios";
+import Cargando from "../../../components/Cargando";
+import ErrorCargando from "../../../components/ErrorCargar";
+import AlertaCarrito from "../../../assets/js/alertas/carrito/AlertaCarrito";
+import { CButton } from "@coreui/react";
 
 function VistaServicios() {
+  const alertas = new AlertaCarrito();
   const { id } = useParams();
-  const [procedimiento, setProcedimiento] = useState(null);
-  const [imagenActiva, setImagenActiva] = useState("");
-  const [tabActiva, setTabActiva] = useState("description");
-  const { agregarAlCarrito } = useCarrito();
+  const {
+    procedimiento,
+    imagenActiva,
+    setImagenActiva,
+    tabActiva,
+    setTabActiva,
+    error,
+  } = useProcedimiento(id);
+
+  const { agregarAlCarrito, carrito, estaEnCarrito } = useCarrito();
   const navigate = useNavigate();
+  const [isAdding, setIsAdding] = useState(false);
 
-  useEffect(() => {
-    axios
-      .get(`${API_URL}/apiprocedimientos/buscarprocedimiento/${id}`)
-      .then((res) => {
-        setProcedimiento(res.data);
-        setImagenActiva(res.data.imagen);
-        // setImagenActiva(`${API_URL}/${res.data.imagen}`);
-      })
-      .catch((err) => console.error("Error al obtener el procedimiento:", err));
-  }, [id]);
-
-  const manejoReserva = () => {
+  const manejoReserva = async () => {
+    if (isAdding) return;
     const token = localStorage.getItem("token");
     if (!token) {
-      navigate("/iniciarsesion");
-    } else {
-      agregarAlCarrito(procedimiento.id);
-      alert("Agregado al carrito ✅");
+      const returnTo = `/reservar/${id}`;
+      if (/^\/reservar\/\d+$/.test(returnTo)) {
+        sessionStorage.setItem("returnTo", returnTo);
+      }
+      await alertas.direccionandoALogin();
+      navigate("/iniciarsesion", { state: { from: returnTo } });
+      return;
+    }
+
+    const yaEnCarrito =
+      typeof estaEnCarrito === "function"
+        ? estaEnCarrito(procedimiento.id)
+        : carrito?.some((item) => item?.procedimiento?.id === procedimiento.id);
+    if (yaEnCarrito) {
+      await alertas.ServicioYaEnCarrito();
+      return;
+    }
+    try {
+      const confirm = await alertas.confirmarGuardarCarrito();
+      if (!confirm.isConfirmed) return;
+      setIsAdding(true);
+      const result = await agregarAlCarrito(procedimiento.id);
+
+      if (result?.reason === "already-in-cart") {
+        await alertas.ServicioYaEnCarrito();
+        return;
+      }
+      if (result && result.added === false && result.reason === "error") {
+        await alertas.alertaErrorGenerico();
+        return;
+      }
+      await alertas.alertaServicioAgregadoExito();
       navigate("/servicios");
+    } catch {
+      await alertas.alertaErrorGenerico();
+    } finally {
+      setIsAdding(false);
     }
   };
+
+  if (error) {
+    return <ErrorCargando texto="Error cargando el procedimiento." />;
+  }
+
   if (!procedimiento) {
-    return <p className="text-center mt-5">Cargando procedimiento...</p>;
+    return <Cargando texto="Cargando procedimiento..." />;
   }
   return (
-    <div className="container mt-5">
-      <div className="card card-solid shadow-sm">
-        <div className="card-body">
+    <main className="container-fluid mt-2">
+      <article className="card shadow-sm">
+        <section className="card-body">
           <div className="row">
-            <div className="col-12 col-sm-6">
-              <div className="col-12 mb-3">
+            <aside className="col-12 col-sm-6 order-2 order-sm-1">
+              <figure className="mb-3">
                 <img
+                  id="procedimiento-imagen-principal"
                   src={imagenActiva}
+                  alt={`Imagen del procedimiento: ${procedimiento.nombre}`}
                   className="product-image img-fluid rounded border"
-                  alt="Imagen del procedimiento"
+                  loading="lazy"
+                  style={{
+                    height: "400px",
+                    width: "100%",
+                    objectFit: "cover",
+                  }}
                 />
+              </figure>
+              <div
+                className="d-flex flex-wrap gap-2"
+                role="group"
+                aria-label="Miniaturas del procedimiento"
+              >
+                {(procedimiento.imagenes?.length
+                  ? procedimiento.imagenes.map((i) => i.url)
+                  : [procedimiento.imagen]
+                )
+                  .filter(Boolean)
+                  .map((img, idx) => (
+                    <button
+                      key={`${img}-${idx}`}
+                      type="button"
+                      className={`product-image-thumb border rounded p-1 ${
+                        imagenActiva === img ? "border-primary" : ""
+                      }`}
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setImagenActiva(img)}
+                      aria-label={`Seleccionar imagen ${
+                        idx + 1
+                      } del procedimiento`}
+                      aria-pressed={imagenActiva === img}
+                      aria-controls="procedimiento-imagen-principal"
+                    >
+                      <img
+                        src={img}
+                        alt={`Miniatura ${idx + 1} del procedimiento: ${
+                          procedimiento.nombre
+                        }`}
+                        className="img-fluid"
+                        style={{
+                          height: "60px",
+                          width: "60px",
+                          objectFit: "cover",
+                          borderRadius: "4px",
+                        }}
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
               </div>
-              <div className="col-12 product-image-thumbs d-flex gap-2">
-                <div
-                  className={`product-image-thumb border rounded p-1 ${
-                    imagenActiva === procedimiento.imagen
-                      ? "active border-primary"
-                      : ""
-                  }`}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setImagenActiva(procedimiento.imagen)}
-                >
-                  <img
-                    src={procedimiento.imagen}
-                    alt="Miniatura"
-                    className="img-fluid"
-                    style={{ height: "60px", objectFit: "cover" }}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="col-12 col-sm-6">
-              <h3 className="my-3">{procedimiento.nombre}</h3>
-              <p>{procedimiento.descripcion}</p>
+            </aside>
+            <section className="col-12 col-sm-6 order-1 order-sm-2">
+              <h1 className="my-3">{procedimiento.nombre}</h1>
+              <h5>Categoría</h5>
+              <p>{procedimiento.categoria?.nombre || "Sin categoría"}</p>
 
-              <h5 className="mt-3">Categoría</h5>
-              <p>{procedimiento.categoria}</p>
-
-              <div className="bg-dark  py-2 px-3 mt-4 rounded">
-                <h4 className="mb-0 text-success fw-bold">
+              <div className="bg-dark py-3 px-4 mt-4 rounded text-white">
+                <h4 className="mb-1 text-success fw-bold">
                   {Number(procedimiento.precio).toLocaleString("es-CO", {
                     style: "currency",
                     currency: "COP",
                     minimumFractionDigits: 0,
                   })}
                 </h4>
-                <small className="text-muted">
-                  Duración: {procedimiento.duracion} minutos
-                </small>
+                <small>Duración: {procedimiento.duracion} minutos</small>
               </div>
-              <div className="mt-4">
-                <button
-                  className="btn btn-primary btn-lg w-100"
-                  onClick={manejoReserva}
-                >
-                  <i className="fas fa-cart-plus me-2" />
-                  Reservar Cita
-                </button>
-              </div>
-            </div>
-            {procedimiento.examenes_requeridos && (
-              <div className="row mt-4">
-                <nav className="w-100">
-                  <div className="nav nav-tabs" id="product-tab" role="tablist">
-                    <button
-                      className={`nav-item nav-link ${
-                        tabActiva === "description" ? "active" : ""
-                      }`}
-                      type="button"
-                      onClick={() => setTabActiva("description")}
-                      role="tab"
-                    >
-                      Examenes
-                    </button>
-                  </div>
-                </nav>
-                <div className="tab-content p-3" id="nav-tabContent">
-                  {tabActiva === "description" && (
-                    <div className="tab-pane fade show active" role="tabpanel">
-                      <h5>Examenes Requeridos</h5>
-                      <div className="mt-3">
-                        <ol>
-                          <li>Micronopia</li>
-                          <li>Para la piel</li>
-                          <li>Eliminacion</li>
-                        </ol>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+
+              <button
+                className="btn btn-primary btn-lg w-100 mt-4 d-inline-flex align-items-center justify-content-center"
+                onClick={manejoReserva}
+                aria-label={`Reservar cita para ${procedimiento.nombre}`}
+                aria-busy={isAdding}
+                disabled={isAdding}
+              >
+                <i className="fas fa-cart-plus me-2" />
+                {isAdding ? "Agregando..." : "Reservar Cita"}
+              </button>
+            </section>
           </div>
-        </div>
-      </div>
-    </div>
+
+          <nav className="mt-4" aria-label="Detalles del procedimiento">
+            <div className="nav nav-tabs" role="tablist">
+              <button
+                className={`nav-link ${
+                  tabActiva === "description" ? "active" : ""
+                }`}
+                id="description-tab"
+                type="button"
+                role="tab"
+                aria-selected={tabActiva === "description"}
+                onClick={() => setTabActiva("description")}
+              >
+                Descripción
+              </button>
+            </div>
+          </nav>
+
+          <section
+            className="tab-content p-3 border rounded"
+            id="nav-tabContent"
+            role="tabpanel"
+            aria-labelledby="description-tab"
+          >
+            {tabActiva === "description" && (
+              <article className="tab-pane fade show active">
+                <h5>Descripción del Procedimiento</h5>
+                <p>{procedimiento.descripcion}</p>
+              </article>
+            )}
+          </section>
+        </section>
+      </article>
+    </main>
   );
 }
 

@@ -9,12 +9,15 @@ import DocsIcons from './DocsIcons'
 import DocsLink from './DocsLink'
 import DocsExample from './DocsExample'
 import Cargando from './Cargando'
+import ErrorCargando from './ErrorCargar'
 import ExamenesUpload from './ExamenesUpload'
+import Paginacion from './PaginacionComponents'
 
 export {
   AppBreadcrumb,
   AppContent,
   AppFooter,
+  Paginacion,
   AppHeader,
   AppHeaderDropdown,
   AppSidebar,
@@ -22,6 +25,7 @@ export {
   DocsIcons,
   DocsLink,
   DocsExample,
+  ErrorCargando,
   Cargando,
   ExamenesUpload,
 }

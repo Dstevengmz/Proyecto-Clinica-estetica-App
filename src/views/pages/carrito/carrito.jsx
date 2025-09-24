@@ -1,73 +1,70 @@
 import { useCarrito } from "../../../contexts/CarritoContext";
-import { useNavigate } from "react-router-dom";
 import { usePerfilUsuario } from "../../../hooks/usePerfilUsuario";
-const API_URL = import.meta.env.VITE_API_URL;
-import axios from "axios";
+import  useVerificacionHistorial  from "../../../hooks/useBuscarHistorialClinicaPorUSuario";
+
 function Carrito() {
   const { usuario } = usePerfilUsuario();
   const { carrito, eliminarDelCarrito, limpiarCarrito } = useCarrito();
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const { irACita } = useVerificacionHistorial(usuario);
 
-  const verificarHistorialMedico = async () => {
-    try {
-      const response = await axios.get(
-        `${API_URL}/apihistorialmedico/buscarhistorialclinicoporusuario/${usuario.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      return response.data ? true : false;
-    } catch (error) {
-      console.log("Error al verificar el historial médico:", error);
-      return false;
-    }
-  };
-  const irACita = async () => {
-    const tieneHistorial = await verificarHistorialMedico();
-    if (tieneHistorial) {
-      navigate("/crearcita");
-    } else {
-      navigate("/crearhistorialclinico");
-    }
-  };
+  const tieneCarrito = carrito.length > 0;
+
   return (
     <div className="container mt-5">
       <h2 className="mb-4">🛒 Mi Carrito</h2>
-      {carrito.length === 0 ? (
-        <p>No tienes procedimientos en tu carrito.</p>
+
+      {!tieneCarrito ? (
+        <p className="text-muted">No tienes procedimientos en tu carrito.</p>
       ) : (
         <>
-          <ul className="list-group mb-3">
-            {carrito.map((item) => (
+          <ul className="list-group mb-4">
+            {carrito.map(({ id, procedimiento }) => (
               <li
-                key={item.id}
+                key={id}
                 className="list-group-item d-flex justify-content-between align-items-center"
               >
-                <div>
-                  <strong>Nombre: {item.procedimiento?.nombre}</strong>
-                  <br />
-                  <strong>Precio: {item.procedimiento?.precio}</strong>
-                  <br />
-                  <span className="text-muted">
-                    Descripcion : {item.procedimiento?.descripcion}
-                  </span>
+                <div className="d-flex align-items-start gap-3">
+                  {procedimiento?.imagen && (
+                    <img
+                      src={procedimiento.imagen}
+                      alt={procedimiento.nombre}
+                      className="img-thumbnail"
+                      style={{ width: "200px", height: "auto" }}
+                    />
+                  )}
+                  <div>
+                    <p className="mb-1">
+                      <strong>ID:</strong> {procedimiento?.id}
+                    </p>
+                    <p className="mb-1">
+                      <strong>Nombre:</strong> {procedimiento?.nombre}
+                    </p>
+                    <p className="mb-1">
+                      <strong>Precio:</strong> ${procedimiento?.precio}
+                    </p>
+                    <small className="text-muted">
+                      {procedimiento?.descripcion}
+                    </small>
+                  </div>
                 </div>
                 <button
-                  onClick={() => eliminarDelCarrito(item.id)}
-                  className="btn btn-danger btn-sm"
+                  onClick={() => eliminarDelCarrito(id)}
+                  className="btn btn-sm btn-danger"
                 >
                   Eliminar
                 </button>
               </li>
             ))}
           </ul>
-          <button onClick={limpiarCarrito} className="btn btn-warning">
-            Limpiar carrito
-          </button>
-          <button className="btn btn-primary ms-4" onClick={irACita}>
-            Realizar Cita
-          </button>
+
+          <div className="d-flex justify-content-end gap-3">
+            <button onClick={limpiarCarrito} className="btn btn-warning">
+              Limpiar Carrito
+            </button>
+            <button onClick={irACita} className="btn btn-primary">
+              Realizar Cita
+            </button>
+          </div>
         </>
       )}
     </div>

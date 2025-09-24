@@ -107,7 +107,7 @@ function Consultarcitas() {
 
   const selectCitas = (citas) => {
     setSelectedCitas(citas);
-    navigate("/detallesCitas");
+    navigate("/detallesCitas/" + citas.id);
   };
 
 
@@ -160,7 +160,6 @@ function Consultarcitas() {
       </Container>
     );
   }
-  // Eliminamos early return por lista vacía; ahora se maneja dentro de la tabla.
   return (
     <CitasContext.Provider value={{ selectedCitas, setSelectedCitas }}>
       <div className="card-body">

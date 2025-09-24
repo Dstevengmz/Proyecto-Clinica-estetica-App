@@ -1,39 +1,81 @@
 import { useContext, useMemo, useState } from "react";
 import { Row, Col, Card, Alert, Badge } from "react-bootstrap";
-import useSubirExamenes from '../../../hooks/useSubirExamenes';
-import useExamenesPorCita from '../../../hooks/useExamenesPorCita';
+import useSubirExamenes from "../../../hooks/useSubirExamenes";
+import useExamenesPorCita from "../../../hooks/useExamenesPorCita";
 import { CitasContext } from "../../../contexts/CitasContext";
 import { useAuth } from "../../../contexts/AuthenticaContext";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
+import useCitaPorId from "../../../hooks/useCitaPorId";
+import ConsentimientoVista from "./ConsentimientoVista";
 
 function DetallesCitas() {
   const { selectedCitas } = useContext(CitasContext);
   const location = useLocation();
+  const { id } = useParams();
   const { userRole } = useAuth();
-  const cita = selectedCitas || location.state?.cita || null;
+  const initial = selectedCitas || location.state?.cita || null;
+  const {
+    cita,
+    setCita,
+    actualizando: cargandoCita,
+  } = useCitaPorId(id, { initialData: initial });
+
   const historial = cita?.usuario?.historial_medico || {};
   const orden = cita?.orden || null;
   const estado = cita?.estado || "—";
-  const esProcedimiento = cita?.tipo === 'procedimiento';
-  // Solo el usuario (paciente) puede subir exámenes; el doctor solo visualiza
-  const puedeSubir = esProcedimiento && userRole === 'usuario';
+  const esProcedimiento = cita?.tipo === "procedimiento";
+  const puedeSubir =
+    esProcedimiento &&
+    userRole === "usuario" &&
+    !!cita?.examenes_requeridos &&
+    !cita?.examenes_cargados;
 
-  // Gestión de exámenes (solo si es procedimiento)
-  const { examenes, cargando: cargandoExamenes, refrescar: refrescarExamenes } = useExamenesPorCita(cita?.id);
+  const {
+    examenes,
+    cargando: cargandoExamenes,
+    refrescar: refrescarExamenes,
+  } = useExamenesPorCita(cita?.id);
   const { subir, subiendo, error: errorSubir } = useSubirExamenes();
-  // Recetas (doctor y usuario las ven; solo doctor crea)
   const [archivos, setArchivos] = useState([]);
-  const [nombreExamen, setNombreExamen] = useState('');
-  const [observacionesExamen, setObservacionesExamen] = useState('');
-
+  const [nombreExamen, setNombreExamen] = useState("");
+  const [observacionesExamen, setObservacionesExamen] = useState("");
+  console.log("Detalles cita:", cita);
   const handleSubirExamen = async (e) => {
     e.preventDefault();
     if (!cita?.id || archivos.length === 0) return;
-    await subir({ id_cita: cita.id, archivos, nombre_examen: nombreExamen, observaciones: observacionesExamen });
-    setArchivos([]); setNombreExamen(''); setObservacionesExamen('');
+    await subir({
+      id_cita: cita.id,
+      archivos,
+      nombre_examen: nombreExamen,
+      observaciones: observacionesExamen,
+    });
+    setArchivos([]);
+    setNombreExamen("");
+    setObservacionesExamen("");
     refrescarExamenes();
   };
 
+  const marcarExamenesSubidos = async () => {
+    if (!cita?.id) return;
+    try {
+      const token = localStorage.getItem("token");
+      const resp = await fetch(
+        `${import.meta.env.VITE_API_URL}/apicitas/marcar-examenes-subidos/${
+          cita.id
+        }`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!resp.ok) throw new Error("No se pudo marcar exámenes");
+      await resp.json();
+      setCita((prev) => ({ ...prev, examenes_cargados: true }));
+    } catch (e) {
+      console.error(e);
+      alert(e.message || "Error al marcar exámenes");
+    }
+  };
 
   const fechaFormateada = useMemo(() => {
     if (!cita?.fecha) return "—";
@@ -47,6 +89,14 @@ function DetallesCitas() {
   const renderBool = (val) =>
     val === true ? "Sí" : val === false ? "No" : "No registrado";
 
+  // if (cargandoCita) {
+  //   return (
+  //     <Alert variant="info" className="mt-4 text-center">
+  //       Cargando detalles de la cita…
+  //     </Alert>
+  //   );
+  // }
+  //darwin
   if (!cita) {
     return (
       <Alert variant="info" className="mt-4 text-center">
@@ -55,8 +105,34 @@ function DetallesCitas() {
     );
   }
   return (
-    <div>
+    <div className="position-relative">
+      {cargandoCita && (
+        <div
+          className="position-absolute top-0 end-0 p-2"
+          style={{ zIndex: 10 }}
+        >
+          <span className="badge bg-info">Actualizando…</span>
+        </div>
+      )}
       <h3 className="mb-4 text-center">Detalles de la Cita</h3>
+      {userRole === "usuario" &&
+        esProcedimiento &&
+        cita.examenes_requeridos && (
+          <div className="mb-3 text-end">
+            {cita.examenes_cargados ? (
+              <button className="btn btn-secondary" disabled>
+                Exámenes subidos
+              </button>
+            ) : (
+              <button
+                className="btn btn-success"
+                onClick={marcarExamenesSubidos}
+              >
+                Marcar exámenes subidos
+              </button>
+            )}
+          </div>
+        )}
 
       <Card className="mb-4 shadow-sm">
         <Card.Body>
@@ -98,8 +174,7 @@ function DetallesCitas() {
               <strong>Fecha:</strong> {fechaFormateada}
             </Col>
             <Col md={6} className="mb-3">
-
-              <strong>Estado:</strong> {estado}
+              <strong>Estado:</strong> <Badge bg="success">: {estado}</Badge>
             </Col>
             <Col md={6} className="mb-2">
               <strong>Tipo de cita:</strong>{" "}
@@ -112,17 +187,32 @@ function DetallesCitas() {
               )}
             </Col>
           </Row>
-
-          {cita.observaciones && (
+          {cita.tipo !== "procedimiento" && cita.observaciones && (
             <>
               <hr />
-              <h5 className="text-primary mb-3">Observaciones</h5>
-              <h5>Motivo Consulta</h5>
+              <h5 className="text-primary mb-3">Motivo Consulta</h5>
               <Row>
                 <Col md={12}>{cita.observaciones}</Col>
               </Row>
             </>
           )}
+
+          {userRole === "usuario" &&
+            cita.tipo === "procedimiento" &&
+            cita.nota_evolucion && (
+              <>
+                <hr />
+                <h5 className="text-primary mb-3">Nota de Evolución</h5>
+                <Row>
+                  <Col md={12}>
+                    {" "}
+                    {cita.nota_evolucion ||
+                      "No hay nota de evolución registrada."}
+                  </Col>
+                </Row>
+              </>
+            )}
+
           {cita.examenes_requeridos && (
             <>
               <hr />
@@ -133,29 +223,38 @@ function DetallesCitas() {
                   className="btn btn-sm btn-outline-primary"
                   onClick={async () => {
                     try {
-                      const token = localStorage.getItem('token');
-                      const resp = await fetch(`${import.meta.env.VITE_API_URL}/apicitas/orden-examenes/pdf/${cita.id}`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                      });
+                      const token = localStorage.getItem("token");
+                      const resp = await fetch(
+                        `${
+                          import.meta.env.VITE_API_URL
+                        }/apicitas/orden-examenes/pdf/${cita.id}`,
+                        {
+                          headers: { Authorization: `Bearer ${token}` },
+                        }
+                      );
                       if (!resp.ok) {
-                        const data = await resp.json().catch(()=>({}));
-                        return alert(data.error || 'Error generando PDF');
+                        const data = await resp.json().catch(() => ({}));
+                        return alert(data.error || "Error generando PDF");
                       }
                       const blob = await resp.blob();
                       const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
+                      const a = document.createElement("a");
                       a.href = url;
                       a.download = `orden_examenes_cita_${cita.id}.pdf`;
                       a.click();
                       URL.revokeObjectURL(url);
                     } catch {
-                      alert('Error al descargar PDF');
+                      alert("Error al descargar PDF");
                     }
                   }}
-                >Descargar PDF</button>
+                >
+                  Descargar PDF
+                </button>
               </h5>
               <Row>
-                <Col md={12} style={{whiteSpace:'pre-wrap'}}>{cita.examenes_requeridos}</Col>
+                <Col md={12} style={{ whiteSpace: "pre-wrap" }}>
+                  {cita.examenes_requeridos}
+                </Col>
               </Row>
             </>
           )}
@@ -249,74 +348,124 @@ function DetallesCitas() {
       )}
 
       {(userRole === "usuario" || userRole === "doctor") && (
-     
-      <Card className="mb-4 shadow-sm">
-        <Card.Body>
-          <h5 className="text-primary mb-3">
-            Procedimientos Asociados a esta Cita
-          </h5>
-          {orden ? (
-            <>
-              <p>
-                <strong>Orden #{orden.id}</strong>
-              </p>
-              <p>
-                <strong>Fecha de creación:</strong>{" "}
-                {new Date(orden.createdAt).toLocaleDateString()}
-              </p>
-              <p>
-                <strong>Estado:</strong> {orden.estado || "No registrado"}
-              </p>
+        <Card className="mb-4 shadow-sm">
+          <Card.Body>
+            <h5 className="text-primary mb-3">
+              Procedimientos Asociados a esta Cita
+            </h5>
+            {orden ? (
+              <>
+                <p>
+                  <strong>Orden #{orden.id}</strong>
+                </p>
+                <p>
+                  <strong>Fecha de creación:</strong>{" "}
+                  {new Date(orden.createdAt).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Estado:</strong> {orden.estado || "No registrado"}
+                </p>
 
-              {Array.isArray(orden.procedimientos) &&
-              orden.procedimientos.length > 0 ? (
-                <ul>
-                  {orden.procedimientos.map((procedimiento) => (
-                    <li key={procedimiento.id}>
-                      <strong>{procedimiento.nombre}</strong> - $
-                      {procedimiento.precio?.toFixed(2)}
-                      <br />
-                      <em>{procedimiento.descripcion || "Sin descripción"}</em>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No hay procedimientos en esta orden.</p>
-              )}
-            </>
-          ) : (
-            <p>Esta cita no tiene una orden asociada.</p>
-          )}
-        </Card.Body>
-      </Card>
-       )}
+                {Array.isArray(orden.procedimientos) &&
+                orden.procedimientos.length > 0 ? (
+                  <ul>
+                    {orden.procedimientos.map((procedimiento) => (
+                      <li key={procedimiento.id}>
+                        <strong>{procedimiento.nombre}</strong> - $
+                        {procedimiento.precio?.toFixed(2)}
+                        <br />
+                        <em>
+                          {procedimiento.descripcion || "Sin descripción"}
+                        </em>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No hay procedimientos en esta orden.</p>
+                )}
+              </>
+            ) : (
+              <p>Esta cita no tiene una orden asociada.</p>
+            )}
 
-      {(userRole === 'doctor' || userRole === 'usuario') && (
+             <h5 className="text-primary mb-3">
+              Consentimiento del usuario
+            </h5>
+            {(userRole === "usuario" || userRole === "doctor") && cita.tipo === "procedimiento" && (
+              <Card className="mb-4 shadow-sm">
+                <Card.Body>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h5 className="text-primary mb-0">
+                      Consentimiento Informado
+                    </h5>
+                    <Badge bg={esProcedimiento ? "success" : "secondary"}>
+                      {esProcedimiento ? "Procedimiento" : "No aplica"}
+                    </Badge>
+                  </div>
+                  <ConsentimientoVista
+                    cita={cita}
+                    orden={orden}
+                    userRole={userRole}
+                    esProcedimiento={esProcedimiento}
+                  />
+                </Card.Body>
+              </Card>
+            )}
+          </Card.Body>
+        </Card>
+      )}
+
+      {(userRole === "doctor" ||
+        (userRole === "usuario" && esProcedimiento)) && (
         <Card className="mb-4 shadow-sm">
           <Card.Body>
             <div className="d-flex justify-content-between align-items-center mb-2">
               <h5 className="text-primary mb-0">Exámenes Adjuntos</h5>
               {esProcedimiento && <Badge bg="secondary">Procedimiento</Badge>}
             </div>
-            {cargandoExamenes ? <p>Cargando exámenes...</p> : (
-              Array.isArray(examenes) && examenes.length > 0 ? (
+            {Array.isArray(examenes) && examenes.length > 0 ? (
+              <>
+                {cargandoExamenes && (
+                  <div className="text-end mb-2">
+                    <span className="badge bg-info">
+                      Actualizando exámenes…
+                    </span>
+                  </div>
+                )}
                 <div className="row g-3 mb-3">
                   {examenes.map((ex) => {
-                    const isPdf = ex.archivo_examen?.toLowerCase().includes('.pdf');
+                    const isPdf = ex.archivo_examen
+                      ?.toLowerCase()
+                      .includes(".pdf");
                     return (
                       <div key={ex.id} className="col-md-4 col-sm-6">
                         <div className="border rounded p-2 h-100 d-flex flex-column">
-                          <div className="mb-2 fw-semibold text-truncate" title={ex.nombre_examen}>{ex.nombre_examen}</div>
+                          <div
+                            className="mb-2 fw-semibold text-truncate"
+                            title={ex.nombre_examen}
+                          >
+                            {ex.nombre_examen}
+                          </div>
                           {isPdf ? (
-                            <div className="flex-grow-1 d-flex align-items-center justify-content-center bg-light" style={{minHeight:'120px'}}>
+                            <div
+                              className="flex-grow-1 d-flex align-items-center justify-content-center bg-light"
+                              style={{ minHeight: "120px" }}
+                            >
                               <span className="text-muted">PDF</span>
                             </div>
                           ) : (
-                            <div className="ratio ratio-4x3 mb-2" style={{overflow:'hidden', borderRadius:4}}>
+                            <div
+                              className="ratio ratio-4x3 mb-2"
+                              style={{ overflow: "hidden", borderRadius: 4 }}
+                            >
                               <img
                                 src={ex.archivo_examen}
                                 alt={ex.nombre_examen}
-                                style={{objectFit:'cover', width:'100%', height:'100%'}}
+                                style={{
+                                  objectFit: "cover",
+                                  width: "100%",
+                                  height: "100%",
+                                }}
                                 loading="lazy"
                               />
                             </div>
@@ -326,18 +475,27 @@ function DetallesCitas() {
                             className="btn btn-sm btn-outline-primary mt-auto"
                             onClick={async () => {
                               try {
-                                const token = localStorage.getItem('token');
-                                const resp = await fetch(`${import.meta.env.VITE_API_URL}/apiexamenes/descargar/${ex.id}`, {
-                                  headers: { Authorization: `Bearer ${token}` }
-                                });
+                                const token = localStorage.getItem("token");
+                                const resp = await fetch(
+                                  `${
+                                    import.meta.env.VITE_API_URL
+                                  }/apiexamenes/descargar/${ex.id}`,
+                                  {
+                                    headers: {
+                                      Authorization: `Bearer ${token}`,
+                                    },
+                                  }
+                                );
                                 const data = await resp.json();
                                 if (data?.url) {
-                                  window.open(data.url, '_blank');
+                                  window.open(data.url, "_blank");
                                 } else {
-                                  alert(data.error || 'No se pudo generar enlace');
+                                  alert(
+                                    data.error || "No se pudo generar enlace"
+                                  );
                                 }
                               } catch {
-                                alert('Error al solicitar URL segura');
+                                alert("Error al solicitar URL segura");
                               }
                             }}
                           >
@@ -348,14 +506,27 @@ function DetallesCitas() {
                     );
                   })}
                 </div>
-              ) : (
-                <p className="text-muted mb-3">No hay exámenes adjuntos a esta cita.</p>
-              )
+              </>
+            ) : cargandoExamenes ? (
+              <p>Cargando exámenes...</p>
+            ) : (
+              <p className="text-muted mb-3">No hay exámenes adjuntos.</p>
             )}
             {puedeSubir && (
               <div className="border-top pt-3">
                 <h6 className="fw-semibold">Subir nuevos exámenes</h6>
-                {!esProcedimiento && <p className="text-muted small mb-2">Solo disponible para citas de procedimiento.</p>}
+                {!esProcedimiento && (
+                  <p className="text-muted small mb-2">
+                    Solo disponible para citas de procedimiento.
+                  </p>
+                )}
+                {userRole === "usuario" &&
+                  esProcedimiento &&
+                  !cita?.examenes_requeridos && (
+                    <p className="text-danger small mb-2">
+                      El doctor aún no ha solicitado exámenes para esta cita.
+                    </p>
+                  )}
                 <form onSubmit={handleSubirExamen} className="small">
                   <div className="mb-2">
                     <input
@@ -363,7 +534,7 @@ function DetallesCitas() {
                       className="form-control form-control-sm"
                       placeholder="Nombre del examen (opcional)"
                       value={nombreExamen}
-                      onChange={e=>setNombreExamen(e.target.value)}
+                      onChange={(e) => setNombreExamen(e.target.value)}
                     />
                   </div>
                   <div className="mb-2">
@@ -372,7 +543,7 @@ function DetallesCitas() {
                       placeholder="Observaciones"
                       rows={2}
                       value={observacionesExamen}
-                      onChange={e=>setObservacionesExamen(e.target.value)}
+                      onChange={(e) => setObservacionesExamen(e.target.value)}
                     />
                   </div>
                   <div className="mb-2">
@@ -381,34 +552,59 @@ function DetallesCitas() {
                       className="form-control form-control-sm"
                       accept="image/*,application/pdf"
                       multiple
-                      onChange={e=> setArchivos(e.target.files)}
+                      onChange={(e) => setArchivos(e.target.files)}
                     />
                   </div>
                   {archivos && archivos.length > 0 && (
                     <div className="mb-2">
-                      <ul className="list-group list-group-flush small" style={{maxHeight:150, overflowY:'auto'}}>
-                        {[...archivos].map((f,i)=>(
-                          <li key={i} className="list-group-item py-1 d-flex justify-content-between align-items-center">
-                            <span className="text-truncate" style={{maxWidth:'70%'}} title={f.name}>{f.name}</span>
-                            <span className="badge bg-secondary rounded-pill">{(f.size/1024/1024).toFixed(2)} MB</span>
+                      <ul
+                        className="list-group list-group-flush small"
+                        style={{ maxHeight: 150, overflowY: "auto" }}
+                      >
+                        {[...archivos].map((f, i) => (
+                          <li
+                            key={i}
+                            className="list-group-item py-1 d-flex justify-content-between align-items-center"
+                          >
+                            <span
+                              className="text-truncate"
+                              style={{ maxWidth: "70%" }}
+                              title={f.name}
+                            >
+                              {f.name}
+                            </span>
+                            <span className="badge bg-secondary rounded-pill">
+                              {(f.size / 1024 / 1024).toFixed(2)} MB
+                            </span>
                           </li>
                         ))}
                       </ul>
                       <div className="d-flex justify-content-end mt-2 gap-2">
-                        <button type="button" className="btn btn-outline-danger btn-sm" onClick={()=>setArchivos([])}>Limpiar</button>
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => setArchivos([])}
+                        >
+                          Limpiar
+                        </button>
                       </div>
                     </div>
                   )}
-                  {errorSubir && <div className="text-danger mb-2">{errorSubir}</div>}
+                  {errorSubir && (
+                    <div className="text-danger mb-2">{errorSubir}</div>
+                  )}
                   <button
                     type="submit"
                     className="btn btn-sm btn-success"
-                    disabled={subiendo || archivos.length===0}
+                    disabled={subiendo || archivos.length === 0}
                   >
-                    {subiendo ? 'Subiendo...' : 'Subir'}
+                    {subiendo ? "Subiendo..." : "Subir"}
                   </button>
                 </form>
-                <p className="text-muted mt-2 mb-0 small">Formatos permitidos: imágenes o PDF. Máx. varios archivos por lote.</p>
+                <p className="text-muted mt-2 mb-0 small">
+                  Formatos permitidos: imágenes o PDF. Máx. varios archivos por
+                  lote.
+                </p>
               </div>
             )}
           </Card.Body>

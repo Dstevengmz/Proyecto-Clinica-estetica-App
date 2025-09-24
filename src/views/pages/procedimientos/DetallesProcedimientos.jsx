@@ -87,7 +87,15 @@ function UserDetail() {
                   <Form.Label>Precio</Form.Label>
                   <Form.Control
                     type="text"
-                    value={selectedProcedimiento.precio || ""}
+                    value={
+                      selectedProcedimiento.precio != null
+                        ? Number(selectedProcedimiento.precio).toLocaleString("es-CO", {
+                            style: "currency",
+                            currency: "COP",
+                            minimumFractionDigits: 0,
+                          })
+                        : ""
+                    }
                     disabled
                   />
                 </Form.Group>
@@ -97,7 +105,7 @@ function UserDetail() {
                   <Form.Label>Categoría</Form.Label>
                   <Form.Control
                     type="text"
-                    value={selectedProcedimiento.categoria || ""}
+                    value={selectedProcedimiento?.categoria?.nombre || ""}
                     disabled
                   />
                 </Form.Group>
