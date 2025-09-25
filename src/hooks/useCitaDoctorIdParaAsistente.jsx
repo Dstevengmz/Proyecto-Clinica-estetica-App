@@ -1,4 +1,3 @@
-// src/hooks/useCitasDoctor.js
 import { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -10,32 +9,38 @@ function useCitasDoctor(doctorId) {
   const [error, setError] = useState(null);
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    if (!doctorId || !token) {
+useEffect(() => {
+  if (!doctorId || !token) {
+    setCitas([]);
+    return;
+  }
+
+  const fetchCitas = async () => {
+    try {
+      setCargando(true);
+      setError(null);
+      const res = await axios.get(
+        `${API_URL}/apicitas/listarcitas?doctorId=${doctorId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const activas = (res.data || []).filter(
+        (cita) => cita.estado !== "cancelada"
+      );
+
+      setCitas(activas);
+    } catch (err) {
+      console.error("Error al cargar citas del doctor:", err);
+      setError("Error al cargar citas");
       setCitas([]);
-      return;
+    } finally {
+      setCargando(false);
     }
+  };
 
-    const fetchCitas = async () => {
-      try {
-        setCargando(true);
-        setError(null);
-        const res = await axios.get(
-          `${API_URL}/apicitas/listarcitas?doctorId=${doctorId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setCitas(res.data || []);
-      } catch (err) {
-        console.error("Error al cargar citas del doctor:", err);
-        setError("Error al cargar citas");
-        setCitas([]);
-      } finally {
-        setCargando(false);
-      }
-    };
+  fetchCitas();
+}, [doctorId, token]);
 
-    fetchCitas();
-  }, [doctorId, token]);
 
   return { citas, cargando, error };
 }

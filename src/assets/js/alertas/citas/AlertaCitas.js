@@ -12,6 +12,32 @@ class AlertaCitas {
         });
     }
 
+     async confirmarCancelarCita() {
+    return Swal.fire({
+      title: "¿Cancelar cita?",
+      text: "Esta acción liberará el espacio y no podrás revertirla.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#2db112ff",
+      confirmButtonText: "Sí, cancelar",
+      cancelButtonText: "No",
+    });
+  }
+
+  async alertaCitaCancelada() {
+    return Swal.fire(
+      "Cancelada",
+      "La cita fue cancelada correctamente.",
+      "success"
+    );
+  }
+
+  async alertaErrorCancelarCita(msg) {
+    return Swal.fire("Error", msg, "error");
+  }
+
+
 
     async alertaCarritoVacioIrServicios() {
         return await Swal.fire({

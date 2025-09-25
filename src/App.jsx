@@ -74,6 +74,9 @@ const RegistrarCitaAsistente = React.lazy(() =>
   import("./views/pages/citas/RegistrarCitaAsistente")
 );
 
+
+import CitasPaciente from "./views/pages/citas/CitasPorPaciente";
+
 const ConsultarCitas = React.lazy(() =>
   import("./views/pages/citas/ConsultarCitas")
 );
@@ -86,6 +89,8 @@ const DetallesCitas = React.lazy(() =>
 const Editarcita = React.lazy(() => import("./views/pages/citas/EditarCita"));
 
 const MisCitas = React.lazy(() => import("./views/pages/citas/MisCitas"));
+
+const VerTodo = React.lazy(() => import("./views/pages/citas/CitaVerTodo"));
 
 //Procedimientos
 const CrearProcedimiento = React.lazy(() =>
@@ -256,6 +261,7 @@ const App = () => {
                       path="/calendariocitas"
                       element={<CalendarioCitas />}
                     />
+                    <Route path="/vertodocita" element={<VerTodo/>}/>
                     <Route path="/crearcita" element={<CrearCita />} />
                     <Route
                       path="/crearcitaasistente"
@@ -265,6 +271,8 @@ const App = () => {
                       path="/consultarcitas"
                       element={<ConsultarCitas />}
                     />
+                    <Route path="/citaspaciente/:usuarioId" element={<CitasPaciente />} />
+                    
                     <Route path="/detallescitas/:id" element={<DetallesCitas />} />
                     <Route path="/citas/:id" element={<DetallesCitas />} />
                     <Route path="/editarcita/:id" element={<Editarcita />} />
