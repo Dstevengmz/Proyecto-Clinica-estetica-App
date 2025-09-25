@@ -1,5 +1,5 @@
-import { Form, Row, Col, Card, Container, Alert } from "react-bootstrap";
-import { useState, useEffect } from "react";
+import { Form, Row, Col, Card, Container } from "react-bootstrap";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import horariosDisponibles from "../../../assets/js/HorariosDisponibles";
 import estaOcupado from "../../../assets/js/HorarioEstaOcupado";
@@ -13,15 +13,17 @@ import { useAuth } from "../../../contexts/AuthenticaContext";
 import useCambiarEstadoCita from "../../../hooks/useCambiarEstadoCita";
 import AlertaCitas from "../../../assets/js/alertas/citas/AlertaCitas";
 
-
-//codigo editar
 function EditarCitas() {
   const { id } = useParams();
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const { userRole } = useAuth();
-  const isDoctor = (userRole || "").toString().toLowerCase() === "doctor";
+  const isDoctor = useMemo(
+    () => (userRole || "").toString().toLowerCase() === "doctor",
+    [userRole]
+  );
   const [hora, setHora] = useState("");
+
   const [formulario, setFormulario] = useState({
     id_usuario: "",
     id_doctor: "",
@@ -35,7 +37,6 @@ function EditarCitas() {
     doctor: {},
   });
   const [requiereExamenes, setRequiereExamenes] = useState(false);
-  //
   const esProcedimiento = formulario?.tipo === "procedimiento";
   const {
     cita,
@@ -52,20 +53,12 @@ function EditarCitas() {
   );
   const { cambiarEstadoCita, cargando: cargandoEstado } =
     useCambiarEstadoCita();
-  const {
-    horariosOcupados,
-    cargando: cargandoHorarios,
-    error,
-  } = useHorariosDisponible(formulario.fecha, formulario.tipo, token);
-  useEffect(() => {}, [
+  const { horariosOcupados, cargando: cargandoHorarios } = useHorariosDisponible(
     formulario.fecha,
     formulario.tipo,
-    horariosOcupados,
-    cargandoHorarios,
-    error,
-    token,
-  ]);
-
+    token
+  );
+  // Cargar los datos iniciales de la cita cuando llegan del hook
   useEffect(() => {
     if (cita) {
       setFormulario({
@@ -87,6 +80,7 @@ function EditarCitas() {
     }
   }, [cita, horaInicial]);
 
+  // Maneja los cambios de los campos del formulario
   const manejarCambio = (e) => {
     const { name, value } = e.target;
     setFormulario((prev) => ({ ...prev, [name]: value }));
@@ -97,6 +91,20 @@ function EditarCitas() {
         setFormulario((prev) => ({ ...prev, examenes_requeridos: "" }));
         setRequiereExamenes(false);
       }
+    }
+  };
+
+  // Marca la cita como realizada sin alterar fecha/hora almacenadas salvo que el backend lo haga
+  const manejarMarcarRealizada = async () => {
+    const alertas = new AlertaCitas();
+    const confirm = await alertas.confirmarMarcarRealizada();
+    if (!confirm.isConfirmed) return;
+    const resp = await cambiarEstadoCita(id, "realizada");
+    if (resp) {
+      await alertas.alertaEstadoActualizado();
+      setFormulario((prev) => ({ ...prev, estado: "realizada" }));
+    } else if (resp === null) {
+      await alertas.alertaErrorEstado();
     }
   };
   if (cargando || citaidcargando) {
@@ -216,7 +224,7 @@ function EditarCitas() {
                 name="fecha"
                 value={formulario.fecha}
                 onChange={manejarCambio}
-                min={new Date().toISOString().split("T")[0]}
+                // Importante: no usar 'min' para que citas pasadas no se modifiquen automáticamente.
                 required
                 disabled={isDoctor}
               />
@@ -354,19 +362,7 @@ function EditarCitas() {
             type="button"
             className="btn btn-primary me-2"
             disabled={cargandoEstado || formulario.estado === "realizada"}
-            onClick={async () => {
-              const alertas = new AlertaCitas();
-              const confirm = await alertas.confirmarMarcarRealizada();
-              if (!confirm.isConfirmed) return;
-              const resp = await cambiarEstadoCita(id, "realizada");
-              if (resp) {
-                await alertas.alertaEstadoActualizado();
-                setFormulario((prev) => ({ ...prev, estado: "realizada" }));
-              } else if (resp === null) {
-                // El hook ya puso mensaje de error en 'error'
-                await alertas.alertaErrorEstado();
-              }
-            }}
+            onClick={manejarMarcarRealizada}
           >
             {cargandoEstado ? "Marcando..." : "Marcar como realizada"}
           </button>
