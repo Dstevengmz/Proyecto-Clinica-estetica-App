@@ -10,47 +10,52 @@ const useActualizarCita = (id, formulario, hora, token) => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const actualizarCita = async (e) => {
-    e.preventDefault();
-    const alertas = new AlertaCitas();
+ const actualizarCita = async (e) => {
+  e.preventDefault();
+  const alertas = new AlertaCitas();
 
-    if (!formulario.id_doctor) {
-      await alertas.alertaValidacionDoctor();
-      return;
-    }
-    if (!formulario.tipo) {
-      await alertas.alertaValidacionTipo();
-      return;
-    }
-    if (!formulario.fecha) {
-      await alertas.alertaValidacionFecha();
-      return;
-    }
-    if (!hora) {
-      await alertas.alertaValidacionHora();
-      return;
-    }
+  if (!formulario.id_doctor) {
+    await alertas.alertaValidacionDoctor();
+    return;
+  }
+  if (!formulario.tipo) {
+    await alertas.alertaValidacionTipo();
+    return;
+  }
 
-    setCargando(true);
-    const fechaCompleta = `${formulario.fecha} ${hora}:00`;
-
-    try {
-      await axios.patch(
-        `${API_URL}/apicitas/editarcitas/${id}`,
-        { ...formulario, fecha: fechaCompleta },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      await alertas.alertaCitaActualizada();
-      navigate("/consultarcitas");
-    } catch (err) {
-      console.error("Error al actualizar cita:", err);
-      const errorMessage = err.response?.data?.message || "No se pudo actualizar la cita";
-      setError(errorMessage);
-      await alertas.alertaErrorActualizarCita(errorMessage);
-    } finally {
-      setCargando(false);
-    }
+  // Construir payload dinámico
+  const payload = {
+    id_usuario: formulario.id_usuario,
+    id_doctor: formulario.id_doctor,
+    estado: formulario.estado,
+    tipo: formulario.tipo,
+    observaciones: formulario.observaciones,
+    examenes_requeridos: formulario.examenes_requeridos,
+    nota_evolucion: formulario.nota_evolucion,
   };
+
+  // Solo enviar fecha si el usuario realmente la seleccionó
+  if (formulario.fecha && hora) {
+    payload.fecha = `${formulario.fecha} ${hora}:00`;
+  }
+
+  try {
+    setCargando(true);
+    await axios.patch(`${API_URL}/apicitas/editarcitas/${id}`, payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    await alertas.alertaCitaActualizada();
+    navigate("/consultarcitas");
+  } catch (err) {
+    console.error("Error al actualizar cita:", err);
+    const errorMessage =
+      err.response?.data?.message || "No se pudo actualizar la cita";
+    setError(errorMessage);
+    await alertas.alertaErrorActualizarCita(errorMessage);
+  } finally {
+    setCargando(false);
+  }
+};
 
   return {
     actualizarCita,
