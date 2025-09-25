@@ -12,6 +12,9 @@ import useActualizarCita from "../../../hooks/useEditarCita";
 import { useAuth } from "../../../contexts/AuthenticaContext";
 import useCambiarEstadoCita from "../../../hooks/useCambiarEstadoCita";
 import AlertaCitas from "../../../assets/js/alertas/citas/AlertaCitas";
+
+
+//codigo editar
 function EditarCitas() {
   const { id } = useParams();
   const navigate = useNavigate();
