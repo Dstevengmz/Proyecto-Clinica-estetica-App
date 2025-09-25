@@ -1,5 +1,5 @@
-import { Form, Row, Col, Card, Container } from "react-bootstrap";
-import { useState, useEffect, useMemo } from "react";
+import { Form, Row, Col, Card, Container, Alert } from "react-bootstrap";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import horariosDisponibles from "../../../assets/js/HorariosDisponibles";
 import estaOcupado from "../../../assets/js/HorarioEstaOcupado";
@@ -7,23 +7,19 @@ import useHorariosDisponible from "../../../hooks/useHorariosDisponible";
 import useListarUsuario from "../../../hooks/useListaDeUsuarios";
 import useCitaPorId from "../../../hooks/useBuscarCita";
 import Cargando from "../../../components/Cargando";
+
 import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario";
 import useActualizarCita from "../../../hooks/useEditarCita";
 import { useAuth } from "../../../contexts/AuthenticaContext";
 import useCambiarEstadoCita from "../../../hooks/useCambiarEstadoCita";
 import AlertaCitas from "../../../assets/js/alertas/citas/AlertaCitas";
-
 function EditarCitas() {
   const { id } = useParams();
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const { userRole } = useAuth();
-  const isDoctor = useMemo(
-    () => (userRole || "").toString().toLowerCase() === "doctor",
-    [userRole]
-  );
+  const isDoctor = (userRole || "").toString().toLowerCase() === "doctor";
   const [hora, setHora] = useState("");
-
   const [formulario, setFormulario] = useState({
     id_usuario: "",
     id_doctor: "",
@@ -37,6 +33,7 @@ function EditarCitas() {
     doctor: {},
   });
   const [requiereExamenes, setRequiereExamenes] = useState(false);
+
   const esProcedimiento = formulario?.tipo === "procedimiento";
   const {
     cita,
@@ -49,16 +46,26 @@ function EditarCitas() {
     id,
     formulario,
     hora,
-    token
+    token,
+    userRole
   );
+
   const { cambiarEstadoCita, cargando: cargandoEstado } =
     useCambiarEstadoCita();
-  const { horariosOcupados, cargando: cargandoHorarios } = useHorariosDisponible(
+  const {
+    horariosOcupados,
+    cargando: cargandoHorarios,
+    error,
+  } = useHorariosDisponible(formulario.fecha, formulario.tipo, token);
+  useEffect(() => {}, [
     formulario.fecha,
     formulario.tipo,
-    token
-  );
-  // Cargar los datos iniciales de la cita cuando llegan del hook
+    horariosOcupados,
+    cargandoHorarios,
+    error,
+    token,
+  ]);
+
   useEffect(() => {
     if (cita) {
       setFormulario({
@@ -80,7 +87,6 @@ function EditarCitas() {
     }
   }, [cita, horaInicial]);
 
-  // Maneja los cambios de los campos del formulario
   const manejarCambio = (e) => {
     const { name, value } = e.target;
     setFormulario((prev) => ({ ...prev, [name]: value }));
@@ -91,20 +97,6 @@ function EditarCitas() {
         setFormulario((prev) => ({ ...prev, examenes_requeridos: "" }));
         setRequiereExamenes(false);
       }
-    }
-  };
-
-  // Marca la cita como realizada sin alterar fecha/hora almacenadas salvo que el backend lo haga
-  const manejarMarcarRealizada = async () => {
-    const alertas = new AlertaCitas();
-    const confirm = await alertas.confirmarMarcarRealizada();
-    if (!confirm.isConfirmed) return;
-    const resp = await cambiarEstadoCita(id, "realizada");
-    if (resp) {
-      await alertas.alertaEstadoActualizado();
-      setFormulario((prev) => ({ ...prev, estado: "realizada" }));
-    } else if (resp === null) {
-      await alertas.alertaErrorEstado();
     }
   };
   if (cargando || citaidcargando) {
@@ -149,6 +141,7 @@ function EditarCitas() {
       </Container>
     );
   }
+
   return (
     <Container>
       <h2 className="mt-4">Editar Cita</h2>
@@ -224,7 +217,7 @@ function EditarCitas() {
                 name="fecha"
                 value={formulario.fecha}
                 onChange={manejarCambio}
-                // Importante: no usar 'min' para que citas pasadas no se modifiquen automáticamente.
+                min={new Date().toISOString().split("T")[0]}
                 required
                 disabled={isDoctor}
               />
@@ -260,8 +253,7 @@ function EditarCitas() {
               </Form.Select>
             </Form.Group>
           </Col>
-        </Row>
-        {" "}
+        </Row>{" "}
         {!esProcedimiento && (
           <Form.Group className="mb-3">
             <Form.Label>Motivo Consulta</Form.Label>
@@ -276,23 +268,21 @@ function EditarCitas() {
           </Form.Group>
         )}
         {isDoctor && esProcedimiento && (
-  <>
-    <hr />
-     <Form.Group className="mb-3">
-            <Form.Label>Nota Evolucion</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={4}
-              name="nota_evolucion"
-              value={formulario.nota_evolucion}
-              onChange={manejarCambio}
-              style={{ resize: "vertical" }}
-            />
-          </Form.Group>
-  </>
-)}
-
-
+          <>
+            <hr />
+            <Form.Group className="mb-3">
+              <Form.Label>Nota Evolucion</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                name="nota_evolucion"
+                value={formulario.nota_evolucion}
+                onChange={manejarCambio}
+                style={{ resize: "vertical" }}
+              />
+            </Form.Group>
+          </>
+        )}
         <Form.Group className="mb-3">
           <div className="d-flex justify-content-between align-items-center">
             <Form.Label className="mb-0">Exámenes Requeridos</Form.Label>
@@ -362,7 +352,19 @@ function EditarCitas() {
             type="button"
             className="btn btn-primary me-2"
             disabled={cargandoEstado || formulario.estado === "realizada"}
-            onClick={manejarMarcarRealizada}
+            onClick={async () => {
+              const alertas = new AlertaCitas();
+              const confirm = await alertas.confirmarMarcarRealizada();
+              if (!confirm.isConfirmed) return;
+              const resp = await cambiarEstadoCita(id, "realizada");
+              if (resp) {
+                await alertas.alertaEstadoActualizado();
+                setFormulario((prev) => ({ ...prev, estado: "realizada" }));
+              } else if (resp === null) {
+                // El hook ya puso mensaje de error en 'error'
+                await alertas.alertaErrorEstado();
+              }
+            }}
           >
             {cargandoEstado ? "Marcando..." : "Marcar como realizada"}
           </button>
