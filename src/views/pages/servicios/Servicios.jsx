@@ -10,13 +10,15 @@ import Cargando from "../../../components/Cargando";
 import ErrorCargando from "../../../components/ErrorCargar";
 
 function Servicios() {
-  
   const {
     categorias,
     loading: loadingCategorias,
     error: errorCategorias,
   } = useListarCategorias();
+
   const [categoriaId, setCategoriaId] = useState("");
+  const [busqueda, setBusqueda] = useState("");
+
   const {
     procedimientos,
     loading: loadingProcedimientos,
@@ -29,8 +31,25 @@ function Servicios() {
   if (errorProcedimientos)
     return <ErrorCargando texto="Error al cargar los procedimientos." />;
 
+  // 🔎 Filtrar procedimientos según búsqueda
+  const procedimientosFiltrados = procedimientos.filter((proc) =>
+    proc.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
   return (
     <Container className="my-5">
+      {/* Buscador arriba */}
+      <div className="mb-3">
+        <Form.Control
+          type="text"
+          placeholder="Buscar procedimiento..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          className="w-100"
+        />
+      </div>
+
+      {/* Categorías tal cual estaba */}
       <div className="d-flex flex-row-reverse bd-highlight mb-4">
         <div
           className="d-flex align-items-center"
@@ -61,15 +80,16 @@ function Servicios() {
         </div>
       </div>
 
+      {/* Listado de procedimientos */}
       {loadingProcedimientos ? (
         <Cargando texto="Cargando procedimientos..." />
-      ) : procedimientos.length === 0 ? (
+      ) : procedimientosFiltrados.length === 0 ? (
         <div className="text-center text-muted py-5">
-          <p>No se encontraron procedimientos para esta categoría.</p>
+          <p>No se encontraron procedimientos.</p>
         </div>
       ) : (
         <Row className="g-4">
-          {procedimientos.map((proc) => (
+          {procedimientosFiltrados.map((proc) => (
             <Col key={proc.id} xs={12} sm={6} md={4} lg={3}>
               <Card className="h-100 shadow border-0 rounded-4 overflow-hidden">
                 <div

@@ -340,13 +340,19 @@ function EditarCitas() {
             </Form.Text>
           )}
         </Form.Group>
-        <button
-          type="submit"
-          className="btn btn-success me-2"
-          disabled={cargandoActualizacion}
-        >
-          {cargandoActualizacion ? "Actualizando..." : "Actualizar"}
-        </button>
+
+
+<button
+  type="submit"
+  className="btn btn-success me-2"
+  disabled={
+    cargandoActualizacion || (isDoctor && formulario.estado !== "realizada")
+  }
+>
+  {cargandoActualizacion ? "Actualizando..." : "Actualizar"}
+</button>
+
+
         {isDoctor && (
           <button
             type="button"

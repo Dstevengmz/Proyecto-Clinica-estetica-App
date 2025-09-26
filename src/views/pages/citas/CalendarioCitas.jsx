@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import calendarFormats from "../../../assets/js/CalendarioEspanol";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
@@ -10,6 +11,7 @@ import es from "date-fns/locale/es";
 import useListarCitas from "../../../hooks/useListarCitas";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import horariosDisponibles from "../../../assets/js/HorariosDisponibles";
+import { Button} from "react-bootstrap";
 
 function combineTime(hhmm) {
   const [hh, mm] = hhmm.split(":").map(Number);
@@ -37,7 +39,10 @@ function CalendarioCitas() {
   const { selectedCitas, setSelectedCitas } = useCitasContext();
   const navigate = useNavigate();
   const { citas: todasLasCitas, cargando: cargandoCitas } = useListarCitas();
-  const citasAMostrar = todasLasCitas;
+
+  const [mostrarCanceladas, setMostrarCanceladas] = useState(false);
+
+
   const selectCitas = (citas) => {
     setSelectedCitas(citas);
     navigate("/detallesCitas/" + citas.id);
@@ -58,37 +63,71 @@ function CalendarioCitas() {
   const minTime = combineTime(firstSlot);
   const maxTime = addMinutes(combineTime(lastSlot), 30);
 
-  const eventosCalendario = citasAMostrar.map((cita) => ({
-    title: `${
-      cita.tipo === "evaluacion" ? "🩺 Evaluación" : "⚕️ Procedimiento"
-    } - ${cita.usuario?.nombre || "Paciente"}`,
-    start: new Date(cita.fecha),
-    end: new Date(new Date(cita.fecha).getTime() + 30 * 60000),
-    resource: cita,
-  }));
+//   const citasActivas = todasLasCitas.filter(
+//   (cita) => cita.estado !== "cancelada"
+// );
 
-  const customEventStyleGetter = (event) => {
-    let backgroundColor = "#007bff";
 
-    if (event.resource.tipo === "evaluacion") {
-      backgroundColor = "#17a2b8";
-    } else if (event.resource.tipo === "procedimiento") {
-      backgroundColor = "#28a745";
-    }
+
+  const eventosCalendario = todasLasCitas
+    .filter((cita) => mostrarCanceladas || cita.estado !== "cancelada")
+    .map((cita) => ({
+      title: `${
+        cita.tipo === "evaluacion" ? "🩺 Evaluación" : "⚕️ Procedimiento"
+      } - ${cita.usuario?.nombre || "Paciente"}`,
+      start: new Date(cita.fecha),
+      end: new Date(new Date(cita.fecha).getTime() + 30 * 60000),
+      resource: cita,
+    }));
+
+  
+const customEventStyleGetter = (event) => {
+  // Si está cancelada, estilo gris y tachado
+  if (event.resource.estado === "cancelada") {
     return {
       style: {
-        backgroundColor,
+        backgroundColor: "gray",
         borderRadius: "5px",
         color: "white",
         border: "none",
         display: "block",
+        opacity: 0.6, // un poco transparente
+        textDecoration: "line-through", // tachado
       },
     };
+  }
+
+  // Si no está cancelada, usa colores normales según el tipo
+  let backgroundColor = "#007bff";
+  if (event.resource.tipo === "evaluacion") {
+    backgroundColor = "#17a2b8";
+  } else if (event.resource.tipo === "procedimiento") {
+    backgroundColor = "#28a745";
+  }
+
+  return {
+    style: {
+      backgroundColor,
+      borderRadius: "5px",
+      color: "white",
+      border: "none",
+      display: "block",
+    },
   };
+};
+
+  
   return (
+    
     <CitasContext.Provider value={{ selectedCitas, setSelectedCitas }}>
         <div className="card-body">
-
+          <Button
+  variant={mostrarCanceladas ? "warning" : "secondary"}
+  className="mb-3"
+  onClick={() => setMostrarCanceladas(!mostrarCanceladas)}
+>
+  {mostrarCanceladas ? "Ocultar canceladas" : "Mostrar canceladas"}
+</Button>
         <h5>Vista de Calendario</h5>
         <div style={{ height: "600px" }}>
           <Calendar

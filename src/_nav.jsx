@@ -98,7 +98,6 @@ const getAsistenteNavigation = () => [
   },
 ];
 
-// Navegacion para doctores
 const getDoctorNavigation = () => [
   {
     component: CNavItem,

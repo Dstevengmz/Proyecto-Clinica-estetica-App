@@ -1,7 +1,8 @@
 import React from "react";
-// import ChatWidget from "../../../components/Publico/ChatWidget";
-import ImplementoValores from "./ValoresClinica"
+import ChatWidget from "../chat/Chat";
+import ImplementoValores from "./ValoresClinica";
 import MapaConRuta from "../mapa/mapa";
+import Servicioss from "./Serviciosinicio";
 const Inicio = () => {
   return (
     <div>
@@ -10,29 +11,83 @@ const Inicio = () => {
         className="carousel slide"
         data-bs-ride="carousel"
       >
-        <div className="carousel-inner">
-          <div className="carousel-item active">
-            <img
-              src="https://picsum.photos/1200/400?random=1"
-              className="d-block w-100"
-              alt="slide1"
-            />
+        <div
+          id="carouselExample"
+          className="carousel slide"
+          data-bs-ride="carousel"
+        >
+          {/* Indicadores */}
+          <div className="carousel-indicators">
+            <button
+              type="button"
+              data-bs-target="#carouselExample"
+              data-bs-slide-to="0"
+              className="active"
+            ></button>
+            <button
+              type="button"
+              data-bs-target="#carouselExample"
+              data-bs-slide-to="1"
+            ></button>
+            <button
+              type="button"
+              data-bs-target="#carouselExample"
+              data-bs-slide-to="2"
+            ></button>
           </div>
-          <div className="carousel-item">
-            <img
-              src="https://picsum.photos/1200/400?random=2"
-              className="d-block w-100"
-              alt="slide2"
-            />
+
+          {/* Slides */}
+          <div className="carousel-inner">
+            <div className="carousel-item active">
+              <img
+                src="https://www.esneca.com/wp-content/uploads/clinica-estetica.jpg"
+                className="d-block w-100"
+                alt="slide1"
+              />
+            </div>
+            <div className="carousel-item">
+              <img
+                src="https://gestaods.com.br/wp-content/uploads/2023/12/gerenciar-clinica-estetica.png"
+                className="d-block w-100"
+                alt="slide2"
+              />
+            </div>
+            <div className="carousel-item">
+              <img
+                src="https://iamat.org.br/wp-content/uploads/2025/01/Post-de-blog-abrir-clinica-estetica-1068x562.jpg"
+                className="d-block w-100"
+                alt="slide3"
+              />
+            </div>
           </div>
-          <div className="carousel-item">
-            <img
-              src="https://picsum.photos/1200/400?random=3"
-              className="d-block w-100"
-              alt="slide3"
-            />
-          </div>
+
+          {/* Controles */}
+          <button
+            className="carousel-control-prev"
+            type="button"
+            data-bs-target="#carouselExample"
+            data-bs-slide="prev"
+          >
+            <span
+              className="carousel-control-prev-icon"
+              aria-hidden="true"
+            ></span>
+            <span className="visually-hidden">Anterior</span>
+          </button>
+          <button
+            className="carousel-control-next"
+            type="button"
+            data-bs-target="#carouselExample"
+            data-bs-slide="next"
+          >
+            <span
+              className="carousel-control-next-icon"
+              aria-hidden="true"
+            ></span>
+            <span className="visually-hidden">Siguiente</span>
+          </button>
         </div>
+
         <button
           className="carousel-control-prev"
           type="button"
@@ -61,143 +116,84 @@ const Inicio = () => {
         </p>
       </div>
       <ImplementoValores />
-      {/* NUESTRO EQUIPO MÉDICO */}
-      <div className="container-fluid px-5 my-5">
-        <h2 className="text-center mb-4">Nuestro Equipo Médico</h2>
-        <p className="text-center mb-5">
-          El trabajo en equipo y la comunicación efectiva entre nuestros
-          profesionales son clave para brindar atención médica de calidad y
-          lograr resultados positivos en la salud.
-        </p>
-        <div className="row text-center">
-          <div className="col-md-4 mb-4">
-            <div className="card h-100">
-              <img
-                src="/doctores/doctor1.png"
-                className="card-img-top"
-                alt="Dr. Andrés Blanco"
-              />
-              <div className="card-body">
-                <h5 className="card-title">Dr. Andrés Blanco, 32</h5>
-                <p className="text-muted">Ortopedista</p>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4 mb-4">
-            <div className="card h-100">
-              <img
-                src="/doctores/doctor2.png"
-                className="card-img-top"
-                alt="Dra. Michelle Gris"
-              />
-              <div className="card-body">
-                <h5 className="card-title">Dra. Michelle Gris, 40</h5>
-                <p className="text-muted">Neuróloga</p>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4 mb-4">
-            <div className="card h-100">
-              <img
-                src="/doctores/doctor3.png"
-                className="card-img-top"
-                alt="Dr. Esteban Johnson"
-              />
-              <div className="card-body">
-                <h5 className="card-title">Dr. Esteban Johnson, 49</h5>
-                <p className="text-muted">Pediatra</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
       {/* SERVICIOS */}
       <div className="container-fluid px-5 my-5">
-        <h2 className="text-center mb-4">Nuestros Servicios</h2>
-        <div className="row">
-          <div className="col-md-4 mb-3">
-            <div className="card h-100">
-              <img
-                src="https://picsum.photos/400/200?random=4"
-                className="card-img-top"
-                alt="servicio1"
-              />
-              <div className="card-body">
-                <h5 className="card-title">Limpieza Facial</h5>
-                <p className="card-text">
-                  Tratamientos para revitalizar tu piel y dejarla luminosa.
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4 mb-3">
-            <div className="card h-100">
-              <img
-                src="https://picsum.photos/400/200?random=5"
-                className="card-img-top"
-                alt="servicio2"
-              />
-              <div className="card-body">
-                <h5 className="card-title">Depilación Láser</h5>
-                <p className="card-text">
-                  Eliminación del vello de forma segura y efectiva.
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4 mb-3">
-            <div className="card h-100">
-              <img
-                src="https://picsum.photos/400/200?random=6"
-                className="card-img-top"
-                alt="servicio3"
-              />
-              <div className="card-body">
-                <h5 className="card-title">Masajes Relajantes</h5>
-                <p className="card-text">
-                  Libérate del estrés con nuestras terapias personalizadas.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Servicioss />
       </div>
       {/* Ubicacion */}
+
+      {/* Aparatos */}
+      <div className="container-fluid px-5 my-5">
+  <h2 className="text-center mb-4">Nuestros Equipos de Alta Tecnología</h2>
+  <p className="text-center mb-5">
+    Contamos con equipos de última generación que garantizan seguridad,
+    precisión y resultados efectivos en cada procedimiento estético y médico.
+  </p>
+
+  <div className="row text-center">
+    <div className="col-md-4 mb-4">
+      <div className="card h-100 shadow-sm">
+        <img
+          src="https://www.clinicapremiumestetica.com/wp-content/uploads/2024/12/Laser-CO2-El-Secreto-para-Reducir-Arrugas-y-Manchas-Faciales-Clinica-Premium-Estetica.jpg"
+          className="card-img-top"
+          alt="Equipo Láser"
+          style={{ height: "200px", objectFit: "cover" }}
+        />
+        <div className="card-body">
+          <h5 className="card-title fw-bold">Láser Médico Estético</h5>
+          <p className="text-muted">
+            Tecnología avanzada para depilación, rejuvenecimiento y tratamientos
+            dermatológicos con máxima seguridad.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div className="col-md-4 mb-4">
+      <div className="card h-100 shadow-sm">
+        <img
+          src="https://healtechmedic.com/cdn/shop/products/Disenosintitulo_8.png?v=1666376033&width=600"
+          className="card-img-top"
+          alt="Cavitación"
+          style={{ height: "200px", objectFit: "cover" }}
+        />
+        <div className="card-body">
+          <h5 className="card-title fw-bold">Equipo de Cavitación</h5>
+          <p className="text-muted">
+            Tratamiento no invasivo para la reducción de grasa localizada mediante
+            ultrasonido de alta frecuencia.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div className="col-md-4 mb-4">
+      <div className="card h-100 shadow-sm">
+        <img
+          src="https://dramarialucchesi.com/wp-content/uploads/2016/09/Screen-Shot-2016-09-16-at-11.00.11.png"
+          className="card-img-top"
+          alt="Radiofrecuencia"
+          style={{ height: "200px", objectFit: "cover" }}
+        />
+        <div className="card-body">
+          <h5 className="card-title fw-bold">Radiofrecuencia Facial y Corporal</h5>
+          <p className="text-muted">
+            Mejora la firmeza de la piel y estimula la producción natural de colágeno
+            para resultados visibles y duraderos.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+      {/* Aparatos */}
       {/* MAPA DE LA CLÍNICA */}
       <div className="container my-5">
         <h2 className="text-center mb-4">¿Cómo llegar a nuestra clínica?</h2>
         <MapaConRuta />
       </div>
-      <div className="container-fluid bg-dark px-5 py-5">
-        <h2 className="text-center mb-4">Contáctanos</h2>
-        <form>
-          <div className="row mb-3">
-            <div className="col-md-6">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Nombre completo"
-              />
-            </div>
-            <div className="col-md-6">
-              <input
-                type="email"
-                className="form-control"
-                placeholder="Correo electrónico"
-              />
-            </div>
-          </div>
-          <div className="mb-3">
-            <textarea className="form-control" rows="4" placeholder="Mensaje" />
-          </div>
-          <div className="text-center">
-            <button type="submit" className="btn btn-primary">
-              Enviar mensaje
-            </button>
-          </div>
-        </form>
-      </div>
-      {/* <ChatWidget /> */}
+      <ChatWidget />
     </div>
   );
 };

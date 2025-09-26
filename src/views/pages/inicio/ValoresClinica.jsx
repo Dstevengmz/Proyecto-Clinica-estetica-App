@@ -9,7 +9,7 @@ function ValoresClinica() {
       <div className="row mb-4">
         <div className="col-md-12">
           <div className="card shadow p-4">
-            <h4 className="mb-3 text-primary text-center">Misión</h4>
+            <h4 className="mb-3 text-dark text-center">Misión</h4>
             <p>
               Brindar atención médica y estética de alta calidad, centrada en el
               bienestar integral de nuestros pacientes, utilizando tecnología de
@@ -22,7 +22,7 @@ function ValoresClinica() {
       <div className="row mb-4">
         <div className="col-md-12">
           <div className="card shadow p-4">
-            <h4 className="mb-3 text-success text-center">Visión</h4>
+            <h4 className="mb-3 text-dark text-center">Visión</h4>
             <p>
               Ser una clínica referente en salud y estética a nivel regional,
               reconocida por su excelencia, innovación y compromiso humano.
@@ -34,7 +34,7 @@ function ValoresClinica() {
       <div className="row">
         <div className="col-md-12">
           <div className="card shadow p-4">
-            <h4 className="mb-4 text-warning text-center">Nuestros Valores</h4>
+            <h4 className="mb-4 text-dark text-center">Nuestros Valores</h4>
             <div className="row text-center">
               <div className="col-md-4 mb-3">
                 <h5 className="text-uppercase fw-bold">Empatía</h5>
