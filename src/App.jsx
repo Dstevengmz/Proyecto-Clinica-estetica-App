@@ -31,6 +31,11 @@ const Servicios = React.lazy(() => import("./views/pages/servicios/Servicios"));
 const VistaServicios = React.lazy(() =>
   import("./views/pages/servicios/VistaServicios")
 );
+
+
+const DashboardOtro = React.lazy(() =>
+  import("./views/pages/dashboard/paneldoctor")
+);
 //Rutas de usuarios
 const ConsultarListausuarios = React.lazy(() =>
   import("./views/pages/usuarios/ListaUsuarios")
@@ -261,6 +266,8 @@ const App = () => {
                       path="/calendariocitas"
                       element={<CalendarioCitas />}
                     />
+                    {/* Citas */}
+                    <Route path="/panelotro" element={<DashboardOtro />} />
                     <Route path="/vertodocita" element={<VerTodo/>}/>
                     <Route path="/crearcita" element={<CrearCita />} />
                     <Route

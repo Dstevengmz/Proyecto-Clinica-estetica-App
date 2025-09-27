@@ -3,6 +3,8 @@ import ChatWidget from "../chat/Chat";
 import ImplementoValores from "./ValoresClinica";
 import MapaConRuta from "../mapa/mapa";
 import Servicioss from "./Serviciosinicio";
+
+
 const Inicio = () => {
   return (
     <div>

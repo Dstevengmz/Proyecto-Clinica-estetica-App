@@ -19,7 +19,7 @@ class AlertaCitas {
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
-      cancelButtonColor: "#2db112ff",
+      cancelButtonColor: "#1e5f88ff",
       confirmButtonText: "Sí, cancelar",
       cancelButtonText: "No",
     });

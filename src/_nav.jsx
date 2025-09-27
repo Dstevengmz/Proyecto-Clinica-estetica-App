@@ -99,6 +99,12 @@ const getAsistenteNavigation = () => [
 ];
 
 const getDoctorNavigation = () => [
+    {
+    component: CNavItem,
+    name: "Doctor",
+    to: "/panelotro",
+    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+  },
   {
     component: CNavItem,
     name: "Panel de control",
