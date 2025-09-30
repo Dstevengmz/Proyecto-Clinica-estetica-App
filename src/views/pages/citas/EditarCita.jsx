@@ -7,7 +7,6 @@ import useHorariosDisponible from "../../../hooks/useHorariosDisponible";
 import useListarUsuario from "../../../hooks/useListaDeUsuarios";
 import useCitaPorId from "../../../hooks/useBuscarCita";
 import Cargando from "../../../components/Cargando";
-
 import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario";
 import useActualizarCita from "../../../hooks/useEditarCita";
 import { useAuth } from "../../../contexts/AuthenticaContext";
@@ -29,6 +28,9 @@ function EditarCitas() {
     observaciones: "",
     examenes_requeridos: "",
     nota_evolucion: "",
+    medicamentos_recetados: "",
+    requiere_mas_procedimientos: false,
+    descripcion_de_procedimientos: "",
     usuario: {},
     doctor: {},
   });
@@ -77,6 +79,9 @@ function EditarCitas() {
         observaciones: cita.observaciones || "",
         examenes_requeridos: cita.examenes_requeridos || "",
         nota_evolucion: cita.nota_evolucion || "",
+        medicamentos_recetados: cita.medicamentos_recetados || "",
+        requiere_mas_procedimientos: cita.requiere_mas_procedimientos || false,
+        descripcion_de_procedimientos: cita.descripcion_de_procedimientos || "",
         usuario: cita.usuario || {},
         doctor: cita.doctor || {},
       });
@@ -283,6 +288,22 @@ function EditarCitas() {
             </Form.Group>
           </>
         )}
+                {isDoctor && esProcedimiento && (
+          <>
+            <hr />
+            <Form.Group className="mb-3">
+              <Form.Label>Medicamentos Recetados</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                name="medicamentos_recetados"
+                value={formulario.medicamentos_recetados}
+                onChange={manejarCambio}
+                style={{ resize: "vertical" }}
+              />
+            </Form.Group>
+          </>
+        )}
         <Form.Group className="mb-3">
           <div className="d-flex justify-content-between align-items-center">
             <Form.Label className="mb-0">Exámenes Requeridos</Form.Label>
@@ -340,19 +361,16 @@ function EditarCitas() {
             </Form.Text>
           )}
         </Form.Group>
-
-
-<button
-  type="submit"
-  className="btn btn-success me-2"
-  disabled={
-    cargandoActualizacion || (isDoctor && formulario.estado !== "realizada")
-  }
->
-  {cargandoActualizacion ? "Actualizando..." : "Actualizar"}
-</button>
-
-
+        <button
+          type="submit"
+          className="btn btn-success me-2"
+          disabled={
+            cargandoActualizacion ||
+            (isDoctor && formulario.estado !== "realizada")
+          }
+        >
+          {cargandoActualizacion ? "Actualizando..." : "Actualizar"}
+        </button>
         {isDoctor && (
           <button
             type="button"

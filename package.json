@@ -26,6 +26,7 @@
     "core-js": "^3.43.0",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
+    "gridstack": "^12.3.3",
     "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.544.0",

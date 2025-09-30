@@ -18,7 +18,6 @@ const useActualizarCita = (id, formulario, hora, token, userRole) => {
     let payload = {};
 
     if (userRole === "usuario") {
-      // Validaciones específicas del usuario
       if (!formulario.fecha) {
         await alertas.alertaValidacionFecha();
         return;
@@ -44,6 +43,9 @@ const useActualizarCita = (id, formulario, hora, token, userRole) => {
         observaciones: formulario.observaciones,
         examenes_requeridos: formulario.examenes_requeridos,
         nota_evolucion: formulario.nota_evolucion,
+        medicamentos_recetados: formulario.medicamentos_recetados,
+        requiere_mas_procedimientos: formulario.requiere_mas_procedimientos,
+        descripcion_de_procedimientos: formulario.descripcion_de_procedimientos,
       };
     }
 

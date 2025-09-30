@@ -89,14 +89,6 @@ function DetallesCitas() {
   const renderBool = (val) =>
     val === true ? "Sí" : val === false ? "No" : "No registrado";
 
-  // if (cargandoCita) {
-  //   return (
-  //     <Alert variant="info" className="mt-4 text-center">
-  //       Cargando detalles de la cita…
-  //     </Alert>
-  //   );
-  // }
-  //darwin
   if (!cita) {
     return (
       <Alert variant="info" className="mt-4 text-center">
@@ -197,7 +189,7 @@ function DetallesCitas() {
             </>
           )}
 
-          {userRole === "usuario" &&
+          {(userRole === "usuario" || userRole === "doctor") &&
             cita.tipo === "procedimiento" &&
             cita.nota_evolucion && (
               <>
@@ -205,14 +197,62 @@ function DetallesCitas() {
                 <h5 className="text-primary mb-3">Nota de Evolución</h5>
                 <Row>
                   <Col md={12}>
-                    {" "}
                     {cita.nota_evolucion ||
                       "No hay nota de evolución registrada."}
                   </Col>
                 </Row>
               </>
             )}
+          {/* Desde aqui  Medicamentos*/}
+          {(userRole === "usuario" || userRole === "doctor") &&
+            cita.tipo === "procedimiento" &&
+            cita.medicamentos_recetados && (
+              <>
+                <hr />
+                <h5 className="text-primary mb-3 d-flex justify-content-between align-items-center">
+                  Medicamentos recetados
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem("token");
+                        const resp = await fetch(
+                          `${
+                            import.meta.env.VITE_API_URL
+                          }/apicitas/orden-medicamentos/pdf/${cita.id}`,
+                          {
+                            headers: { Authorization: `Bearer ${token}` },
+                          }
+                        );
+                        if (!resp.ok) {
+                          const data = await resp.json().catch(() => ({}));
+                          return alert(data.error || "Error generando PDF");
+                        }
+                        const blob = await resp.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `receta_medicamentos_cita_${cita.id}.pdf`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      } catch {
+                        alert("Error al descargar PDF de medicamentos");
+                      }
+                    }}
+                  >
+                    Descargar PDF
+                  </button>
+                </h5>
+                <Row>
+                  <Col md={12} style={{ whiteSpace: "pre-wrap" }}>
+                    {cita.medicamentos_recetados}
+                  </Col>
+                </Row>
+              </>
+            )}
 
+          {/* Hasta aqui Medicamentos*/}
           {cita.examenes_requeridos && (
             <>
               <hr />
@@ -388,29 +428,28 @@ function DetallesCitas() {
               <p>Esta cita no tiene una orden asociada.</p>
             )}
 
-             <h5 className="text-primary mb-3">
-              Consentimiento del usuario
-            </h5>
-            {(userRole === "usuario" || userRole === "doctor") && cita.tipo === "procedimiento" && (
-              <Card className="mb-4 shadow-sm">
-                <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <h5 className="text-primary mb-0">
-                      Consentimiento Informado
-                    </h5>
-                    <Badge bg={esProcedimiento ? "success" : "secondary"}>
-                      {esProcedimiento ? "Procedimiento" : "No aplica"}
-                    </Badge>
-                  </div>
-                  <ConsentimientoVista
-                    cita={cita}
-                    orden={orden}
-                    userRole={userRole}
-                    esProcedimiento={esProcedimiento}
-                  />
-                </Card.Body>
-              </Card>
-            )}
+            <h5 className="text-primary mb-3">Consentimiento del usuario</h5>
+            {(userRole === "usuario" || userRole === "doctor") &&
+              cita.tipo === "procedimiento" && (
+                <Card className="mb-4 shadow-sm">
+                  <Card.Body>
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <h5 className="text-primary mb-0">
+                        Consentimiento Informado
+                      </h5>
+                      <Badge bg={esProcedimiento ? "success" : "secondary"}>
+                        {esProcedimiento ? "Procedimiento" : "No aplica"}
+                      </Badge>
+                    </div>
+                    <ConsentimientoVista
+                      cita={cita}
+                      orden={orden}
+                      userRole={userRole}
+                      esProcedimiento={esProcedimiento}
+                    />
+                  </Card.Body>
+                </Card>
+              )}
           </Card.Body>
         </Card>
       )}
