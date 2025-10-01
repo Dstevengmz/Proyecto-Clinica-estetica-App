@@ -5,7 +5,7 @@ import AlertaCitas from "../assets/js/alertas/citas/AlertaCitas";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const useActualizarCita = (id, formulario, hora, token, userRole) => {
+const useActualizarCita = (id, formulario, hora, token, userRole,requerimientos) => {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -46,6 +46,7 @@ const useActualizarCita = (id, formulario, hora, token, userRole) => {
         medicamentos_recetados: formulario.medicamentos_recetados,
         requiere_mas_procedimientos: formulario.requiere_mas_procedimientos,
         descripcion_de_procedimientos: formulario.descripcion_de_procedimientos,
+        requerimientos,
       };
     }
 

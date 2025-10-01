@@ -12,6 +12,7 @@ import useActualizarCita from "../../../hooks/useEditarCita";
 import { useAuth } from "../../../contexts/AuthenticaContext";
 import useCambiarEstadoCita from "../../../hooks/useCambiarEstadoCita";
 import AlertaCitas from "../../../assets/js/alertas/citas/AlertaCitas";
+import FormularioRequerimientos from "./CitasRequiereProcedimientos";
 function EditarCitas() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -19,12 +20,17 @@ function EditarCitas() {
   const { userRole } = useAuth();
   const isDoctor = (userRole || "").toString().toLowerCase() === "doctor";
   const [hora, setHora] = useState("");
+  const [requerimientos, setRequerimientos] = useState([
+    { descripcion: "", frecuencia: 1, repeticiones: 1, fecha_inicio: "" },
+  ]);
+
   const [formulario, setFormulario] = useState({
     id_usuario: "",
     id_doctor: "",
     fecha: "",
     estado: "",
     tipo: "",
+    origen: "",
     observaciones: "",
     examenes_requeridos: "",
     nota_evolucion: "",
@@ -37,6 +43,7 @@ function EditarCitas() {
   const [requiereExamenes, setRequiereExamenes] = useState(false);
 
   const esProcedimiento = formulario?.tipo === "procedimiento";
+  const esRequerimiento = formulario?.origen === "requerimiento";
   const {
     cita,
     hora: horaInicial,
@@ -49,7 +56,8 @@ function EditarCitas() {
     formulario,
     hora,
     token,
-    userRole
+    userRole,
+    requerimientos
   );
 
   const { cambiarEstadoCita, cargando: cargandoEstado } =
@@ -76,6 +84,7 @@ function EditarCitas() {
         fecha: cita.fecha || "",
         estado: cita.estado || "",
         tipo: cita.tipo || "",
+        origen: cita.origen || "",
         observaciones: cita.observaciones || "",
         examenes_requeridos: cita.examenes_requeridos || "",
         nota_evolucion: cita.nota_evolucion || "",
@@ -85,6 +94,12 @@ function EditarCitas() {
         usuario: cita.usuario || {},
         doctor: cita.doctor || {},
       });
+      // se agrego esto.
+
+      if (cita.requerimientos && cita.requerimientos.length > 0) {
+        setRequerimientos(cita.requerimientos);
+      }
+
       setRequiereExamenes(!!cita.examenes_requeridos);
     }
     if (horaInicial) {
@@ -288,7 +303,7 @@ function EditarCitas() {
             </Form.Group>
           </>
         )}
-                {isDoctor && esProcedimiento && (
+        {isDoctor && esProcedimiento && !esRequerimiento && (
           <>
             <hr />
             <Form.Group className="mb-3">
@@ -304,63 +319,79 @@ function EditarCitas() {
             </Form.Group>
           </>
         )}
-        <Form.Group className="mb-3">
-          <div className="d-flex justify-content-between align-items-center">
-            <Form.Label className="mb-0">Exámenes Requeridos</Form.Label>
-            {isDoctor && formulario.tipo === "evaluacion" && (
-              <Form.Check
-                type="switch"
-                id="switch-requiere-examenes"
-                label="Requiere exámenes"
-                checked={requiereExamenes}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setRequiereExamenes(checked);
-                  if (!checked) {
-                    setFormulario((prev) => ({
-                      ...prev,
-                      examenes_requeridos: "",
-                    }));
-                  }
-                }}
-              />
-            )}
-          </div>
-          <Form.Control
-            className="mt-2"
-            as="textarea"
-            rows={3}
-            name="examenes_requeridos"
-            value={formulario.examenes_requeridos}
-            onChange={manejarCambio}
-            style={{ resize: "vertical" }}
-            placeholder={
-              isDoctor
-                ? "Escriba los exámenes requeridos para el paciente"
-                : "El doctor indicará aquí los exámenes si son necesarios"
-            }
-            disabled={
-              !isDoctor || formulario.tipo !== "evaluacion" || !requiereExamenes
-            }
+        {/* Inicio Crear citas requerimientos */}
+        {isDoctor && esProcedimiento && !esRequerimiento && (
+          <FormularioRequerimientos
+            requerimientos={requerimientos}
+            setRequerimientos={setRequerimientos}
           />
-          {!isDoctor && (
-            <Form.Text muted>
-              Solo el doctor puede indicar y modificar los exámenes requeridos.
-            </Form.Text>
-          )}
-          {isDoctor &&
-            formulario.tipo === "evaluacion" &&
-            !requiereExamenes && (
+        )}
+        {/* Inicio Crear citas requerimientos */}
+        {!esRequerimiento && (
+          <Form.Group className="mb-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <Form.Label className="mb-0">Exámenes Requeridos</Form.Label>
+              {isDoctor && formulario.tipo === "evaluacion" && (
+                <Form.Check
+                  type="switch"
+                  id="switch-requiere-examenes"
+                  label="Requiere exámenes"
+                  checked={requiereExamenes}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setRequiereExamenes(checked);
+                    if (!checked) {
+                      setFormulario((prev) => ({
+                        ...prev,
+                        examenes_requeridos: "",
+                      }));
+                    }
+                  }}
+                />
+              )}
+            </div>
+
+            <Form.Control
+              className="mt-2"
+              as="textarea"
+              rows={3}
+              name="examenes_requeridos"
+              value={formulario.examenes_requeridos}
+              onChange={manejarCambio}
+              style={{ resize: "vertical" }}
+              placeholder={
+                isDoctor
+                  ? "Escriba los exámenes requeridos para el paciente"
+                  : "El doctor indicará aquí los exámenes si son necesarios"
+              }
+              disabled={
+                !isDoctor ||
+                formulario.tipo !== "evaluacion" ||
+                !requiereExamenes
+              }
+            />
+
+            {!isDoctor && (
               <Form.Text muted>
-                Active "Requiere exámenes" para escribirlos.
+                Solo el doctor puede indicar y modificar los exámenes
+                requeridos.
               </Form.Text>
             )}
-          {isDoctor && formulario.tipo !== "evaluacion" && (
-            <Form.Text muted>
-              Los exámenes solo se asignan en citas de evaluación.
-            </Form.Text>
-          )}
-        </Form.Group>
+            {isDoctor &&
+              formulario.tipo === "evaluacion" &&
+              !requiereExamenes && (
+                <Form.Text muted>
+                  Active "Requiere exámenes" para escribirlos.
+                </Form.Text>
+              )}
+            {isDoctor && formulario.tipo !== "evaluacion" && (
+              <Form.Text muted>
+                Los exámenes solo se asignan en citas de evaluación.
+              </Form.Text>
+            )}
+          </Form.Group>
+        )}
+        {/* Fin Examenes requeridos */}
         <button
           type="submit"
           className="btn btn-success me-2"
@@ -385,7 +416,6 @@ function EditarCitas() {
                 await alertas.alertaEstadoActualizado();
                 setFormulario((prev) => ({ ...prev, estado: "realizada" }));
               } else if (resp === null) {
-                // El hook ya puso mensaje de error en 'error'
                 await alertas.alertaErrorEstado();
               }
             }}

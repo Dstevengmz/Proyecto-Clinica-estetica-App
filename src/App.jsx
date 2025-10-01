@@ -37,6 +37,10 @@ const DashboardOtro = React.lazy(() =>
   import("./views/pages/dashboard/paneldoctor")
 );
 //Rutas de usuarios
+const EditarUsuarioXAdmin = React.lazy(() =>
+  import("./views/pages/usuarios/EditarUsuarioXAdmin")
+);
+
 const ConsultarListausuarios = React.lazy(() =>
   import("./views/pages/usuarios/ListaUsuarios")
 );
@@ -236,6 +240,7 @@ const App = () => {
                       path="/listarusuarios"
                       element={<ConsultarListausuarios />}
                     />
+                    <Route path="/editarusuarioadmin/:id" element={<EditarUsuarioXAdmin />} />
                     <Route path="/crear-usuario" element={<CrearUsuario />} />
                     <Route
                       path="/editarusuario/:id"

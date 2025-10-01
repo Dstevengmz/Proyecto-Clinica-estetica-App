@@ -24,6 +24,8 @@ function DetallesCitas() {
   const orden = cita?.orden || null;
   const estado = cita?.estado || "—";
   const esProcedimiento = cita?.tipo === "procedimiento";
+  const esRequerimiento = cita?.origen === "requerimiento";
+
   const puedeSubir =
     esProcedimiento &&
     userRole === "usuario" &&
@@ -387,7 +389,7 @@ function DetallesCitas() {
         </Card>
       )}
 
-      {(userRole === "usuario" || userRole === "doctor") && (
+      {(userRole === "usuario" || userRole === "doctor") && !esRequerimiento && (
         <Card className="mb-4 shadow-sm">
           <Card.Body>
             <h5 className="text-primary mb-3">
@@ -428,9 +430,10 @@ function DetallesCitas() {
               <p>Esta cita no tiene una orden asociada.</p>
             )}
 
-            <h5 className="text-primary mb-3">Consentimiento del usuario</h5>
+            {/* Consentimiento Informado Inicio */}
             {(userRole === "usuario" || userRole === "doctor") &&
-              cita.tipo === "procedimiento" && (
+              cita.tipo === "procedimiento" &&
+              !esRequerimiento && (
                 <Card className="mb-4 shadow-sm">
                   <Card.Body>
                     <div className="d-flex justify-content-between align-items-center mb-2">
@@ -450,205 +453,208 @@ function DetallesCitas() {
                   </Card.Body>
                 </Card>
               )}
+            {/* Consentimiento Informado Fin */}
           </Card.Body>
         </Card>
       )}
 
-      {(userRole === "doctor" ||
-        (userRole === "usuario" && esProcedimiento)) && (
-        <Card className="mb-4 shadow-sm">
-          <Card.Body>
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <h5 className="text-primary mb-0">Exámenes Adjuntos</h5>
-              {esProcedimiento && <Badge bg="secondary">Procedimiento</Badge>}
-            </div>
-            {Array.isArray(examenes) && examenes.length > 0 ? (
-              <>
-                {cargandoExamenes && (
-                  <div className="text-end mb-2">
-                    <span className="badge bg-info">
-                      Actualizando exámenes…
-                    </span>
-                  </div>
-                )}
-                <div className="row g-3 mb-3">
-                  {examenes.map((ex) => {
-                    const isPdf = ex.archivo_examen
-                      ?.toLowerCase()
-                      .includes(".pdf");
-                    return (
-                      <div key={ex.id} className="col-md-4 col-sm-6">
-                        <div className="border rounded p-2 h-100 d-flex flex-column">
-                          <div
-                            className="mb-2 fw-semibold text-truncate"
-                            title={ex.nombre_examen}
-                          >
-                            {ex.nombre_examen}
+      {/* Examenes Inicio */}
+      {(userRole === "doctor" || (userRole === "usuario" && esProcedimiento)) &&
+        !esRequerimiento && (
+          <Card className="mb-4 shadow-sm">
+            <Card.Body>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h5 className="text-primary mb-0">Exámenes Adjuntos</h5>
+                {esProcedimiento && <Badge bg="secondary">Procedimiento</Badge>}
+              </div>
+              {Array.isArray(examenes) && examenes.length > 0 ? (
+                <>
+                  {cargandoExamenes && (
+                    <div className="text-end mb-2">
+                      <span className="badge bg-info">
+                        Actualizando exámenes…
+                      </span>
+                    </div>
+                  )}
+                  <div className="row g-3 mb-3">
+                    {examenes.map((ex) => {
+                      const isPdf = ex.archivo_examen
+                        ?.toLowerCase()
+                        .includes(".pdf");
+                      return (
+                        <div key={ex.id} className="col-md-4 col-sm-6">
+                          <div className="border rounded p-2 h-100 d-flex flex-column">
+                            <div
+                              className="mb-2 fw-semibold text-truncate"
+                              title={ex.nombre_examen}
+                            >
+                              {ex.nombre_examen}
+                            </div>
+                            {isPdf ? (
+                              <div
+                                className="flex-grow-1 d-flex align-items-center justify-content-center bg-light"
+                                style={{ minHeight: "120px" }}
+                              >
+                                <span className="text-muted">PDF</span>
+                              </div>
+                            ) : (
+                              <div
+                                className="ratio ratio-4x3 mb-2"
+                                style={{ overflow: "hidden", borderRadius: 4 }}
+                              >
+                                <img
+                                  src={ex.archivo_examen}
+                                  alt={ex.nombre_examen}
+                                  style={{
+                                    objectFit: "cover",
+                                    width: "100%",
+                                    height: "100%",
+                                  }}
+                                  loading="lazy"
+                                />
+                              </div>
+                            )}
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-primary mt-auto"
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem("token");
+                                  const resp = await fetch(
+                                    `${
+                                      import.meta.env.VITE_API_URL
+                                    }/apiexamenes/descargar/${ex.id}`,
+                                    {
+                                      headers: {
+                                        Authorization: `Bearer ${token}`,
+                                      },
+                                    }
+                                  );
+                                  const data = await resp.json();
+                                  if (data?.url) {
+                                    window.open(data.url, "_blank");
+                                  } else {
+                                    alert(
+                                      data.error || "No se pudo generar enlace"
+                                    );
+                                  }
+                                } catch {
+                                  alert("Error al solicitar URL segura");
+                                }
+                              }}
+                            >
+                              Ver / Descargar
+                            </button>
                           </div>
-                          {isPdf ? (
-                            <div
-                              className="flex-grow-1 d-flex align-items-center justify-content-center bg-light"
-                              style={{ minHeight: "120px" }}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : cargandoExamenes ? (
+                <p>Cargando exámenes...</p>
+              ) : (
+                <p className="text-muted mb-3">No hay exámenes adjuntos.</p>
+              )}
+              {puedeSubir && (
+                <div className="border-top pt-3">
+                  <h6 className="fw-semibold">Subir nuevos exámenes</h6>
+                  {!esProcedimiento && (
+                    <p className="text-muted small mb-2">
+                      Solo disponible para citas de procedimiento.
+                    </p>
+                  )}
+                  {userRole === "usuario" &&
+                    esProcedimiento &&
+                    !cita?.examenes_requeridos && (
+                      <p className="text-danger small mb-2">
+                        El doctor aún no ha solicitado exámenes para esta cita.
+                      </p>
+                    )}
+                  <form onSubmit={handleSubirExamen} className="small">
+                    <div className="mb-2">
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        placeholder="Nombre del examen (opcional)"
+                        value={nombreExamen}
+                        onChange={(e) => setNombreExamen(e.target.value)}
+                      />
+                    </div>
+                    <div className="mb-2">
+                      <textarea
+                        className="form-control form-control-sm"
+                        placeholder="Observaciones"
+                        rows={2}
+                        value={observacionesExamen}
+                        onChange={(e) => setObservacionesExamen(e.target.value)}
+                      />
+                    </div>
+                    <div className="mb-2">
+                      <input
+                        type="file"
+                        className="form-control form-control-sm"
+                        accept="image/*,application/pdf"
+                        multiple
+                        onChange={(e) => setArchivos(e.target.files)}
+                      />
+                    </div>
+                    {archivos && archivos.length > 0 && (
+                      <div className="mb-2">
+                        <ul
+                          className="list-group list-group-flush small"
+                          style={{ maxHeight: 150, overflowY: "auto" }}
+                        >
+                          {[...archivos].map((f, i) => (
+                            <li
+                              key={i}
+                              className="list-group-item py-1 d-flex justify-content-between align-items-center"
                             >
-                              <span className="text-muted">PDF</span>
-                            </div>
-                          ) : (
-                            <div
-                              className="ratio ratio-4x3 mb-2"
-                              style={{ overflow: "hidden", borderRadius: 4 }}
-                            >
-                              <img
-                                src={ex.archivo_examen}
-                                alt={ex.nombre_examen}
-                                style={{
-                                  objectFit: "cover",
-                                  width: "100%",
-                                  height: "100%",
-                                }}
-                                loading="lazy"
-                              />
-                            </div>
-                          )}
+                              <span
+                                className="text-truncate"
+                                style={{ maxWidth: "70%" }}
+                                title={f.name}
+                              >
+                                {f.name}
+                              </span>
+                              <span className="badge bg-secondary rounded-pill">
+                                {(f.size / 1024 / 1024).toFixed(2)} MB
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="d-flex justify-content-end mt-2 gap-2">
                           <button
                             type="button"
-                            className="btn btn-sm btn-outline-primary mt-auto"
-                            onClick={async () => {
-                              try {
-                                const token = localStorage.getItem("token");
-                                const resp = await fetch(
-                                  `${
-                                    import.meta.env.VITE_API_URL
-                                  }/apiexamenes/descargar/${ex.id}`,
-                                  {
-                                    headers: {
-                                      Authorization: `Bearer ${token}`,
-                                    },
-                                  }
-                                );
-                                const data = await resp.json();
-                                if (data?.url) {
-                                  window.open(data.url, "_blank");
-                                } else {
-                                  alert(
-                                    data.error || "No se pudo generar enlace"
-                                  );
-                                }
-                              } catch {
-                                alert("Error al solicitar URL segura");
-                              }
-                            }}
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => setArchivos([])}
                           >
-                            Ver / Descargar
+                            Limpiar
                           </button>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </>
-            ) : cargandoExamenes ? (
-              <p>Cargando exámenes...</p>
-            ) : (
-              <p className="text-muted mb-3">No hay exámenes adjuntos.</p>
-            )}
-            {puedeSubir && (
-              <div className="border-top pt-3">
-                <h6 className="fw-semibold">Subir nuevos exámenes</h6>
-                {!esProcedimiento && (
-                  <p className="text-muted small mb-2">
-                    Solo disponible para citas de procedimiento.
+                    )}
+                    {errorSubir && (
+                      <div className="text-danger mb-2">{errorSubir}</div>
+                    )}
+                    <button
+                      type="submit"
+                      className="btn btn-sm btn-success"
+                      disabled={subiendo || archivos.length === 0}
+                    >
+                      {subiendo ? "Subiendo..." : "Subir"}
+                    </button>
+                  </form>
+                  <p className="text-muted mt-2 mb-0 small">
+                    Formatos permitidos: imágenes o PDF. Máx. varios archivos
+                    por lote.
                   </p>
-                )}
-                {userRole === "usuario" &&
-                  esProcedimiento &&
-                  !cita?.examenes_requeridos && (
-                    <p className="text-danger small mb-2">
-                      El doctor aún no ha solicitado exámenes para esta cita.
-                    </p>
-                  )}
-                <form onSubmit={handleSubirExamen} className="small">
-                  <div className="mb-2">
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      placeholder="Nombre del examen (opcional)"
-                      value={nombreExamen}
-                      onChange={(e) => setNombreExamen(e.target.value)}
-                    />
-                  </div>
-                  <div className="mb-2">
-                    <textarea
-                      className="form-control form-control-sm"
-                      placeholder="Observaciones"
-                      rows={2}
-                      value={observacionesExamen}
-                      onChange={(e) => setObservacionesExamen(e.target.value)}
-                    />
-                  </div>
-                  <div className="mb-2">
-                    <input
-                      type="file"
-                      className="form-control form-control-sm"
-                      accept="image/*,application/pdf"
-                      multiple
-                      onChange={(e) => setArchivos(e.target.files)}
-                    />
-                  </div>
-                  {archivos && archivos.length > 0 && (
-                    <div className="mb-2">
-                      <ul
-                        className="list-group list-group-flush small"
-                        style={{ maxHeight: 150, overflowY: "auto" }}
-                      >
-                        {[...archivos].map((f, i) => (
-                          <li
-                            key={i}
-                            className="list-group-item py-1 d-flex justify-content-between align-items-center"
-                          >
-                            <span
-                              className="text-truncate"
-                              style={{ maxWidth: "70%" }}
-                              title={f.name}
-                            >
-                              {f.name}
-                            </span>
-                            <span className="badge bg-secondary rounded-pill">
-                              {(f.size / 1024 / 1024).toFixed(2)} MB
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="d-flex justify-content-end mt-2 gap-2">
-                        <button
-                          type="button"
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() => setArchivos([])}
-                        >
-                          Limpiar
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {errorSubir && (
-                    <div className="text-danger mb-2">{errorSubir}</div>
-                  )}
-                  <button
-                    type="submit"
-                    className="btn btn-sm btn-success"
-                    disabled={subiendo || archivos.length === 0}
-                  >
-                    {subiendo ? "Subiendo..." : "Subir"}
-                  </button>
-                </form>
-                <p className="text-muted mt-2 mb-0 small">
-                  Formatos permitidos: imágenes o PDF. Máx. varios archivos por
-                  lote.
-                </p>
-              </div>
-            )}
-          </Card.Body>
-        </Card>
-      )}
+                </div>
+              )}
+            </Card.Body>
+          </Card>
+        )}
+      {/* Examenes Fin */}
     </div>
   );
 }

@@ -1,4 +1,3 @@
-// src/views/pages/citas/CitasPaciente.jsx
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
 import { Spinner, Alert } from "react-bootstrap";
@@ -80,7 +79,7 @@ function CitasPaciente() {
             </CTableRow>
           </CTableHead>
           <CTableBody>
-            {(!citasAMostrar || citasAMostrar.length === 0) ? (
+            {!citasAMostrar || citasAMostrar.length === 0 ? (
               <CTableRow>
                 <CTableDataCell colSpan={5} className="text-center text-muted">
                   No hay citas registradas para este paciente.
@@ -134,7 +133,6 @@ function CitasPaciente() {
                         <CIcon icon={cibCassandra} size="sm" />
                       </button>
 
-                      {/* Editar: siempre visible, pero deshabilitado si está cancelada */}
                       <button
                         className="btn btn-sm btn-primary"
                         title="Editar"

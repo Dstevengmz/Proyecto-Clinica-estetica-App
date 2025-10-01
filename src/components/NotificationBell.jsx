@@ -113,8 +113,10 @@ const NotificationBell = () => {
   };
 
   const handleNotificationClick = async (index, notification) => {
-    console.log(`✅ Marcando notificación ${index} como leída`);
-    markAsRead(index);
+    console.log(`Marcando notificación ${notification?.id} como leída`);
+    if (notification?.id != null) {
+      await markAsRead(notification.id);
+    }
     if (notification.ruta) {
       if (notification.citaId) {
         try {

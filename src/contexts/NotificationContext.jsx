@@ -77,7 +77,7 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
-  const markAsRead = async (index) => {
+  const markAsRead = async (notificacionId) => {
     try {
       const userId = ObtenerUserIdFromToken();
       const token = localStorage.getItem('token');
@@ -89,18 +89,24 @@ export const NotificationProvider = ({ children }) => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ index })
+        body: JSON.stringify({ notificacionId })
       });
       
       if (response.ok) {
-        // Actualizar estado local solo si el backend se actualizó correctamente
-        setNotifications(prev => 
-          prev.map((notif, i) => 
-            i === index ? { ...notif, leida: true } : notif
-          )
-        );
-        setUnreadCount(prev => Math.max(0, prev - 1));
-        console.log(`Notificación ${index} marcada como leída`);
+        // Actualizar estado local por id
+        setNotifications(prev => {
+          let restados = 0;
+          const next = prev.map((notif) => {
+            if (String(notif.id) === String(notificacionId)) {
+              if (!notif.leida) restados = 1;
+              return { ...notif, leida: true };
+            }
+            return notif;
+          });
+          if (restados) setUnreadCount((p) => Math.max(0, p - 1));
+          return next;
+        });
+        console.log(`Notificación ${notificacionId} marcada como leída`);
       } else {
         console.error('Error al marcar notificación como leída en el backend');
       }

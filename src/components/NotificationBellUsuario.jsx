@@ -105,8 +105,10 @@ const NotificationBellUsuario = () => {
   };
 
   const handleNotificationClick = async (index, notification) => {
-    console.log(`Marcando notificación de usuario ${index} como leída`, notification);
-    markAsRead(index);
+    console.log(`Marcando notificación de usuario ${notification?.id} como leída`, notification);
+    if (notification?.id != null) {
+      await markAsRead(notification.id);
+    }
 
     const { tipo, citaId } = notification || {};
 

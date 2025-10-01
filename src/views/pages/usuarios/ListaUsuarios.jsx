@@ -110,7 +110,8 @@ function ConsultarListaUsuarios() {
 
   return (
     <ListarUsuariosContext.Provider
-      value={{ selectedListarusuarios, setSelectedListarusuarios }}>
+      value={{ selectedListarusuarios, setSelectedListarusuarios }}
+    >
       <div className="card-body">
         <h1 className="mb-0 text-center">Lista De Usuarios</h1>
         <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-center justify-content-md-between mb-3 gap-2">
@@ -242,7 +243,7 @@ function ConsultarListaUsuarios() {
                       </a>
                       <a
                         onClick={() => {
-                          navigate(`/editarhistorialmedico/${usuario.id}`);
+                          navigate(`/editarusuarioadmin/${usuario.id}`);
                         }}
                         className="btn btn-sm btn-primary"
                         title="Editar"

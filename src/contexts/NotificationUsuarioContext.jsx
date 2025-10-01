@@ -84,7 +84,7 @@ export const NotificationUsuarioProvider = ({ children }) => {
     }
   };
 
-  const markAsRead = async (index) => {
+  const markAsRead = async (notificacionId) => {
     try {
       const userId = ObtenerUserIdFromToken();
       const token = localStorage.getItem('token');
@@ -96,17 +96,23 @@ export const NotificationUsuarioProvider = ({ children }) => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ index })
+        body: JSON.stringify({ notificacionId })
       });
       
       if (response.ok) {
-        setNotifications(prev => 
-          prev.map((notif, i) => 
-            i === index ? { ...notif, leida: true } : notif
-          )
-        );
-        setUnreadCount(prev => Math.max(0, prev - 1));
-        console.log(`Notificación de usuario ${index} marcada como leída`);
+        setNotifications(prev => {
+          let restados = 0;
+          const next = prev.map((notif) => {
+            if (String(notif.id) === String(notificacionId)) {
+              if (!notif.leida) restados = 1;
+              return { ...notif, leida: true };
+            }
+            return notif;
+          });
+          if (restados) setUnreadCount((p) => Math.max(0, p - 1));
+          return next;
+        });
+        console.log(`Notificación de usuario ${notificacionId} marcada como leída`);
       }
     } catch (error) {
       console.error('Error al marcar notificación de usuario como leída:', error);
