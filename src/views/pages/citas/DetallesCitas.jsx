@@ -389,74 +389,76 @@ function DetallesCitas() {
         </Card>
       )}
 
-      {(userRole === "usuario" || userRole === "doctor") && !esRequerimiento && (
-        <Card className="mb-4 shadow-sm">
-          <Card.Body>
-            <h5 className="text-primary mb-3">
-              Procedimientos Asociados a esta Cita
-            </h5>
-            {orden ? (
-              <>
-                <p>
-                  <strong>Orden #{orden.id}</strong>
-                </p>
-                <p>
-                  <strong>Fecha de creación:</strong>{" "}
-                  {new Date(orden.createdAt).toLocaleDateString()}
-                </p>
-                <p>
-                  <strong>Estado:</strong> {orden.estado || "No registrado"}
-                </p>
+      {(userRole === "usuario" || userRole === "doctor") &&
+        !esRequerimiento && (
+          <Card className="mb-4 shadow-sm">
+            <Card.Body>
+              <h5 className="text-primary mb-3">
+                Procedimientos Asociados a esta Cita
+              </h5>
+              {orden ? (
+                <>
+                  <p>
+                    <strong>Orden #{orden.id}</strong>
+                  </p>
+                  <p>
+                    <strong>Fecha de creación:</strong>{" "}
+                    {new Date(orden.createdAt).toLocaleDateString()}
+                  </p>
+                  <p>
+                    <strong>Estado:</strong> {orden.estado || "No registrado"}
+                  </p>
 
-                {Array.isArray(orden.procedimientos) &&
-                orden.procedimientos.length > 0 ? (
-                  <ul>
-                    {orden.procedimientos.map((procedimiento) => (
-                      <li key={procedimiento.id}>
-                        <strong>{procedimiento.nombre}</strong> - $
-                        {procedimiento.precio?.toFixed(2)}
-                        <br />
-                        <em>
-                          {procedimiento.descripcion || "Sin descripción"}
-                        </em>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No hay procedimientos en esta orden.</p>
-                )}
-              </>
-            ) : (
-              <p>Esta cita no tiene una orden asociada.</p>
-            )}
-
-            {/* Consentimiento Informado Inicio */}
-            {(userRole === "usuario" || userRole === "doctor") &&
-              cita.tipo === "procedimiento" &&
-              !esRequerimiento && (
-                <Card className="mb-4 shadow-sm">
-                  <Card.Body>
-                    <div className="d-flex justify-content-between align-items-center mb-2">
-                      <h5 className="text-primary mb-0">
-                        Consentimiento Informado
-                      </h5>
-                      <Badge bg={esProcedimiento ? "success" : "secondary"}>
-                        {esProcedimiento ? "Procedimiento" : "No aplica"}
-                      </Badge>
-                    </div>
-                    <ConsentimientoVista
-                      cita={cita}
-                      orden={orden}
-                      userRole={userRole}
-                      esProcedimiento={esProcedimiento}
-                    />
-                  </Card.Body>
-                </Card>
+                  {Array.isArray(orden.procedimientos) &&
+                  orden.procedimientos.length > 0 ? (
+                    <ul>
+                      {orden.procedimientos.map((procedimiento) => (
+                        <li key={procedimiento.id}>
+                          <strong>{procedimiento.nombre}</strong> - $
+                          {procedimiento.precio?.toFixed(2)}
+                          <br />
+                          <em>
+                            {procedimiento.descripcion || "Sin descripción"}
+                          </em>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>No hay procedimientos en esta orden.</p>
+                  )}
+                </>
+              ) : (
+                <p>Esta cita no tiene una orden asociada.</p>
               )}
-            {/* Consentimiento Informado Fin */}
-          </Card.Body>
-        </Card>
-      )}
+
+              {/* Consentimiento Informado Inicio */}
+              {(userRole === "usuario" || userRole === "doctor") &&
+                cita.tipo === "procedimiento" &&
+                !esRequerimiento && (
+                  <Card className="mb-4 shadow-sm">
+                    <Card.Body>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <h5 className="text-primary mb-0">
+                          Consentimiento Informado
+                        </h5>
+                        <Badge bg={esProcedimiento ? "success" : "secondary"}>
+                          {esProcedimiento ? "Procedimiento" : "No aplica"}
+                        </Badge>
+                      </div>
+                      <ConsentimientoVista
+                        cita={cita}
+                        orden={orden}
+                        userRole={userRole}
+                        esProcedimiento={esProcedimiento}
+                        forceShow={true}
+                      />
+                    </Card.Body>
+                  </Card>
+                )}
+              {/* Consentimiento Informado Fin */}
+            </Card.Body>
+          </Card>
+        )}
 
       {/* Examenes Inicio */}
       {(userRole === "doctor" || (userRole === "usuario" && esProcedimiento)) &&

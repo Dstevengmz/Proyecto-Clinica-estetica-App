@@ -10,24 +10,23 @@ import {
 } from "@coreui/react";
 
 import {
-  cilCreditCard,
   cilFile,
   cilAccountLogout,
-  cilSettings,
   cilUser,
+  cilLifeRing,
+  cilLockLocked,
 } from "@coreui/icons";
 import CIcon from "@coreui/icons-react";
 import manejarCerrarSesion from "../../assets/js/alertas/logout/AlertaCerrarSesion";
 import { useAuth } from "../../contexts/AuthenticaContext";
 import ObtenerUsuarioIToken from "../../assets/js/ObtenerTokenDelUsuario";
 
-
-import { useNavigate,useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import avatar8 from "./../../assets/images/avatars/8.jpg";
 const AppHeaderDropdown = () => {
-  const { logout } = useAuth(); 
+  const { logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation()
+  const location = useLocation();
   const userId = ObtenerUsuarioIToken();
 
   return (
@@ -57,29 +56,25 @@ const AppHeaderDropdown = () => {
           <CIcon icon={cilUser} className="me-2" />
           Perfil
         </CDropdownItem>
-        <CDropdownItem href="#">
-          <CIcon icon={cilSettings} className="me-2" />
-          Configuraciones
-        </CDropdownItem>
-        <CDropdownItem href="#">
-          <CIcon icon={cilCreditCard} className="me-2" />
-          Payments
-          <CBadge color="secondary" className="ms-2">
-            42
-          </CBadge>
-        </CDropdownItem>
-        <CDropdownItem href="#">
+
+        <CDropdownItem onClick={() => navigate("/terminoscondiciones")}>
           <CIcon icon={cilFile} className="me-2" />
-          Projects
-          <CBadge color="primary" className="ms-2">
-            42
-          </CBadge>
+          Términos y Condiciones
         </CDropdownItem>
+        <CDropdownItem onClick={() => navigate("/contacto")}>
+          <CIcon icon={cilLifeRing} className="me-2" />
+          Ayuda
+        </CDropdownItem>
+        <CDropdownItem onClick={() => navigate("/cambiarcontrasena")}>
+          <CIcon icon={cilLockLocked} className="me-2" />
+          Cambiar Contraseña
+        </CDropdownItem>
+
         <CDropdownDivider />
         <CDropdownItem
           href="#"
           className="nav-link"
-          onClick={() => manejarCerrarSesion(navigate,logout,location)}
+          onClick={() => manejarCerrarSesion(navigate, logout, location)}
         >
           <CIcon icon={cilAccountLogout} className="me-2" />
           Cerrar Sesión

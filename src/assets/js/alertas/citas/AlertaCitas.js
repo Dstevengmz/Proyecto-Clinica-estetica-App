@@ -3,6 +3,15 @@ import Swal from 'sweetalert2';
 
 class AlertaCitas {
 
+    async NoAgendarDomingos() {
+         return Swal.fire({
+      icon: "warning",
+      title: "Fecha no permitida",
+      text: "No se pueden agendar citas los domingos.",
+      confirmButtonColor: "#3085d6",
+    });
+    }
+
     async alertaCitaAgendada() {
         return await Swal.fire({
             icon: 'success',

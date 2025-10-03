@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { Form, Row, Col, Card } from "react-bootstrap";
-import { HistorialClinicoContext } from "./ConsultarHistorialMedico";
+import { HistorialClinicoContext } from "../../../contexts/HistorialClinicoContext";
 
 function UserDetail() {
   const { selectedHistorialclinico } = useContext(HistorialClinicoContext);

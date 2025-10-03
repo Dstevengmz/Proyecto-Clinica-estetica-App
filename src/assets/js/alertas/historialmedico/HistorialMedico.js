@@ -55,6 +55,33 @@ class AlertaHistorialMedico{
       confirmButtonText: "Entendido",
     });
   }
+ async alertaActualizadoEditarHistorialMedico(mensaje) {
+    return Swal.fire({
+      icon: "error",
+      title: "No se pudo editar",
+      text: mensaje,
+      confirmButtonText: "Entendido",
+    });
+  }
+
+
+  async alertaNoSePudoEditarHistorialMedico(mensaje) {
+    return Swal.fire({
+      icon: "error",
+      title: "No se pudo editar",
+      text: mensaje,
+      confirmButtonText: "Entendido",
+    });
+  }
+
+  async alertaErrorEditarHistorialMedico(mensaje) {
+    return Swal.fire({
+      icon: "error",
+      title: "Error al editar",
+      text: mensaje,
+      confirmButtonText: "Entendido",
+    });
+  }
 }
 
 export default AlertaHistorialMedico;

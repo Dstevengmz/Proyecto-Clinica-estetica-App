@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import axios from "axios";
-import { createContext, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_URL;
 import {
@@ -11,6 +10,8 @@ import {
   CNavbar,
   CNavbarBrand,
 } from "@coreui/react";
+import { usePerfilUsuario } from "../../../hooks/usePerfilUsuario";
+import { HistorialClinicoContext } from "../../../contexts/HistorialClinicoContext";
 import {
   CTable,
   CTableBody,
@@ -20,15 +21,12 @@ import {
   CTableRow,
 } from "@coreui/react";
 
-export const HistorialClinicoContext = createContext();
-const useHistorialClinicoContext = () => useContext(HistorialClinicoContext);
-
 function ConsultaHistorialMedico() {
   const [historialmedico, setHistorialmedico] = useState([]);
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
-  const { selectedHistorialclinico, setSelectedHistorialclinico } =
-    useHistorialClinicoContext();
+  const { setSelectedHistorialclinico } = useContext(HistorialClinicoContext);
   const navigate = useNavigate();
+  const { rol } = usePerfilUsuario();
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -51,7 +49,6 @@ function ConsultaHistorialMedico() {
       });
   }, []);
 
-  // Filtrado (por id, nombre usuario, correo, rol, genero)
   const historialFiltrado = useMemo(() => {
     if (!terminoBusqueda.trim()) return historialmedico;
     const t = terminoBusqueda.toLowerCase().trim();
@@ -71,14 +68,11 @@ function ConsultaHistorialMedico() {
   const limpiarBusqueda = () => setTerminoBusqueda("");
 
   const selectUser = (historialmedico) => {
-    setSelectedHistorialclinico(historialmedico);
-    navigate("/DetallesHistorialMedico");
+    setSelectedHistorialclinico && setSelectedHistorialclinico(historialmedico);
+    navigate("/detalleshistorialmedico");
   };
 
   return (
-    <HistorialClinicoContext.Provider
-      value={{ selectedHistorialclinico, setSelectedHistorialclinico }}
-    >
       <div className="card-body">
         <h1 className="mb-0 text-center">Historial Médico</h1>
         <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-center justify-content-md-between mb-3 gap-2 mt-3">
@@ -176,13 +170,15 @@ function ConsultaHistorialMedico() {
                       >
                         <i className="bi bi-eye-fill"></i>
                       </a>
-                      <a
-                        onClick={() => navigate(`/editarhistorialmedico/${hm.id}`)}
-                        className="btn btn-sm btn-primary"
-                        title="Editar"
-                      >
-                        <i className="bi bi-pencil-square"></i>
-                      </a>
+                      {rol === "doctor" && (
+                        <a
+                          onClick={() => navigate(`/editarhistorialmedico/${hm.id}`)}
+                          className="btn btn-sm btn-primary"
+                          title="Editar"
+                        >
+                          <i className="bi bi-pencil-square"></i>
+                        </a>
+                      )}
                       <a className="btn btn-sm btn-danger" title="Eliminar">
                         <i className="bi bi-trash"></i>
                       </a>
@@ -194,7 +190,6 @@ function ConsultaHistorialMedico() {
           </CTableBody>
         </CTable>
       </div>
-    </HistorialClinicoContext.Provider>
   );
 }
 export default ConsultaHistorialMedico;

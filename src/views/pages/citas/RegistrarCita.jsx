@@ -17,12 +17,14 @@ import AlertaCitas from "../../../assets/js/alertas/citas/AlertaCitas";
 import { useCarrito } from "../../../contexts/CarritoContext";
 import Cargando from "../../../components/Cargando";
 import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario";
+import calendarFormats from "../../../assets/js/CalendarioEspanol";
+import "../../../assets/css/RegistrarCita.css";
 
 const locales = { es: esES };
 const localizer = dateFnsLocalizer({
   format,
   parse,
-  startOfWeek,
+  startOfWeek: (date) => startOfWeek(date, { locale: esES }),
   getDay,
   locales,
 });
@@ -68,7 +70,7 @@ export default function RegistrarCitasCalendario() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const onNavigate = (date) => {
     setCurrentDate(date);
-  }
+  };
   // Selección de doctor (debe ir antes de obtener horarios para poder filtrar)
   const [doctorSeleccionado, setDoctorSeleccionado] = useState("");
 
@@ -82,67 +84,68 @@ export default function RegistrarCitasCalendario() {
   const [showModal, setShowModal] = useState(false);
   const [slotSeleccionado, setSlotSeleccionado] = useState(null);
   const [enviando, setEnviando] = useState(false);
-const { citas: citasDoctor, cargando: cargandoCitasDoctor } = useCitasDoctor(doctorSeleccionado);
+  const { citas: citasDoctor, cargando: cargandoCitasDoctor } =
+    useCitasDoctor(doctorSeleccionado);
   // Ajusta la ventana visible del calendario a tu horario laboral usando horariosDisponibles
-const minTime = useMemo(() => {
-  const first = horariosDisponibles[0] || "08:00";
-  return combineDateTime(toISODate(currentDate), first);
-}, [currentDate]);
+  const minTime = useMemo(() => {
+    const first = horariosDisponibles[0] || "08:00";
+    return combineDateTime(toISODate(currentDate), first);
+  }, [currentDate]);
 
-const maxTime = useMemo(() => {
-  const last = horariosDisponibles[horariosDisponibles.length - 1] || "18:00";
-  return addMinutes(combineDateTime(toISODate(currentDate), last), 30);
-}, [currentDate]);
+  const maxTime = useMemo(() => {
+    const last = horariosDisponibles[horariosDisponibles.length - 1] || "18:00";
+    return addMinutes(combineDateTime(toISODate(currentDate), last), 30);
+  }, [currentDate]);
 
+  useEffect(() => {
+    if (!doctorSeleccionado || !citasDoctor || citasDoctor.length === 0) {
+      setEventos([]);
+      return;
+    }
 
-useEffect(() => {
-  if (!doctorSeleccionado || !citasDoctor || citasDoctor.length === 0) {
-    setEventos([]);
-    return;
-  }
+    const mapped = citasDoctor.map((cita) => {
+      const start = new Date(cita.fecha);
+      const duracion = cita.tipo === "evaluacion" ? 30 : 60;
+      const end = new Date(start.getTime() + duracion * 60000);
 
-  const mapped = citasDoctor.map((cita) => {
-    const start = new Date(cita.fecha);
-    const duracion = cita.tipo === "evaluacion" ? 30 : 60;
-    const end = new Date(start.getTime() + duracion * 60000);
+      return {
+        title: "🟥 Ocupado",
+        start,
+        end,
+        tipo: "ocupado",
+        resource: cita,
+      };
+    });
 
-    return {
-      title: "🟥 Ocupado",
-      start,
-      end,
-      tipo: "ocupado",
-      resource: cita,
-    };
-  });
-
-  setEventos(mapped);
-}, [citasDoctor, doctorSeleccionado]);
-
-
+    setEventos(mapped);
+  }, [citasDoctor, doctorSeleccionado]);
 
   const onView = (nextView) => setView(nextView);
 
-  // Verificaciones de selección
   function validarSlot(start) {
     const ahora = new Date();
-    const horaStr = `${String(start.getHours()).padStart(2, "0")}:${String(
-      start.getMinutes()
-    ).padStart(2, "0")}`;
 
-    // 1) No pasado
-    if (start < ahora) {
+      if (start.getDay() === 0) {
+    return false;
+  }
+
+      if (start < ahora) {
       alerta.alertaLaCitaNoPuedeSerPasada();
       return false;
     }
 
-    if (!horariosDisponibles.includes(horaStr)) {
-    alerta.alertaErrorCrearCita("Seleccione una hora válida según el horario disponible.");
-    return false;
-  }
+    const horaStr = `${String(start.getHours()).padStart(2, "0")}:${String(
+      start.getMinutes()
+    ).padStart(2, "0")}`;
 
-   const ocupado = eventos.some(
-  (ev) => start >= ev.start && start < ev.end
-);
+    if (!horariosDisponibles.includes(horaStr)) {
+      alerta.alertaErrorCrearCita(
+        "Seleccione una hora válida según el horario disponible Horario [08:00am - 12:00pm 01:00pm - 06:00pm]"
+      );
+      return false;
+    }
+
+    const ocupado = eventos.some((ev) => start >= ev.start && start < ev.end);
 
     if (ocupado) {
       alerta.alertaErrorCrearCita("Ese horario ya está ocupado. Elige otro.");
@@ -152,7 +155,24 @@ useEffect(() => {
     return true;
   }
 
+const slotPropGetter = (date) => {
+  if (date.getDay() === 0) {
+    return {
+      className: "slot-domingo"
+    };
+  }
+  return {};
+};
+
+
   const onSelectSlot = ({ start }) => {
+
+
+    if (start.getDay() === 0) {
+     alerta.NoAgendarDomingos();
+    return;
+  }
+
     const startRounded = new Date(start);
     startRounded.setMinutes(
       startRounded.getMinutes() - (startRounded.getMinutes() % 30),
@@ -162,7 +182,9 @@ useEffect(() => {
     const endRounded = addMinutes(startRounded, 30);
 
     if (!doctorSeleccionado) {
-      alerta.alertaErrorCrearCita("Primero seleccione un doctor para agendar la cita.");
+      alerta.alertaErrorCrearCita(
+        "Primero seleccione un doctor para agendar la cita."
+      );
       return;
     }
 
@@ -219,13 +241,14 @@ useEffect(() => {
       limpiarCarrito();
       setShowModal(false);
 
-      const citaCreada = resp?.data?.cita || resp?.data || {
-        id_usuario: usuario.id,
-        id_doctor: doctorSeleccionado,
-        fecha: fechaFormateada,
-        tipo: "evaluacion",
-        estado: "pendiente",
-      };
+      const citaCreada = resp?.data?.cita ||
+        resp?.data || {
+          id_usuario: usuario.id,
+          id_doctor: doctorSeleccionado,
+          fecha: fechaFormateada,
+          tipo: "evaluacion",
+          estado: "pendiente",
+        };
 
       setEventos((prev) => [
         ...prev,
@@ -258,7 +281,12 @@ useEffect(() => {
       setEnviando(false);
     }
   };
-
+  const dayPropGetter = (date) => {
+  if (date.getDay() === 0) {
+    return { className: "dia-domingo" };
+  }
+  return {};
+};
 
   const eventPropGetter = (event) => {
     if (event.tipo === "ocupado") {
@@ -292,7 +320,7 @@ useEffect(() => {
     showMore: (total) => `+ Ver más (${total})`,
   };
 
-  if (cargandoUsuario || cargandoDoctores ||cargandoCitasDoctor) {
+  if (cargandoUsuario || cargandoDoctores || cargandoCitasDoctor) {
     return <Cargando texto="Cargando información del calendario…" />;
   }
 
@@ -320,7 +348,7 @@ useEffect(() => {
               value={doctorSeleccionado}
               onChange={(e) => {
                 setDoctorSeleccionado(e.target.value);
-                setSlotSeleccionado(null); 
+                setSlotSeleccionado(null);
               }}
               disabled={cargandoDoctores}
               required
@@ -347,19 +375,22 @@ useEffect(() => {
               style={{ height: 650 }}
               selectable
               onSelectSlot={onSelectSlot}
+              dayPropGetter={dayPropGetter}
+              slotPropGetter={slotPropGetter} 
               onNavigate={onNavigate}
               onView={onView}
               view={view}
               date={currentDate}
-              step={30} 
+              step={30}
               timeslots={2}
-              min={minTime} 
-              max={maxTime} 
+              min={minTime}
+              max={maxTime}
               toolbar
               popup
               messages={messages}
+              formats={calendarFormats}
               eventPropGetter={eventPropGetter}
-              views={["day", "week", "month"]} 
+              views={["day", "week", "month"]}
             />
           )}
         </div>
@@ -384,9 +415,9 @@ useEffect(() => {
           </p>
 
           <p className="mb-2">
-            <strong>Doctores:</strong> {(
-              doctores?.find((d) => String(d.id) === String(doctorSeleccionado))?.nombre || ""
-            )}
+            <strong>Doctores:</strong>{" "}
+            {doctores?.find((d) => String(d.id) === String(doctorSeleccionado))
+              ?.nombre || ""}
           </p>
 
           <Form.Group>

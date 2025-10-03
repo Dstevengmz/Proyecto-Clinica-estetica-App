@@ -7,7 +7,8 @@ import { CSpinner, useColorModes } from "@coreui/react";
 import "./scss/style.scss";
 import "./scss/examples.scss";
 
-//Verificar Token
+// Verificar Token y permisos o autorizaciones para navegacion
+import ProtectedRoute from "./components/ProtegerRutas";
 import VerificarTokenExpirado from "./assets/js/ValidarTokenExpirado";
 import TokenExpiradoAlerta from "./assets/js/MensajeTokenEXpirado";
 import { useAuth } from "./contexts/AuthenticaContext";
@@ -22,6 +23,7 @@ const TerminosyCondiciones = React.lazy(() =>
 );
 
 // Pages
+const Contacto = React.lazy(() => import("./components/Publico/Contacto"));
 const Login = React.lazy(() => import("./views/pages/login/Login"));
 const Register = React.lazy(() => import("./views/pages/register/Register"));
 const Page404 = React.lazy(() => import("./views/pages/page404/Page404"));
@@ -31,7 +33,9 @@ const Servicios = React.lazy(() => import("./views/pages/servicios/Servicios"));
 const VistaServicios = React.lazy(() =>
   import("./views/pages/servicios/VistaServicios")
 );
-
+const Unauthorized = React.lazy(() =>
+  import("./views/pages/page404/AutorizacionNavegacion")
+);
 
 const DashboardOtro = React.lazy(() =>
   import("./views/pages/dashboard/paneldoctor")
@@ -44,6 +48,21 @@ const EditarUsuarioXAdmin = React.lazy(() =>
 const ConsultarListausuarios = React.lazy(() =>
   import("./views/pages/usuarios/ListaUsuarios")
 );
+
+// Rutas de contrasena
+const CambiarContrasena = React.lazy(() =>
+  import("./views/pages/contrasena/CambiarContrasena")
+);
+
+const OlvideContrasena = React.lazy(() =>
+  import("./views/pages/contrasena/OlvideContrasena")
+);
+
+const ResetearContrasena = React.lazy(() =>
+  import("./views/pages/contrasena/ResetearContrasena")
+);
+
+
 const CrearUsuario = React.lazy(() =>
   import("./views/pages/usuarios/CrearUsuario")
 );
@@ -54,7 +73,7 @@ import DetallesListarUsuarios from "./views/pages/usuarios/DetallesListaUsuarios
 import { ListarUsuariosContext } from "./contexts/ListarUsuariosContext";
 
 //historialClinico
-import { HistorialClinicoContext } from "./views/pages/historialmedico/ConsultarHistorialMedico";
+import { HistorialClinicoContext } from "./contexts/HistorialClinicoContext";
 const CrearHistorialClinico = React.lazy(() =>
   import("./views/pages/historialmedico/CrearHistorialMedico")
 );
@@ -83,6 +102,8 @@ const RegistrarCitaAsistente = React.lazy(() =>
   import("./views/pages/citas/RegistrarCitaAsistente")
 );
 
+
+import ReagendarCita from "./views/pages/citas/ReagendarCita"; 
 
 import CitasPaciente from "./views/pages/citas/CitasPorPaciente";
 
@@ -195,10 +216,14 @@ const App = () => {
                 <Routes>
                   <Route path="/" element={<Navigate to="/inicio" replace />} />
                   {/* Rutas públicas */}
+                  <Route path="/unauthorized" element={<Unauthorized />} />
                   <Route element={<PublicLayout />}>
                     <Route path="/iniciarsesion" element={<Login />} />
                     <Route path="/inicio" element={<Inicio />} />
                     <Route path="/servicios" element={<Servicios />} />
+                    <Route path="/contacto" element={<Contacto />} />
+                    <Route path="/olvidecontrasena" element={<OlvideContrasena />} />
+                    <Route path="/resetearcontrasena/:token" element={<ResetearContrasena />} />
                     {/* Alias de detalle de servicio público para compatibilidad */}
                     <Route path="/servicios/:id" element={<VistaServicios />} />
                     <Route path="/registrar" element={<Register />} />
@@ -219,6 +244,7 @@ const App = () => {
                   </Route>
 
                   {/* Rutas protegidas con layout */}
+                  
                   <Route
                     element={
                       <RutaProtegida>
@@ -238,9 +264,20 @@ const App = () => {
                     {/* USUARIOS */}
                     <Route
                       path="/listarusuarios"
-                      element={<ConsultarListausuarios />}
+                      element={
+                        <ProtectedRoute allowedRoles={["doctor"]}>
+                          <ConsultarListausuarios />
+                        </ProtectedRoute>
+                      }
                     />
-                    <Route path="/editarusuarioadmin/:id" element={<EditarUsuarioXAdmin />} />
+                    <Route
+                      path="/cambiarcontrasena"
+                      element={<CambiarContrasena />}
+                    />
+                    <Route
+                      path="/editarusuarioadmin/:id"
+                      element={<EditarUsuarioXAdmin />}
+                    />
                     <Route path="/crear-usuario" element={<CrearUsuario />} />
                     <Route
                       path="/editarusuario/:id"
@@ -273,19 +310,30 @@ const App = () => {
                     />
                     {/* Citas */}
                     <Route path="/panelotro" element={<DashboardOtro />} />
-                    <Route path="/vertodocita" element={<VerTodo/>}/>
+                    <Route path="/vertodocita" element={<VerTodo />} />
                     <Route path="/crearcita" element={<CrearCita />} />
+                    <Route path="/reagendarcita/:id" element={<ReagendarCita />} />
                     <Route
                       path="/crearcitaasistente"
-                      element={<RegistrarCitaAsistente />}
+                      element={
+                        <ProtectedRoute allowedRoles={["asistente", "doctor"]}>
+                          <RegistrarCitaAsistente />
+                        </ProtectedRoute>
+                      }
                     />
                     <Route
                       path="/consultarcitas"
                       element={<ConsultarCitas />}
                     />
-                    <Route path="/citaspaciente/:usuarioId" element={<CitasPaciente />} />
-                    
-                    <Route path="/detallescitas/:id" element={<DetallesCitas />} />
+                    <Route
+                      path="/citaspaciente/:usuarioId"
+                      element={<CitasPaciente />}
+                    />
+
+                    <Route
+                      path="/detallescitas/:id"
+                      element={<DetallesCitas />}
+                    />
                     <Route path="/citas/:id" element={<DetallesCitas />} />
                     <Route path="/editarcita/:id" element={<Editarcita />} />
                     <Route path="/miscitas" element={<MisCitas />} />

@@ -4,7 +4,9 @@ import {
   cilCalendar,
   cilNotes,
   cilMedicalCross,
+  
   cilSpeedometer,
+  cilApps
   // cilUser,
 } from "@coreui/icons";
 import { CNavGroup, CNavItem, CNavTitle } from "@coreui/react";
@@ -86,31 +88,78 @@ const getAsistenteNavigation = () => [
     items: [
       {
         component: CNavItem,
-        name: "Crear Cita",
+        name: "Registrar Cita asistente",
         to: "/crearcitaasistente",
       },
       {
         component: CNavItem,
         name: "Consultar Citas",
-        to: "/consultarcitas",
+        to: "/vertodocita",
+      },
+    ],
+  },
+      {
+      component: CNavGroup,
+      name: "Mis Citas",
+      icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
+      items: [
+        {
+          component: CNavItem,
+          name: "Agendar Cita",
+          to: "/crearcita",
+        },
+        {
+          component: CNavItem,
+          name: "Mis Citas",
+          to: "/miscitas",
+        },
+      ],
+    },
+    {
+    component: CNavGroup,
+    name: "Servicio",
+    icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: "Crear Servicio",
+        to: "/crearprocedimiento",
+      },
+      {
+        component: CNavItem,
+        name: "Crear Categoria",
+        to: "/categoriaprocedimientoscrear",
+      },
+      {
+        component: CNavItem,
+        name: "Consultar Servicios",
+        to: "/consultarprocedimientos",
+      },
+
+      {
+        component: CNavItem,
+        name: "Consultar Categorias",
+        to: "/categoriaprocedimientos",
       },
     ],
   },
 ];
 
 const getDoctorNavigation = () => [
-    {
-    component: CNavItem,
-    name: "Doctor",
-    to: "/panelotro",
-    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-  },
-  {
-    component: CNavItem,
-    name: "Panel de control",
-    to: "/dashboard",
-    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-  },
+{
+  component: CNavItem,
+  name: "Panel en vivo",
+  to: "/panelotro",
+  icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+  
+},
+{
+  component: CNavItem,
+  name: "Accesos rápidos",
+  to: "/dashboard",
+  icon: <CIcon icon={cilApps} customClassName="nav-icon" />,
+},
+
   {
     component: CNavGroup,
     name: "Historial Médico",

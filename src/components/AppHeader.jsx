@@ -17,8 +17,6 @@ import {
 import CIcon from '@coreui/icons-react'
 import {
   cilContrast,
-  cilEnvelopeOpen,
-  cilList,
   cilMenu,
   cilMoon,
   cilSun,
@@ -72,16 +70,7 @@ const AppHeader = () => {
           {/* Mostrar campana apropiada según el rol */}
           {(userRole === 'doctor' || userRole === 'Doctor' || userRole === 'DOCTOR') && <NotificationBell />}
           {(userRole === 'paciente' || userRole === 'Paciente' || userRole === 'PACIENTE' || userRole === 'usuario') && <NotificationBellUsuario />}
-          <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilList} size="lg" />
-            </CNavLink>
-          </CNavItem>
-          <CNavItem>
-            <CNavLink href="#">
-              <CIcon icon={cilEnvelopeOpen} size="lg" />
-            </CNavLink>
-          </CNavItem>
+
         </CHeaderNav>
         <CHeaderNav>
           <li className="nav-item py-1">

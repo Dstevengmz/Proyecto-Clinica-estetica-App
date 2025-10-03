@@ -20,6 +20,8 @@ import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario
 import useOrdenesEvaluacionRealizada from "../../../hooks/useOrdenesEvaluacionRealizada";
 import useListarUsuarios from "../../../hooks/useListarUsuarios";
 import useCitasDoctor from "../../../hooks/useCitaDoctorIdParaAsistente";
+import calendarFormats from "../../../assets/js/CalendarioEspanol";
+import "../../../assets/css/AsistenteCita.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -28,7 +30,7 @@ function RegistraCitaAsistente() {
   const localizer = dateFnsLocalizer({
     format,
     parse,
-    startOfWeek,
+    startOfWeek: (date) => startOfWeek(date, { locale: esES }),
     getDay,
     locales,
   });
@@ -62,7 +64,6 @@ function RegistraCitaAsistente() {
   } = useListarUsuarios();
 
   const token = localStorage.getItem("token");
-
 
   const [view, setView] = useState("day");
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -208,7 +209,26 @@ function RegistraCitaAsistente() {
     return true;
   }
 
+  const dayPropGetter = (date) => {
+    if (date.getDay() === 0) {
+      return { className: "dia-domingo" };
+    }
+    return {};
+  };
+
+  const slotPropGetter = (date) => {
+    if (date.getDay() === 0) {
+      return { className: "slot-domingo" };
+    }
+    return {};
+  };
+
   const onSelectSlot = ({ start }) => {
+    if (start.getDay() === 0) {
+      alerta.NoAgendarDomingos();
+      return;
+    }
+
     if (!formData.id_usuario) {
       alerta.alertaValidacionCampos("Primero seleccione un usuario.");
       return;
@@ -238,9 +258,7 @@ function RegistraCitaAsistente() {
   const onView = (next) => setView(next);
 
   const guardarCita = async () => {
-    if (
-      !slotSeleccionado?.start 
-    ) {
+    if (!slotSeleccionado?.start) {
       await alerta.alertaValidacionCampos("Seleccione doctor y horario.");
       return;
     }
@@ -474,7 +492,10 @@ function RegistraCitaAsistente() {
                 min={minTime}
                 max={maxTime}
                 messages={messages}
+                formats={calendarFormats}
                 eventPropGetter={eventPropGetter}
+                dayPropGetter={dayPropGetter}
+                slotPropGetter={slotPropGetter}
               />
             </div>
           </div>

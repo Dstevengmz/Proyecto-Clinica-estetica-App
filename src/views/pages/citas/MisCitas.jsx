@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import useMisCitas from "../../../hooks/useMisCitas";
 import { useCitasContext } from "../../../contexts/CitasContext";
 import useCancelarCita from "../../../hooks/useCancelarCitaUsuario";
+import puedeCancelarCita from "../../../assets/js/CancelarCitaUsuario";
+
 function MisCitas() {
   const navigate = useNavigate();
   const { citas, cargando, error, refrescar } = useMisCitas();
@@ -39,6 +41,9 @@ function MisCitas() {
             Refrescar
           </Button>
         </div>
+        <Alert variant="dark" className="mb-3">
+          Solo puedes cancelar tus citas con mínimo 24 horas de anticipación.
+        </Alert>
 
         {cargando && (
           <div className="d-flex align-items-center gap-2">
@@ -89,17 +94,34 @@ function MisCitas() {
                       </Button>
 
                       {f.estado !== "cancelada" && f.estado !== "realizada" && (
-                        <Button
-                          size="sm"
-                          variant="outline-danger"
-                          disabled={cargandoCancelacion}
-                          onClick={async () => {
-                            const ok = await cancelarCita(f.id);
-                            if (ok) refrescar();
-                          }}
-                        >
-                          {cargandoCancelacion ? "Cancelando..." : "Cancelar"}
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline-warning"
+                            className="me-2"
+                            onClick={() => navigate("/reagendarcita/" + f.id)}
+                          >
+                            Reagendar
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            variant="outline-danger"
+                            disabled={
+                              cargandoCancelacion || !puedeCancelarCita(f.fecha)
+                            }
+                            onClick={async () => {
+                              const ok = await cancelarCita(f.id);
+                              if (ok) refrescar();
+                            }}
+                          >
+                            {cargandoCancelacion
+                              ? "Cancelando..."
+                              : !puedeCancelarCita(f.fecha)
+                              ? "Cancelar"
+                              : "Cancelar"}
+                          </Button>
+                        </>
                       )}
                     </td>
                   </tr>

@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Container,
   Row,
@@ -10,11 +10,14 @@ import {
   Spinner,
   Alert,
 } from "react-bootstrap";
+import { usePerfilUsuario } from "../../../hooks/usePerfilUsuario";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function MiHistorialMedico() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { usuario: usuarioPerfil, rol, cargando: cargandoUsuario } = usePerfilUsuario();
   const [mihistorialmedico, setMihistorialmedico] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
@@ -50,6 +53,19 @@ function MiHistorialMedico() {
     cargarHistorial();
   }, [cargarHistorial]);
 
+  // Si se carga un historial que no pertenece al usuario y no es doctor, bloquear
+  useEffect(() => {
+    if (cargando || cargandoUsuario) return;
+    if (!mihistorialmedico) return;
+    const isDoctor = (rol || "").toLowerCase() === "doctor";
+    const ownerId = mihistorialmedico?.usuario?.id || mihistorialmedico?.usuarioId;
+    const isOwnerViaData = usuarioPerfil?.id && ownerId && Number(usuarioPerfil.id) === Number(ownerId);
+    const isOwnerViaRoute = usuarioPerfil?.id && id && Number(usuarioPerfil.id) === Number(id);
+    if (!isDoctor && !(isOwnerViaData || isOwnerViaRoute)) {
+      setError("No autorizado para ver este historial.");
+    }
+  }, [cargando, cargandoUsuario, mihistorialmedico, rol, usuarioPerfil?.id, id]);
+
   const renderBool = (val) =>
     val === true ? "Sí" : val === false ? "No" : "No registrado";
 
@@ -57,6 +73,23 @@ function MiHistorialMedico() {
     <div className="d-flex justify-content-between align-items-center mt-4 mb-3">
       <h3 className="mb-0">Mi Historial Médico</h3>
       <div className="d-flex gap-2">
+        {(() => {
+          if (cargandoUsuario) return null; 
+          const isDoctor = (rol || "").toLowerCase() === "doctor";
+          const ownerId = mihistorialmedico?.usuario?.id || mihistorialmedico?.usuarioId;
+          const isOwnerViaData = usuarioPerfil?.id && ownerId && Number(usuarioPerfil.id) === Number(ownerId);
+          const isOwnerViaRoute = usuarioPerfil?.id && id && Number(usuarioPerfil.id) === Number(id);
+          const canEdit = Boolean(mihistorialmedico?.id) && (isDoctor || isOwnerViaData || isOwnerViaRoute);
+          return canEdit ? (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate(`/editarhistorialmedico/${mihistorialmedico.id}`)}
+            >
+              Editar
+            </Button>
+          ) : null;
+        })()}
         <Button
           variant="outline-primary"
           size="sm"

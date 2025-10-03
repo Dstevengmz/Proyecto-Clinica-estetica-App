@@ -52,6 +52,11 @@ const NavbarPublico = () => {
                 Servicios
               </CNavLink>
             </CNavItem>
+            <CNavItem>
+              <CNavLink as={Link} to="/contacto">
+                Contacto
+              </CNavLink>
+            </CNavItem>
           </CNavbarNav>
 
           <CNavbarNav className="ms-auto">
