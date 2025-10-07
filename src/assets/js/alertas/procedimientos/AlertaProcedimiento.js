@@ -125,7 +125,14 @@ class AlertaProcedimiento {
       confirmButtonText: "Entendido",
     });
   }
-
+  async alertaMensajes(mensaje) {
+    return Swal.fire({
+      icon: "error",
+      title: "No autorizado",
+      text: mensaje,
+      confirmButtonText: "Entendido",
+    }); 
+  }
 }
 
 export default AlertaProcedimiento;

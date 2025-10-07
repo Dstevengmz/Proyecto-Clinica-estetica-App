@@ -9,6 +9,7 @@ import {
   useListarUsuariosContext,
 } from "../../../contexts/ListarUsuariosContext";
 import { CButton, CForm, CFormInput } from "@coreui/react";
+import useELiminarUsuario from "../../../hooks/useEliminarUsuario";
 import {
   CTable,
   CTableBody,
@@ -19,6 +20,8 @@ import {
 } from "@coreui/react";
 
 function ConsultarListaUsuarios() {
+  const eliminarUsuario = useELiminarUsuario(() => refrescarLista());
+
   const { usuario, refrescarLista } = useListarUsuario();
   const { selectedListarusuarios, setSelectedListarusuarios } =
     useListarUsuariosContext();
@@ -250,7 +253,7 @@ function ConsultarListaUsuarios() {
                       >
                         <i class="bi bi-pencil-square"></i>
                       </a>
-                      <a className="btn btn-sm btn-danger" title="Eliminar">
+                      <a onClick={() => eliminarUsuario(usuario.id)} className="btn btn-sm btn-danger" title="Eliminar">
                         <i class="bi bi-trash"></i>
                       </a>
                       <a

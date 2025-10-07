@@ -94,7 +94,6 @@ function EditarCitas() {
         usuario: cita.usuario || {},
         doctor: cita.doctor || {},
       });
-      // se agrego esto.
 
       if (cita.requerimientos && cita.requerimientos.length > 0) {
         setRequerimientos(cita.requerimientos);
@@ -162,6 +161,38 @@ function EditarCitas() {
     );
   }
 
+  const actualizarYMarcarRealizada = async (e) => {
+    e.preventDefault();
+    const alertas = new AlertaCitas();
+
+    const confirm = await alertas.confirmarMarcarRealizada(
+      "¿Deseas actualizar esta cita y marcarla como realizada?"
+    );
+    if (!confirm.isConfirmed) return;
+
+    try {
+      // 1️⃣ Llamamos al hook de actualización
+      await actualizarCita(e);
+
+      // 2️⃣ Si la cita no está realizada, cambiamos el estado
+      if (formulario.estado !== "realizada") {
+        const resp = await cambiarEstadoCita(id, "realizada");
+        if (resp) {
+          await alertas.alertaEstadoActualizado("Cita marcada como realizada.");
+          setFormulario((prev) => ({ ...prev, estado: "realizada" }));
+        } else {
+          await alertas.alertaErrorEstado();
+        }
+      }
+
+      // 3️⃣ Redirigimos al final, cuando todo terminó
+      navigate("/consultarcitas");
+    } catch (error) {
+      console.error("Error al actualizar y marcar cita:", error);
+      await alertas.alertaErrorEstado();
+    }
+  };
+
   return (
     <Container>
       <h2 className="mt-4">Editar Cita</h2>
@@ -194,7 +225,7 @@ function EditarCitas() {
         </Card.Body>
       </Card>
 
-      <Form onSubmit={actualizarCita}>
+      <Form onSubmit={(e) => e.preventDefault()}>
         <Form.Group className="mb-3">
           <Form.Label>Doctor</Form.Label>
           <Form.Select
@@ -393,15 +424,16 @@ function EditarCitas() {
         )}
         {/* Fin Examenes requeridos */}
         <button
-          type="submit"
+          type="button"
           className="btn btn-success me-2"
-          disabled={
-            cargandoActualizacion ||
-            (isDoctor && formulario.estado !== "realizada")
-          }
+          onClick={actualizarYMarcarRealizada}
+          disabled={cargandoActualizacion || cargandoEstado}
         >
-          {cargandoActualizacion ? "Actualizando..." : "Actualizar"}
+          {cargandoActualizacion || cargandoEstado
+            ? "Procesando..."
+            : "Actualizar y marcar como realizada"}
         </button>
+        {/* 
         {isDoctor && (
           <button
             type="button"
@@ -422,7 +454,7 @@ function EditarCitas() {
           >
             {cargandoEstado ? "Marcando..." : "Marcar como realizada"}
           </button>
-        )}
+        )} */}
         <button
           type="button"
           className="btn btn-secondary"

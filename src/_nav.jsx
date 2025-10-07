@@ -88,13 +88,13 @@ const getAsistenteNavigation = () => [
     items: [
       {
         component: CNavItem,
-        name: "Registrar Cita asistente",
+        name: "Registrar Cita ",
         to: "/crearcitaasistente",
       },
       {
         component: CNavItem,
-        name: "Consultar Citas",
-        to: "/vertodocita",
+        name: "Reagendar Citas",
+        to: "/listatodoslosusuariosasistente",
       },
     ],
   },

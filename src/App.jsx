@@ -1,6 +1,5 @@
 import React, { Suspense, useEffect } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CSpinner, useColorModes } from "@coreui/react";
@@ -62,7 +61,6 @@ const ResetearContrasena = React.lazy(() =>
   import("./views/pages/contrasena/ResetearContrasena")
 );
 
-
 const CrearUsuario = React.lazy(() =>
   import("./views/pages/usuarios/CrearUsuario")
 );
@@ -102,8 +100,7 @@ const RegistrarCitaAsistente = React.lazy(() =>
   import("./views/pages/citas/RegistrarCitaAsistente")
 );
 
-
-import ReagendarCita from "./views/pages/citas/ReagendarCita"; 
+import ReagendarCita from "./views/pages/citas/ReagendarCita";
 
 import CitasPaciente from "./views/pages/citas/CitasPorPaciente";
 
@@ -121,6 +118,10 @@ const Editarcita = React.lazy(() => import("./views/pages/citas/EditarCita"));
 const MisCitas = React.lazy(() => import("./views/pages/citas/MisCitas"));
 
 const VerTodo = React.lazy(() => import("./views/pages/citas/CitaVerTodo"));
+
+const CitasTodosAsistente = React.lazy(() =>
+  import("./views/pages/citas/CitaTodosUsuariosAsistente")
+);
 
 //Procedimientos
 const CrearProcedimiento = React.lazy(() =>
@@ -171,17 +172,14 @@ const App = () => {
   const [selectedCategoria, setSelectedCategoria] = useState(null);
   const [selectedCitas, setSelectedCitas] = useState(null);
   const [selectedListarusuarios, setSelectedListarusuarios] = useState(null);
-  const { isColorModeSet, setColorMode } = useColorModes(
+  const { setColorMode } = useColorModes(
     "coreui-free-react-admin-template-theme"
   );
-  const storedTheme = useSelector((state) => state.theme);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.href.split("?")[1]);
-    const theme = urlParams.get("theme")?.match(/^[A-Za-z0-9\s]+/)[0];
-    if (theme) setColorMode(theme);
-    if (!isColorModeSet()) setColorMode(storedTheme);
+    // Fijar el tema en 'light' y desactivar cambios por URL o estado
+    setColorMode("light");
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { logout } = useAuth();
@@ -222,8 +220,14 @@ const App = () => {
                     <Route path="/inicio" element={<Inicio />} />
                     <Route path="/servicios" element={<Servicios />} />
                     <Route path="/contacto" element={<Contacto />} />
-                    <Route path="/olvidecontrasena" element={<OlvideContrasena />} />
-                    <Route path="/resetearcontrasena/:token" element={<ResetearContrasena />} />
+                    <Route
+                      path="/olvidecontrasena"
+                      element={<OlvideContrasena />}
+                    />
+                    <Route
+                      path="/resetearcontrasena/:token"
+                      element={<ResetearContrasena />}
+                    />
                     {/* Alias de detalle de servicio público para compatibilidad */}
                     <Route path="/servicios/:id" element={<VistaServicios />} />
                     <Route path="/registrar" element={<Register />} />
@@ -244,7 +248,7 @@ const App = () => {
                   </Route>
 
                   {/* Rutas protegidas con layout */}
-                  
+
                   <Route
                     element={
                       <RutaProtegida>
@@ -284,6 +288,14 @@ const App = () => {
                       element={<EditarUsuario />}
                     />
                     <Route
+                      path="/listatodoslosusuariosasistente"
+                      element={
+                        <ProtectedRoute allowedRoles={["asistente"]}>
+                          <CitasTodosAsistente />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/DetallesListarUsuarios"
                       element={<DetallesListarUsuarios />}
                     />
@@ -306,13 +318,27 @@ const App = () => {
                     />
                     <Route
                       path="/calendariocitas"
-                      element={<CalendarioCitas />}
+                      element={
+                        <ProtectedRoute allowedRoles={["doctor"]}>
+                          <CalendarioCitas />
+                        </ProtectedRoute>
+                      }
                     />
                     {/* Citas */}
-                    <Route path="/panelotro" element={<DashboardOtro />} />
+                    <Route
+                      path="/panelotro"
+                      element={
+                        <ProtectedRoute allowedRoles={["doctor"]}>
+                          <DashboardOtro />
+                        </ProtectedRoute>
+                      }
+                    />
                     <Route path="/vertodocita" element={<VerTodo />} />
                     <Route path="/crearcita" element={<CrearCita />} />
-                    <Route path="/reagendarcita/:id" element={<ReagendarCita />} />
+                    <Route
+                      path="/reagendarcita/:id"
+                      element={<ReagendarCita />}
+                    />
                     <Route
                       path="/crearcitaasistente"
                       element={
@@ -323,11 +349,19 @@ const App = () => {
                     />
                     <Route
                       path="/consultarcitas"
-                      element={<ConsultarCitas />}
+                      element={
+                        <ProtectedRoute allowedRoles={["doctor"]}>
+                          <ConsultarCitas />
+                        </ProtectedRoute>
+                      }
                     />
                     <Route
                       path="/citaspaciente/:usuarioId"
-                      element={<CitasPaciente />}
+                      element={
+                        <ProtectedRoute allowedRoles={["doctor"]}>
+                          <CitasPaciente />
+                        </ProtectedRoute>
+                      }
                     />
 
                     <Route
@@ -341,11 +375,19 @@ const App = () => {
                     {/* Procedimientos */}
                     <Route
                       path="/crearprocedimiento"
-                      element={<CrearProcedimiento />}
+                      element={
+                        <ProtectedRoute allowedRoles={["asistente", "doctor"]}>
+                          <CrearProcedimiento />
+                        </ProtectedRoute>
+                      }
                     />
                     <Route
                       path="/consultarprocedimientos"
-                      element={<ConsultarProcedimientos />}
+                      element={
+                        <ProtectedRoute allowedRoles={["asistente", "doctor"]}>
+                          <ConsultarProcedimientos />
+                        </ProtectedRoute>
+                      }
                     />
                     <Route
                       path="/detallesprocedimientos"
@@ -353,12 +395,19 @@ const App = () => {
                     />
                     <Route
                       path="/editarprocedimientos/:id"
-                      element={<EditarProcedimiento />}
+                      element={
+                        <ProtectedRoute allowedRoles={["asistente", "doctor"]}>
+                          <EditarProcedimiento />
+                        </ProtectedRoute>
+                      }
                     />
-                    {/* Categorías de procedimientos */}
                     <Route
                       path="/categoriaprocedimientos"
-                      element={<ListarCategorias />}
+                      element={
+                        <ProtectedRoute allowedRoles={["asistente", "doctor"]}>
+                          <ListarCategorias />
+                        </ProtectedRoute>
+                      }
                     />
                     <Route
                       path="/detallescategorias/:id"
@@ -366,7 +415,11 @@ const App = () => {
                     />
                     <Route
                       path="/categoriaprocedimientoscrear"
-                      element={<CrearCategoria />}
+                      element={
+                        <ProtectedRoute allowedRoles={["doctor", "asistente"]}>
+                          <CrearCategoria />
+                        </ProtectedRoute>
+                      }
                     />
                     <Route
                       path="/editarcategoriaprocedimientos/:id"

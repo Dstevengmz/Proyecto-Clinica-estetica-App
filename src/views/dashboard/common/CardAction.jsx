@@ -1,8 +1,9 @@
 import React from 'react';
 
-export default function CardAction({ icon, title, description, onClick, color = '#031422FF' }) {
+export default function CardAction({ id, icon, title, description, onClick, color = '#031422FF' }) {
   return (
     <div
+      id={id}
       onClick={onClick}
       style={{
         border: `2px solid ${color}`,

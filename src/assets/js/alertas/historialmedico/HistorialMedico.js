@@ -82,6 +82,14 @@ class AlertaHistorialMedico{
       confirmButtonText: "Entendido",
     });
   }
+  async alertaMensaje(mensaje) {
+    return Swal.fire({
+      icon: "info",
+      title: "Información",
+      text: mensaje,
+      confirmButtonText: "Entendido",
+    });
+  }
 }
 
 export default AlertaHistorialMedico;

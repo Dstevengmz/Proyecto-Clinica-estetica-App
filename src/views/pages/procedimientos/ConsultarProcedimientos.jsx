@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -16,8 +16,12 @@ import { useProcedimientoContext } from "../../../contexts/ProcedimientoContext"
 import usePaginacion from "../../../hooks/usePaginacion";
 import PaginacionComponents from "../../../components/PaginacionComponents";
 const API_URL = import.meta.env.VITE_API_URL;
-
+import { useAuth } from "../../../contexts/AuthenticaContext";
+import useEliminarProcedimiento from "../../../hooks/useEliminarProcedimiento";
+import AlertaProcedimiento from "../../../assets/js/alertas/procedimientos/AlertaProcedimiento";
+const alertas = new AlertaProcedimiento();
 function ConsultarProcedimientos() {
+  const { userRole } = useAuth();
   const [procedimientos, setProcedimientos] = useState([]);
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
   const { setSelectedProcedimiento } = useProcedimientoContext();
@@ -26,37 +30,36 @@ function ConsultarProcedimientos() {
   const searchParams = new URLSearchParams(location.search);
   const categoriaId = searchParams.get("categoriaId");
 
-  useEffect(() => {
+  const reload = useCallback(() => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      alert("Error", "No estás autenticado", "error");
+      alertas.alertaMensajes("No estás autenticado");
+      navigate("/iniciarsesion");
       return;
     }
+
     const url = categoriaId
       ? `${API_URL}/apiprocedimientos/listarprocedimiento?categoriaId=${categoriaId}`
       : `${API_URL}/apiprocedimientos/listarprocedimiento`;
 
     axios
-      .get(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .get(url, { headers: { Authorization: `Bearer ${token}` } })
       .then((response) => {
         setProcedimientos(response.data);
-        console.log("Respuesta del backend:", response.data);
+        console.log("Procedimientos cargados:", response.data);
       })
       .catch((error) => {
         console.error("Error al cargar procedimientos:", error);
-        alert(
-          "Error",
-          "No se pudieron cargar los procedimientos",
-          "error",
-          error
-        );
+        alertas.alertaMensajes("Error al cargar los procedimientos");
       });
-  }, [categoriaId, location.search]);
+  }, [categoriaId, navigate]);
+
+  const eliminarProcedimiento = useEliminarProcedimiento(() => reload());
+
+  useEffect(() => {
+    reload();
+  }, [reload, location.search]);
 
   const procedimientosFiltrados = useMemo(() => {
     if (!terminoBusqueda.trim()) return procedimientos;
@@ -91,13 +94,15 @@ function ConsultarProcedimientos() {
       <h1 className="mb-0 text-center">Lista de Procedimientos</h1>
       <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-center justify-content-md-between mb-3 gap-2 mt-3">
         <div className="d-flex justify-content-center justify-content-md-start">
-          <CButton
-            color="primary"
-            size="sm"
-            onClick={() => navigate("/crearprocedimiento")}
-          >
-            <i className="bi bi-plus-circle me-1"></i> Crear Procedimiento
-          </CButton>
+          {(userRole === "doctor" || userRole === "asistente") && (
+            <CButton
+              color="primary"
+              size="sm"
+              onClick={() => navigate("/crearprocedimiento")}
+            >
+              <i className="bi bi-plus-circle me-1"></i> Crear Procedimiento
+            </CButton>
+          )}
         </div>
         <CForm
           className="d-flex justify-content-center justify-content-md-end"
@@ -156,7 +161,9 @@ function ConsultarProcedimientos() {
             <CTableHeaderCell>Nombre</CTableHeaderCell>
             <CTableHeaderCell>Precio</CTableHeaderCell>
             <CTableHeaderCell>Categoria</CTableHeaderCell>
-            <CTableHeaderCell>Opciones</CTableHeaderCell>
+            {(userRole === "doctor" || userRole === "asistente") && (
+              <CTableHeaderCell>Opciones</CTableHeaderCell>
+            )}
           </CTableRow>
         </CTableHead>
         <CTableBody>
@@ -195,31 +202,40 @@ function ConsultarProcedimientos() {
                 <CTableDataCell>
                   {procedimiento?.categoria?.nombre || "—"}
                 </CTableDataCell>
-                <CTableDataCell className="text-center">
-                  <div className="d-flex justify-content-center gap-2">
-                    <CButton
-                      color="info"
-                      size="sm"
-                      onClick={() => selectUser(procedimiento)}
-                      title="Ver detalles"
-                    >
-                      <i className="bi bi-eye-fill"></i>
-                    </CButton>
-                    <CButton
-                      color="primary"
-                      size="sm"
-                      onClick={() =>
-                        navigate(`/editarprocedimientos/${procedimiento.id}`)
-                      }
-                      title="Editar"
-                    >
-                      <i className="bi bi-pencil-square"></i>
-                    </CButton>
-                    <CButton color="danger" size="sm" title="Eliminar">
-                      <i className="bi bi-trash"></i>
-                    </CButton>
-                  </div>
-                </CTableDataCell>
+
+                {(userRole === "doctor" || userRole === "asistente") && (
+                  <CTableDataCell className="text-center">
+                    <div className="d-flex justify-content-center gap-2">
+                      <CButton
+                        color="info"
+                        size="sm"
+                        onClick={() => selectUser(procedimiento)}
+                        title="Ver detalles"
+                      >
+                        <i className="bi bi-eye-fill"></i>
+                      </CButton>
+                      <CButton
+                        color="primary"
+                        size="sm"
+                        onClick={() =>
+                          navigate(`/editarprocedimientos/${procedimiento.id}`)
+                        }
+                        title="Editar"
+                      >
+                        <i className="bi bi-pencil-square"></i>
+                      </CButton>
+
+                      <CButton
+                        color="danger"
+                        size="sm"
+                        title="Eliminar"
+                        onClick={() => eliminarProcedimiento(procedimiento.id)}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </CButton>
+                    </div>
+                  </CTableDataCell>
+                )}
               </CTableRow>
             ))
           )}

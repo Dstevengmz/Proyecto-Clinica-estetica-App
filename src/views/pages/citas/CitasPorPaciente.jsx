@@ -11,7 +11,7 @@ import {
 } from "@coreui/react";
 import CIcon from "@coreui/icons-react";
 import { cibCassandra, cilPenAlt, cilXCircle } from "@coreui/icons";
-
+import useEliminarCitaPaciente from "../../../hooks/useEliminarCita";
 import { CitasContext, useCitasContext } from "../../../contexts/CitasContext";
 import useCitasPacienteDoctor from "../../../hooks/useCitasPacienteDoctor";
 
@@ -20,7 +20,8 @@ function CitasPaciente() {
   const navigate = useNavigate();
   const { selectedCitas, setSelectedCitas } = useCitasContext();
 
-  const { citas, cargando, error } = useCitasPacienteDoctor(usuarioId);
+  const { citas, cargando, error, reload } = useCitasPacienteDoctor(usuarioId);
+  const eliminarCita = useEliminarCitaPaciente(() => reload());
 
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
   const [citasFiltradas, setCitasFiltradas] = useState(citas);
@@ -142,11 +143,10 @@ function CitasPaciente() {
                         <CIcon icon={cilPenAlt} size="sm" />
                       </button>
 
-                      {/* Eliminar */}
                       <button
                         className="btn btn-sm btn-danger"
                         title="Eliminar"
-                        onClick={() => console.log("Eliminar cita", cita.id)}
+                        onClick={() => eliminarCita(cita.id)}
                       >
                         <CIcon icon={cilXCircle} size="sm" />
                       </button>

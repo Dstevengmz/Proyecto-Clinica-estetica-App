@@ -9,11 +9,14 @@ import useReagendarCita from "../../../hooks/useReagendarCita";
 import Cargando from "../../../components/Cargando";
 import InformacionUsuario from "../../../views/pages/usuarios/InformacionUsuario";
 import AlertaCitas from "../../../assets/js/alertas/citas/AlertaCitas";
+import { useAuth } from "../../../contexts/AuthenticaContext";
 
 const alertas = new AlertaCitas();
 function ReagendarCita() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { userRole } = useAuth();
+
   const token = localStorage.getItem("token");
 
   const [fecha, setFecha] = useState("");
@@ -43,7 +46,12 @@ function ReagendarCita() {
     try {
       await reagendarCita(id, fecha, hora);
       await alertas.alertaEstadoActualizado("Cita reagendada correctamente");
-      navigate("/miscitas");
+
+      if (userRole?.toLowerCase().trim() === "asistente") {
+        navigate("/listatodoslosusuariosasistente");
+      } else {
+        navigate("/miscitas");
+      }
     } catch (err) {
       console.error(err);
       await alertas.alertaErrorActualizarCita("Error al reagendar la cita");
@@ -180,11 +188,16 @@ function ReagendarCita() {
         >
           {cargandoReagendar ? "Reagendando..." : "Reagendar Cita"}
         </button>
-
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={() => navigate("/miscitas")}
+          onClick={() => {
+            if (userRole?.toLowerCase().trim() === "asistente") {
+              navigate("/listatodoslosusuariosasistente");
+            } else {
+              navigate("/miscitas");
+            }
+          }}
         >
           Cancelar
         </button>
