@@ -7,7 +7,7 @@ function PublicLayout() {
   return (
     <div className="d-flex flex-column min-vh-100">
       <NavbarPublico />
-      <main className="flex-grow-1">
+      <main className="flex-grow-1" style={{ paddingTop: '10px' }}>
         <Outlet />
       </main>
       <FooterPublico />

@@ -18,7 +18,7 @@ function Servicios() {
 
   const [categoriaId, setCategoriaId] = useState("");
   const [busqueda, setBusqueda] = useState("");
-
+  const [visibleCount, setVisibleCount] = useState(8);
   const {
     procedimientos,
     loading: loadingProcedimientos,
@@ -31,14 +31,16 @@ function Servicios() {
   if (errorProcedimientos)
     return <ErrorCargando texto="Error al cargar los procedimientos." />;
 
-  // 🔎 Filtrar procedimientos según búsqueda
   const procedimientosFiltrados = procedimientos.filter((proc) =>
     proc.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
+  const handleMore = () => {
+    setVisibleCount((prev) => prev + 8);
+  };
+
   return (
     <Container className="my-5">
-      {/* Buscador arriba */}
       <div className="mb-3">
         <Form.Control
           type="text"
@@ -49,7 +51,6 @@ function Servicios() {
         />
       </div>
 
-      {/* Categorías tal cual estaba */}
       <div className="d-flex flex-row-reverse bd-highlight mb-4">
         <div
           className="d-flex align-items-center"
@@ -80,7 +81,6 @@ function Servicios() {
         </div>
       </div>
 
-      {/* Listado de procedimientos */}
       {loadingProcedimientos ? (
         <Cargando texto="Cargando procedimientos..." />
       ) : procedimientosFiltrados.length === 0 ? (
@@ -89,7 +89,7 @@ function Servicios() {
         </div>
       ) : (
         <Row className="g-4">
-          {procedimientosFiltrados.map((proc) => (
+          {procedimientosFiltrados.slice(0, visibleCount).map((proc) => (
             <Col key={proc.id} xs={12} sm={6} md={4} lg={3}>
               <Card className="h-100 shadow border-0 rounded-4 overflow-hidden">
                 <div
@@ -119,12 +119,16 @@ function Servicios() {
                   </Card.Title>
                   <ul className="list-unstyled mb-4">
                     <li>
-                      <span className="fw-semibold">💲 Precio:</span>{" "}
-                      {Number(proc.precio).toLocaleString("es-CO", {
-                        style: "currency",
-                        currency: "COP",
-                        minimumFractionDigits: 0,
-                      })}
+                      <span
+                        className="fw-bold text-dark"
+                        style={{ fontSize: "1.2rem", letterSpacing: "0.5px" }}
+                      >
+                        {Number(proc.precio).toLocaleString("es-CO", {
+                          style: "currency",
+                          currency: "COP",
+                          minimumFractionDigits: 0,
+                        })}
+                      </span>
                     </li>
                   </ul>
                   <div className="mt-auto">
@@ -137,7 +141,7 @@ function Servicios() {
                         className="w-100 rounded-pill fw-semibold"
                         style={{ letterSpacing: "1px" }}
                       >
-                        Ver más
+                        Ver detalles
                       </Button>
                     </Link>
                   </div>
@@ -145,6 +149,18 @@ function Servicios() {
               </Card>
             </Col>
           ))}
+
+          {visibleCount < procedimientosFiltrados.length && (
+            <Col xs={12} className="text-center mt-2">
+              <Button
+                variant="outline-primary"
+                onClick={handleMore}
+                className="px-4 py-2 rounded shadow-sm"
+              >
+                Ver más productos
+              </Button>
+            </Col>
+          )}
         </Row>
       )}
     </Container>

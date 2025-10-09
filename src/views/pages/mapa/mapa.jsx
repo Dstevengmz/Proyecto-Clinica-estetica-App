@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polyline,
+  Popup,
+} from "react-leaflet";
 import { Button, Alert, Spinner } from "react-bootstrap";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -22,8 +28,7 @@ const containerStyle = {
   height: "400px",
 };
 
-
-const clinicaUbicacion = [2.444814, -76.614739]; 
+const clinicaUbicacion = [2.444814, -76.614739];
 
 function MapaConRuta() {
   const [posCliente, setPosCliente] = useState(null);
@@ -77,7 +82,8 @@ function MapaConRuta() {
         let errorMessage = "No se pudo obtener tu ubicación. ";
         switch (err.code) {
           case err.PERMISSION_DENIED:
-            errorMessage += "Permiso denegado. Activa la ubicación en tu navegador.";
+            errorMessage +=
+              "Permiso denegado. Activa la ubicación en tu navegador.";
             break;
           case err.POSITION_UNAVAILABLE:
             errorMessage += "Ubicación no disponible.";
@@ -105,7 +111,7 @@ function MapaConRuta() {
       setError("La geolocalización no está disponible en este navegador");
       return;
     }
-    if (watchIdRef.current !== null) return; // ya activo
+    if (watchIdRef.current !== null) return;
 
     const id = navigator.geolocation.watchPosition(
       (pos) => {
@@ -120,7 +126,8 @@ function MapaConRuta() {
         let errorMessage = "No se pudo obtener tu ubicación en tiempo real. ";
         switch (err.code) {
           case err.PERMISSION_DENIED:
-            errorMessage += "Permiso denegado. Activa la ubicación en tu navegador.";
+            errorMessage +=
+              "Permiso denegado. Activa la ubicación en tu navegador.";
             break;
           case err.POSITION_UNAVAILABLE:
             errorMessage += "Ubicación no disponible.";
@@ -163,34 +170,40 @@ function MapaConRuta() {
   }, []);
 
   return (
-  <div>
-      <MapContainer center={clinicaUbicacion} zoom={14} style={containerStyle} whenCreated={setMap}>
+    <div>
+      <MapContainer
+        center={clinicaUbicacion}
+        zoom={14}
+        style={containerStyle}
+        whenCreated={setMap}
+      >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-
         <Marker position={clinicaUbicacion} icon={defaultLeafletIcon}>
           <Popup>Clínica</Popup>
         </Marker>
-
         {posCliente && (
           <Marker position={posCliente} icon={defaultLeafletIcon}>
             <Popup>Tú</Popup>
           </Marker>
         )}
-
-        {ruta && <Polyline positions={ruta} color="blue" />} {/* Ruta a la clínica */}
+        {ruta && <Polyline positions={ruta} color="blue" />}
         {livePath.length > 1 && (
           <Polyline positions={livePath} color="green" />
-        )} {/* Trayectoria en tiempo real */}
+        )}{" "}
+        {/* Trayectoria en tiempo real */}
       </MapContainer>
 
       <div className="text-center mt-3">
-        {!posCliente && !error && (
-          <div>
+
+        {/* Controles de seguimiento en tiempo real */}
+        {/* Controles en una sola fila */}
+        <div className="d-flex justify-content-center align-items-center gap-3 mt-3 flex-wrap">
+          {!posCliente && !error && (
             <Button
-              variant="primary"
+              variant="dark"
               onClick={solicitarUbicacion}
               disabled={solicitandoUbicacion}
             >
@@ -207,24 +220,19 @@ function MapaConRuta() {
                   Obteniendo ubicación...
                 </>
               ) : (
-                <>📍 Obtener mi ubicación y ruta</>
+                <>Obtener ubicación</>
               )}
             </Button>
-            <p className="text-muted mt-2 small">
-              Haz clic para permitir el acceso a tu ubicación y ver la ruta a la clínica
-            </p>
-          </div>
-        )}
+          )}
 
-        {/* Controles de seguimiento en tiempo real */}
-        <div className="d-flex justify-content-center gap-2 mt-2 flex-wrap">
           <Button
-            variant={tracking ? "danger" : "success"}
+            variant={tracking ? "dark" : "dark"}
             onClick={tracking ? detenerSeguimiento : iniciarSeguimiento}
           >
             {tracking ? "Detener seguimiento" : "Iniciar seguimiento"}
           </Button>
-          <div className="form-check d-inline-flex align-items-center">
+
+          <div className="form-check d-flex align-items-center">
             <input
               className="form-check-input me-2"
               type="checkbox"
@@ -232,7 +240,10 @@ function MapaConRuta() {
               checked={followUser}
               onChange={(e) => setFollowUser(e.target.checked)}
             />
-            <label className="form-check-label" htmlFor="seguirUsuario">
+            <label
+              className="form-check-label fw-semibold"
+              htmlFor="seguirUsuario"
+            >
               Seguir mi posición
             </label>
           </div>

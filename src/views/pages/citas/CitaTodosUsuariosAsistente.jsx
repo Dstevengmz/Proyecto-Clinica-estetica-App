@@ -3,12 +3,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Container } from "react-bootstrap";
 import { CitasContext, useCitasContext } from "../../../contexts/CitasContext";
 import FiltrosCitas from "./FiltrosCitas";
-import {
-  cibCassandra,
-  cilPenAlt,
-  cilXCircle,
-  cilCalendarCheck,
-} from "@coreui/icons";
+import { cibCassandra, cilPenAlt, cilCalendarCheck } from "@coreui/icons";
 import CIcon from "@coreui/icons-react";
 import useListarCitas from "../../../hooks/useListarCitasTodosUsuarioAsistente";
 
@@ -23,6 +18,7 @@ import {
   CButton,
 } from "@coreui/react";
 import BuscadorCitas from "./BuscadorCitas";
+import PaginacionComponents from "../../../components/PaginacionComponents";
 
 function ConsultarCitasPorAsistente() {
   const { citas: todasLasCitas, cargando: cargandoCitas } = useListarCitas();
@@ -83,23 +79,39 @@ function ConsultarCitasPorAsistente() {
     fechaTipo,
   ]);
 
-  // Búsqueda libre
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
   const [citasFiltradasBusqueda, setCitasFiltradasBusqueda] =
     useState(citasBase);
 
-  // Actualiza filtradas cuando cambian las citas base
   const citasAMostrar = useMemo(() => {
     return citasFiltradasBusqueda;
   }, [citasFiltradasBusqueda]);
 
-  // Si cambia la base (por filtros de fecha/tipo) re-aplico búsqueda
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 8; 
+
+  const totalPages = Math.max(1, Math.ceil(citasFiltradasBusqueda.length / pageSize));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [citasFiltradasBusqueda]);
+
+  const paginatedCitas = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return citasFiltradasBusqueda.slice(start, start + pageSize);
+  }, [citasFiltradasBusqueda, currentPage]);
+
+  const goToPage = (page) => {
+    const p = Math.min(Math.max(1, page), totalPages);
+    setCurrentPage(p);
+  };
+  const prevPage = () => goToPage(currentPage - 1);
+  const nextPage = () => goToPage(currentPage + 1);
+
   useEffect(() => {
     if (!terminoBusqueda.trim()) {
       setCitasFiltradasBusqueda(citasBase);
     } else {
-      // delegamos al componente BuscadorCitas mediante onResultado al cambiar termino
-      // aquí sólo aseguramos que la base cambió
       const t = terminoBusqueda.toLowerCase().trim();
       setCitasFiltradasBusqueda(
         citasBase.filter(
@@ -239,7 +251,7 @@ function ConsultarCitasPorAsistente() {
                 </CTableDataCell>
               </CTableRow>
             ) : (
-              citasAMostrar.map((cita) => (
+              paginatedCitas.map((cita) => (
                 <CTableRow key={cita.id}>
                   <CTableDataCell>{cita.id}</CTableDataCell>
                   <CTableDataCell>
@@ -302,12 +314,6 @@ function ConsultarCitasPorAsistente() {
                       >
                         <CIcon icon={cilPenAlt} size="sm" />
                       </button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        title="Eliminar"
-                      >
-                        <CIcon icon={cilXCircle} size="sm" />
-                      </button>
                     </div>
                   </CTableDataCell>
                 </CTableRow>
@@ -315,6 +321,16 @@ function ConsultarCitasPorAsistente() {
             )}
           </CTableBody>
         </CTable>
+        {/* Pagination controls */}
+        <div className="d-flex justify-content-center">
+          <PaginacionComponents
+            currentPage={currentPage}
+            totalPages={totalPages}
+            goToPage={goToPage}
+            prevPage={prevPage}
+            nextPage={nextPage}
+          />
+        </div>
       </div>
     </CitasContext.Provider>
   );

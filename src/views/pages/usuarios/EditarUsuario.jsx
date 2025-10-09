@@ -100,9 +100,10 @@ function EditarUsuario() {
       navigate("/dashboard");
     } catch (error) {
       console.error("Error al actualizar el usuario:", error);
-      await alertas.noSePudoActualizarUsuario(
-        "No se pudo actualizar el usuario. Intenta nuevamente."
-      );
+      const verificacionMensaje =
+        error?.response?.data?.error || error?.response?.data?.message ||
+        error?.message || "No se pudo actualizar el usuario. Intenta nuevamente.";
+      await alertas.noSePudoActualizarUsuario(verificacionMensaje);
     }
   };
 

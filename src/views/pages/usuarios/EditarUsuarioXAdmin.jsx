@@ -106,9 +106,10 @@ function EditarUsuarioXAdmin() {
         navigate("/listarusuarios");
       } catch (error) {
         console.error("Error al actualizar el Usuario:", error);
-        await alertas.noSePudoActualizarUsuario(
-          "No se pudo actualizar el Usuario"
-        );
+        const mensajeVerificacion =
+          error?.response?.data?.error || error?.response?.data?.message ||
+          error?.message || "No se pudo actualizar el Usuario";
+        await alertas.noSePudoActualizarUsuario(mensajeVerificacion);
       }
     }
   };

@@ -9,7 +9,8 @@ import {
   CButton,
 } from "@coreui/react";
 import CIcon from "@coreui/icons-react";
-import { cilCalendarCheck, cilCalendar, cilList, cilX } from "@coreui/icons";
+import { cilCalendar, cilX } from "@coreui/icons";
+import { useAuth } from "../../../contexts/AuthenticaContext";
 
 const FiltrosCitas = ({
   fechaSeleccionada,
@@ -30,7 +31,7 @@ const FiltrosCitas = ({
   handleMostrarTodasLasCitas,
 }) => {
   const navigate = useNavigate();
-
+    const { userRole } = useAuth();
   const irACalendario = () => {
     navigate("/calendariocitas");
   };
@@ -44,16 +45,18 @@ const FiltrosCitas = ({
           className="d-flex justify-content-between align-items-center mb-3"
         >
           <h5 className="mb-0">Filtros de Consulta</h5>
-          <CButton color="primary" onClick={irACalendario}>
-            Ir al Calendario
-          </CButton>
+          {(userRole === "doctor") && (
+            <CButton color="primary" onClick={irACalendario}>
+              Ir al Calendario
+            </CButton>
+          )}
         </CCol>
 
         {/* Filtro por día */}
         <CCol md={4}>
           <div className="border rounded p-3 h-100">
-            <h6 className="text-primary mb-3">
-              <CIcon icon={cilCalendarCheck} className="me-1" />
+            <h6 className="text-success mb-3">
+              <CIcon icon={cilCalendar} className="me-1" />
               Consultar por Día
             </h6>
             <CFormLabel htmlFor="fechaFiltro">Seleccionar fecha:</CFormLabel>
@@ -66,11 +69,11 @@ const FiltrosCitas = ({
             />
             <div className="d-flex gap-2">
               <CButton
-                color="primary"
+                color="success"
                 onClick={handleFiltrarPorDia}
                 disabled={!fechaSeleccionada}
               >
-                <CIcon icon={cilCalendarCheck} className="me-1" />
+                <CIcon icon={cilCalendar} className="me-1" />
                 Consultar
               </CButton>
               {fechaSeleccionada && (
@@ -144,8 +147,8 @@ const FiltrosCitas = ({
         {/* Filtro por tipo */}
         <CCol md={4}>
           <div className="border rounded p-3 h-100">
-            <h6 className="text-warning mb-3">
-              <CIcon icon={cilList} className="me-1" />
+            <h6 className="text-success mb-3">
+              <CIcon icon={cilCalendar} className="me-1" />
               Consultar por Tipo
             </h6>
             <CFormLabel htmlFor="tipoSelect">Tipo de cita:</CFormLabel>
@@ -169,11 +172,11 @@ const FiltrosCitas = ({
             />
             <div className="d-flex gap-2">
               <CButton
-                color="warning"
+                color="success"
                 onClick={handleFiltrarPorTipo}
                 disabled={!tipoSeleccionado || !fechaTipo}
               >
-                <CIcon icon={cilList} className="me-1" />
+                <CIcon icon={cilCalendar} className="me-1" />
                 Consultar
               </CButton>
               {(tipoSeleccionado || fechaTipo) && (

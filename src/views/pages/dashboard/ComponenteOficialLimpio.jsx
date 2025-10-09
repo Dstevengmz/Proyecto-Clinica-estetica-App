@@ -1,6 +1,6 @@
 import React from "react";
 
-function MetricCard({ title, total, icon: Icon, color, subtitle }) {
+function MetricCard({ title, total, icon: Icon, color }) {
   return (
     <div className="bg-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl p-6 w-full h-full text-center border border-gray-200">
       <div className="flex justify-center items-center mb-3">
@@ -18,7 +18,7 @@ function MetricCard({ title, total, icon: Icon, color, subtitle }) {
       </p>
 
       <span className="text-xs text-gray-500 mt-3 block italic">
-        {subtitle || "📡 Actualizado en tiempo real"}
+      
       </span>
     </div>
   );

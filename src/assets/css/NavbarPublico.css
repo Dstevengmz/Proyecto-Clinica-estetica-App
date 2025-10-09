@@ -9,3 +9,7 @@
   font-size: 0.7rem;
   transform: translate(-50%, 25%);
 }
+
+.c-navbar {
+  height: 64px;
+}

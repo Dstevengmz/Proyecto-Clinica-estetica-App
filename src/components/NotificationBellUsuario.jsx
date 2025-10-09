@@ -17,6 +17,8 @@ import CIcon from '@coreui/icons-react';
 import { cilBell } from '@coreui/icons';
 import { useNotificationsUsuario } from '../contexts/NotificationUsuarioContext';
 import { useAuth } from '../contexts/AuthenticaContext';
+import { useContext } from 'react';
+import { CitasContext } from '../contexts/CitasContext';
 
 const NotificationBellUsuario = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications, loadNotificationHistory } = useNotificationsUsuario();
@@ -79,8 +81,10 @@ const NotificationBellUsuario = () => {
   
   const themeStyles = getThemeStyles();
 
+  const citasContext = useContext(CitasContext);
+
   const isDoctor = userRole === 'doctor' || userRole === 'Doctor' || userRole === 'DOCTOR';
-  
+
   if (isDoctor) {
     return null;
   }
@@ -109,21 +113,55 @@ const NotificationBellUsuario = () => {
     if (notification?.id != null) {
       await markAsRead(notification.id);
     }
+    const { tipo, citaId, ruta } = notification || {};
 
-    const { tipo, citaId } = notification || {};
+    if (ruta) {
+      if (citaId) {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/apicitas/buscarcitas/${citaId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const citaData = await response.json();
+            if (citasContext && citasContext.setSelectedCitas) {
+              citasContext.setSelectedCitas(citaData);
+            }
+          }
+        } catch (e) {
+          console.error('Error precargando cita desde notificación (usuario):', e);
+        }
+      }
+      navigate(ruta);
+      return;
+    }
 
-    if ((tipo === 'confirmacion_cita' || tipo === 'recordatorio_cita' || tipo === 'cita_actualizada' || tipo === 'cita_cancelada') && citaId) {
-      return navigate(`/citas/${citaId}`);
+    if (citaId) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/apicitas/buscarcitas/${citaId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const citaData = await response.json();
+          if (citasContext && citasContext.setSelectedCitas) {
+            citasContext.setSelectedCitas(citaData);
+          }
+          navigate(`/citas/${citaData.id}`);
+          return;
+        }
+      } catch (e) {
+        console.error('Error al cargar cita desde notificación (usuario):', e);
+      }
+      navigate('/miscitas');
+      return;
     }
 
     if (tipo === 'promocion') {
       return navigate('/promociones');
     }
 
-    if (tipo === 'confirmacion_cita' || tipo === 'recordatorio_cita') {
-      return navigate('/miscitas');
-    }
-
+    // Default landing
     navigate('/dashboard-usuario');
   };
 
@@ -161,9 +199,11 @@ const NotificationBellUsuario = () => {
       <CDropdownMenu 
         className="notification-dropdown" 
         style={{ 
-          width: '380px', 
+          maxWidth: '92vw', 
+          width: '380px',
           maxHeight: '500px', 
           overflowY: 'auto',
+          overflowX: 'hidden',
           ...themeStyles.dropdown,
           boxShadow: isDarkMode 
             ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)' 

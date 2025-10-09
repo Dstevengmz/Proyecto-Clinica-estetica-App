@@ -100,6 +100,14 @@ const RegistrarCitaAsistente = React.lazy(() =>
   import("./views/pages/citas/RegistrarCitaAsistente")
 );
 
+const HistorialCompleto = React.lazy(() =>
+  import("./views/pages/historialcompletopaciente/historialtodocompletousuario")
+);
+
+const SeleccionarUsuarioHistorial = React.lazy(() =>
+  import("./views/pages/historialcompletopaciente/SeleccionarUsuarioHistorial")
+);
+
 import ReagendarCita from "./views/pages/citas/ReagendarCita";
 
 import CitasPaciente from "./views/pages/citas/CitasPorPaciente";
@@ -326,7 +334,7 @@ const App = () => {
                     />
                     {/* Citas */}
                     <Route
-                      path="/panelotro"
+                      path="/paneldedatos"
                       element={
                         <ProtectedRoute allowedRoles={["doctor"]}>
                           <DashboardOtro />
@@ -372,6 +380,22 @@ const App = () => {
                     <Route path="/editarcita/:id" element={<Editarcita />} />
                     <Route path="/miscitas" element={<MisCitas />} />
                     <Route path="/miscitas" element={<MisCitas />} />
+                    <Route
+                      path="/historialcompleto/:idUsuario"
+                      element={
+                        <ProtectedRoute allowedRoles={["asistente"]}>
+                          <HistorialCompleto />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/seleccionarusuariohistorial"
+                      element={
+                        <ProtectedRoute allowedRoles={["asistente"]}>
+                          <SeleccionarUsuarioHistorial />
+                        </ProtectedRoute>
+                      }
+                    />
                     {/* Procedimientos */}
                     <Route
                       path="/crearprocedimiento"

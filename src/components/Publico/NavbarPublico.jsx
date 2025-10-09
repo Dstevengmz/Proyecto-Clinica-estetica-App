@@ -31,7 +31,11 @@ const NavbarPublico = () => {
   const cantidadCarrito = Array.isArray(carrito) ? carrito.length : 0;
 
   return (
-    <CNavbar expand="lg" className="bg-body-tertiary">
+    <CNavbar
+      expand="lg"
+      className="bg-body-tertiary sticky-top shadow-sm"
+      style={{ zIndex: 1030 }}
+    >
       <CContainer fluid>
         <CNavbarBrand as={Link} to="/inicio">
           Mi Clínica

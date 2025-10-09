@@ -24,7 +24,6 @@ function useEditarUsuario(id) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      // Algunos backends responden como { usuario: {...} } y otros directamente el objeto
       const data = response?.data;
       const usuarioData = data?.usuario ?? data;
       setUsuario(usuarioData);
@@ -54,7 +53,6 @@ function useEditarUsuario(id) {
           },
         }
       );
-      // Normalizar respuesta para obtener el usuario actualizado
       const data = response?.data;
       const usuarioActualizado = data?.usuario ?? data ?? datosActualizados;
       setUsuario(usuarioActualizado);

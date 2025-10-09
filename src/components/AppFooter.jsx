@@ -5,15 +5,15 @@ const AppFooter = () => {
   return (
     <CFooter className="px-4">
       <div>
-        <a href="https://coreui.io" target="_blank" rel="noopener noreferrer">
-          CoreUI
+        <a href="https://proyecto-clinica-estetica-app.vercel.app" target="_blank" rel="noopener noreferrer">
+          Clinestetica
         </a>
-        <span className="ms-1">&copy; 2025 creativeLabs.</span>
+        <span className="ms-1">&copy; 2025 Clinestetica.</span>
       </div>
       <div className="ms-auto">
-        <span className="me-1">Powered by</span>
-        <a href="https://coreui.io/react" target="_blank" rel="noopener noreferrer">
-          CoreUI React Admin &amp; Dashboard Template
+        <span className="me-1"></span>
+        <a href="https://proyecto-clinica-estetica-app.vercel.app"  target="_blank" rel="noopener noreferrer">
+          Desarrollado por Dstevengmz, Liliana, Constanza
         </a>
       </div>
     </CFooter>

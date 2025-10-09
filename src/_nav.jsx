@@ -4,9 +4,8 @@ import {
   cilCalendar,
   cilNotes,
   cilMedicalCross,
-  
   cilSpeedometer,
-  cilApps
+  cilApps,
   // cilUser,
 } from "@coreui/icons";
 import { CNavGroup, CNavItem, CNavTitle } from "@coreui/react";
@@ -80,7 +79,6 @@ const getAsistenteNavigation = () => [
     to: "/dashboard",
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
   },
-
   {
     component: CNavGroup,
     name: "Citas",
@@ -96,26 +94,15 @@ const getAsistenteNavigation = () => [
         name: "Reagendar Citas",
         to: "/listatodoslosusuariosasistente",
       },
+      {
+        component: CNavItem,
+        name: "Completo Historial",
+        to: "/seleccionarusuariohistorial",
+      },
     ],
   },
-      {
-      component: CNavGroup,
-      name: "Mis Citas",
-      icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
-      items: [
-        {
-          component: CNavItem,
-          name: "Agendar Cita",
-          to: "/crearcita",
-        },
-        {
-          component: CNavItem,
-          name: "Mis Citas",
-          to: "/miscitas",
-        },
-      ],
-    },
-    {
+
+  {
     component: CNavGroup,
     name: "Servicio",
     icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
@@ -146,19 +133,18 @@ const getAsistenteNavigation = () => [
 ];
 
 const getDoctorNavigation = () => [
-{
-  component: CNavItem,
-  name: "Panel en vivo",
-  to: "/panelotro",
-  icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-  
-},
-{
-  component: CNavItem,
-  name: "Accesos rápidos",
-  to: "/dashboard",
-  icon: <CIcon icon={cilApps} customClassName="nav-icon" />,
-},
+  {
+    component: CNavItem,
+    name: "Panel en vivo",
+    to: "/paneldedatos",
+    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: "Accesos rápidos",
+    to: "/dashboard",
+    icon: <CIcon icon={cilApps} customClassName="nav-icon" />,
+  },
 
   {
     component: CNavGroup,
